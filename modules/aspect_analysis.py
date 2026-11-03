@@ -114,6 +114,9 @@ CATEGORY_TAXONOMY: Dict[str, Dict[str, Set[str]]] = {
     }
 }
 
+# Alias for backward compatibility
+CATEGORY_ASPECTS = CATEGORY_TAXONOMY
+
 # General fallback taxonomy if category is unspecified
 GENERAL_TAXONOMY: Dict[str, Set[str]] = {
     "Performance": {"performance", "speed", "fast", "processor", "chip", "lag"},
