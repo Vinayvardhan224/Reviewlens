@@ -1,6 +1,7 @@
 """
 Competitor Benchmarking and Side-by-Side Product Comparison Engine for ReviewLens.
 Compares two products on aspect Net Sentiment Scores (NSS), CSAT, and detects winners.
+Handles missing aspect evidence transparently without assigning false neutral zero scores.
 """
 
 from typing import List, Dict, Any, Optional
@@ -10,10 +11,15 @@ from reviewlens.models import BatchAnalysisResult, AspectSummary
 
 class AspectComparison(BaseModel):
     category: str
-    score_a: float
-    score_b: float
+    score_a: Optional[float] = None
+    score_b: Optional[float] = None
+    score_a_display: str = "Insufficient review data"
+    score_b_display: str = "Insufficient review data"
+    has_evidence_a: bool = False
+    has_evidence_b: bool = False
     winner: str
-    delta: float
+    delta: Optional[float] = None
+    delta_display: str = "N/A"
 
 
 class ProductComparisonReport(BaseModel):
@@ -49,8 +55,8 @@ class ProductComparator:
         csat_b = result_b.executive_summary.csat_score
 
         # Map aspects by category
-        map_a = {a.category: a.net_sentiment_score for a in result_a.aspect_summaries}
-        map_b = {b.category: b.net_sentiment_score for b in result_b.aspect_summaries}
+        map_a = {a.category: a for a in result_a.aspect_summaries}
+        map_b = {b.category: b for b in result_b.aspect_summaries}
 
         all_categories = sorted(list(set(map_a.keys()) | set(map_b.keys())))
         aspect_comparisons: List[AspectComparison] = []
@@ -61,30 +67,63 @@ class ProductComparator:
         b_strengths = []
 
         for cat in all_categories:
-            score_a = map_a.get(cat, 0.0)
-            score_b = map_b.get(cat, 0.0)
-            diff = score_a - score_b
+            asp_a = map_a.get(cat)
+            asp_b = map_b.get(cat)
 
-            if diff > 5.0:
-                winner = name_a
-                a_wins += 1
-                if diff >= 15.0:
-                    a_strengths.append(f"{cat} (+{diff:.0f} pts over {name_b})")
-            elif diff < -5.0:
-                winner = name_b
-                b_wins += 1
-                if diff <= -15.0:
-                    b_strengths.append(f"{cat} (+{abs(diff):.0f} pts over {name_a})")
+            m_a = getattr(asp_a, "total_mentions", getattr(asp_a, "mentions", 0)) if asp_a is not None else 0
+            m_b = getattr(asp_b, "total_mentions", getattr(asp_b, "mentions", 0)) if asp_b is not None else 0
+
+            has_ev_a = asp_a is not None and m_a > 0
+            has_ev_b = asp_b is not None and m_b > 0
+
+            score_a = asp_a.net_sentiment_score if has_ev_a else None
+            score_b = asp_b.net_sentiment_score if has_ev_b else None
+
+            score_a_display = f"{score_a:+.1f} ({m_a} mentions)" if has_ev_a and score_a is not None else "Insufficient review data"
+            score_b_display = f"{score_b:+.1f} ({m_b} mentions)" if has_ev_b and score_b is not None else "Insufficient review data"
+
+            if has_ev_a and has_ev_b and score_a is not None and score_b is not None:
+                diff = score_a - score_b
+                delta = round(diff, 1)
+                delta_display = f"{abs(delta):.1f} pts"
+
+                if diff > 5.0:
+                    winner = name_a
+                    a_wins += 1
+                    if diff >= 15.0:
+                        a_strengths.append(f"{cat} (+{diff:.0f} pts over {name_b})")
+                elif diff < -5.0:
+                    winner = name_b
+                    b_wins += 1
+                    if diff <= -15.0:
+                        b_strengths.append(f"{cat} (+{abs(diff):.0f} pts over {name_a})")
+                else:
+                    winner = "Tie"
+            elif has_ev_a and not has_ev_b:
+                delta = None
+                delta_display = "N/A"
+                winner = f"Insufficient data for {name_b[:12]}"
+            elif has_ev_b and not has_ev_a:
+                delta = None
+                delta_display = "N/A"
+                winner = f"Insufficient data for {name_a[:12]}"
             else:
-                winner = "Tie"
+                delta = None
+                delta_display = "N/A"
+                winner = "Insufficient review data"
 
             aspect_comparisons.append(
                 AspectComparison(
                     category=cat,
                     score_a=score_a,
                     score_b=score_b,
+                    score_a_display=score_a_display,
+                    score_b_display=score_b_display,
+                    has_evidence_a=has_ev_a,
+                    has_evidence_b=has_ev_b,
                     winner=winner,
-                    delta=round(diff, 1)
+                    delta=delta,
+                    delta_display=delta_display
                 )
             )
 
@@ -98,11 +137,11 @@ class ProductComparator:
 
         # Narrative verdict
         if overall_winner == name_a:
-            verdict = f"{name_a} outperforms {name_b} overall with higher Net Sentiment ({nss_a:+.1f} vs {nss_b:+.1f}) and leads in {len(a_strengths)} key dimensions."
+            verdict = f"{name_a} outperforms {name_b} with a Net Sentiment advantage of {nss_a - nss_b:+.1f} and {a_wins} aspect victories."
         elif overall_winner == name_b:
-            verdict = f"{name_b} claims the overall victory with superior customer satisfaction ({csat_b:.1f}% vs {csat_a:.1f}%) and leads in {len(b_strengths)} key dimensions."
+            verdict = f"{name_b} outperforms {name_a} with a Net Sentiment advantage of {nss_b - nss_a:+.1f} and {b_wins} aspect victories."
         else:
-            verdict = f"{name_a} and {name_b} offer balanced trade-offs. Choose based on which specific aspect matters most to your use case."
+            verdict = f"{name_a} and {name_b} demonstrate comparable overall sentiment ({nss_a:+.1f} vs {nss_b:+.1f} NSS) across verified customer feedback."
 
         return ProductComparisonReport(
             product_a_name=name_a,

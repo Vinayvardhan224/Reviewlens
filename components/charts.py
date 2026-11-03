@@ -1,7 +1,7 @@
 """
 ReviewLens Visualization & Charts Component.
 Engineered for publication-quality visual analytics with zero legend/title overlap,
-responsive container support, and accessible color schemes.
+responsive container support, category-specific ABSA, and confusion matrix heatmaps.
 """
 
 from typing import List, Dict, Any, Optional
@@ -58,15 +58,14 @@ def create_sentiment_donut_chart(distribution: Dict[str, int]) -> go.Figure:
 def create_aspect_breakdown_bar_chart(aspects: List[Dict[str, Any]]) -> go.Figure:
     """
     Horizontal stacked bar chart showing % Positive, % Neutral, % Negative per aspect.
-    Title is handled outside in Streamlit markdown to guarantee 0% title/legend collision.
+    Filters out aspects with zero mentions to avoid false reporting.
     """
     if not aspects:
         return go.Figure()
 
-    # Filter to aspects with mentions and reverse for top-down display
     active = [a for a in aspects if a.get("mentions", 0) > 0][::-1]
     if not active:
-        active = aspects[::-1]
+        return go.Figure()
 
     categories = [a["category"] for a in active]
     pos_pcts = [a.get("pos_pct", 0.0) for a in active]
@@ -118,17 +117,25 @@ def create_aspect_breakdown_bar_chart(aspects: List[Dict[str, Any]]) -> go.Figur
 
 def create_aspect_radar_chart(aspects: List[Dict[str, Any]], product_name: str = "Product") -> go.Figure:
     """
-    Radar (spider) chart showing Net Sentiment Score (-100 to +100) per aspect.
+    Radar chart showing Net Sentiment Score per aspect.
+    Only includes aspects with verified evidence.
     """
     if not aspects:
         return go.Figure()
 
-    active = [a for a in aspects if a.get("mentions", 0) > 0]
-    if not active:
-        active = aspects
+    active = [a for a in aspects if a.get("mentions", 0) > 0 and a.get("net_sentiment_score") is not None]
+    if len(active) < 3:
+        # Fallback to bar chart if too few points to form a polygon
+        fig = go.Figure()
+        categories = [a["category"] for a in active]
+        scores = [a["net_sentiment_score"] for a in active]
+        colors = [COLOR_POSITIVE if s >= 0 else COLOR_NEGATIVE for s in scores]
+        fig.add_trace(go.Bar(y=categories, x=scores, orientation="h", marker=dict(color=colors)))
+        fig.update_layout(height=350, xaxis=dict(range=[-100, 100], title="Net Sentiment Score (-100 to +100)"))
+        return fig
 
     categories = [a["category"] for a in active]
-    nss_scores = [a.get("net_sentiment_score", 0.0) for a in active]
+    nss_scores = [a["net_sentiment_score"] for a in active]
 
     # Close polygon loop
     categories_closed = categories + [categories[0]]
@@ -174,12 +181,15 @@ def create_multi_product_radar_chart(products_data: List[Dict[str, Any]]) -> go.
 
     fig = go.Figure()
 
-    # Collect all categories
+    # Collect shared categories that have evidence in at least one product
     all_cats = []
     for item in products_data:
         for a in item.get("aspects", []):
-            if a["category"] not in all_cats:
+            if a.get("mentions", 0) > 0 and a["category"] not in all_cats:
                 all_cats.append(a["category"])
+
+    if len(all_cats) < 3:
+        all_cats = [a["category"] for a in products_data[0].get("aspects", [])]
 
     if not all_cats:
         return go.Figure()
@@ -187,14 +197,13 @@ def create_multi_product_radar_chart(products_data: List[Dict[str, Any]]) -> go.
     for idx, item in enumerate(products_data):
         name = item.get("name", f"Product {idx+1}")
         aspect_dict = {a["category"]: a.get("net_sentiment_score", 0.0) for a in item.get("aspects", [])}
-        scores = [aspect_dict.get(c, 0.0) for c in all_cats]
+        scores = [aspect_dict.get(c, 0.0) if aspect_dict.get(c) is not None else 0.0 for c in all_cats]
 
         # Close loop
         cats_closed = all_cats + [all_cats[0]]
         scores_closed = scores + [scores[0]]
 
         c = colors[idx % len(colors)]
-        # Extract rgb components for fill
         fill_col = c.replace("#", "")
         r = int(fill_col[0:2], 16)
         g = int(fill_col[2:4], 16)
@@ -237,7 +246,6 @@ def create_multi_product_radar_chart(products_data: List[Dict[str, Any]]) -> go.
 def create_keyword_driver_chart(pos_keywords: List[Dict[str, Any]], neg_keywords: List[Dict[str, Any]]) -> go.Figure:
     """
     Dual bar chart comparing top positive driver terms vs negative pain points.
-    Title rendered outside in markdown. Legend placed at bottom with margin.
     """
     fig = go.Figure()
 
@@ -268,7 +276,7 @@ def create_keyword_driver_chart(pos_keywords: List[Dict[str, Any]], neg_keywords
     fig.update_layout(
         barmode="group",
         height=400,
-        xaxis=dict(title="TF-IDF Importance Score"),
+        xaxis=dict(title="TF-IDF Salience Score"),
         yaxis=dict(title=""),
         margin=dict(t=15, b=65, l=140, r=20),
         legend=dict(
@@ -323,5 +331,28 @@ def create_rating_scatter_chart(records: List[Dict[str, Any]]) -> go.Figure:
             xanchor="center",
             x=0.5
         )
+    )
+    return fig
+
+
+def create_confusion_matrix_heatmap(cm: List[List[int]], labels: List[str]) -> go.Figure:
+    """
+    Render an interactive confusion matrix heatmap for model evaluation.
+    """
+    z = cm
+    x = [f"Pred: {l}" for l in labels]
+    y = [f"True: {l}" for l in labels]
+
+    fig = px.imshow(
+        z,
+        x=x,
+        y=y,
+        color_continuous_scale="Blues",
+        text_auto=True,
+        labels=dict(x="Predicted Class", y="Actual Ground Truth", color="Review Count")
+    )
+    fig.update_layout(
+        height=380,
+        margin=dict(t=30, b=40, l=40, r=40)
     )
     return fig
