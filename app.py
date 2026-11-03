@@ -53,6 +53,16 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
+
+def render_html_block(html_content: str) -> None:
+    """
+    Renders HTML safely without Markdown treating indented lines as code blocks.
+    Strips leading and trailing whitespace from each line and drops blank lines.
+    """
+    clean_lines = [line.strip() for line in html_content.strip().splitlines() if line.strip()]
+    st.markdown("\n".join(clean_lines), unsafe_allow_html=True)
+
+
 # CSS Styling (Amazon Navy #131921, Amber #FF9900, Clean SaaS cards)
 st.markdown("""
 <style>
@@ -134,12 +144,6 @@ st.markdown("""
         display: flex;
         align-items: center;
         gap: 0.8rem;
-    }
-
-    /* Spec diff table styling */
-    .spec-diff {
-        background-color: #FEF3C7 !important;
-        font-weight: 600;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -232,7 +236,7 @@ st.sidebar.caption("🛡️ **Data Provenance**: All products & reviews are labe
 # VIEW 1: HOME / DISCOVERY
 # ==========================================
 if st.session_state["nav_view"] == "🏠 Home / Discovery":
-    st.markdown("""
+    render_html_block("""
     <div class="hero-banner">
         <div style="display: inline-block; padding: 4px 12px; border-radius: 20px; background: rgba(255,153,0,0.2); border: 1px solid #FF9900; color: #FF9900; font-size: 0.8rem; font-weight: 700; margin-bottom: 0.8rem;">
             NLP-POWERED SMART SHOPPING INTELLIGENCE
@@ -246,42 +250,42 @@ if st.session_state["nav_view"] == "🏠 Home / Discovery":
             compares electronics side-by-side with 100% mathematical transparency.
         </p>
     </div>
-    """, unsafe_allow_html=True)
+    """)
 
     # Quick Stats Row
     stat1, stat2, stat3, stat4 = st.columns(4)
     with stat1:
-        st.markdown("""
+        render_html_block("""
         <div class="metric-card metric-card-orange">
             <div class="metric-label">Electronics Catalogue</div>
             <div class="metric-value">12 Products</div>
             <div class="metric-sub">Phones, Audio, Laptops, Cameras</div>
         </div>
-        """, unsafe_allow_html=True)
+        """)
     with stat2:
-        st.markdown("""
+        render_html_block("""
         <div class="metric-card">
             <div class="metric-label">Verified Reviews</div>
             <div class="metric-value">70+ Feedback</div>
             <div class="metric-sub">Prepared & validated records</div>
         </div>
-        """, unsafe_allow_html=True)
+        """)
     with stat3:
-        st.markdown("""
+        render_html_block("""
         <div class="metric-card metric-card-green">
             <div class="metric-label">Aspect Dimensions</div>
             <div class="metric-value">8 Key Pillars</div>
             <div class="metric-sub">Speed, Display, Battery, Value...</div>
         </div>
-        """, unsafe_allow_html=True)
+        """)
     with stat4:
-        st.markdown("""
+        render_html_block("""
         <div class="metric-card metric-card-purple">
             <div class="metric-label">NLP Explainability</div>
             <div class="metric-value">100% Glass Box</div>
             <div class="metric-sub">VADER + Rule-based Lexicon</div>
         </div>
-        """, unsafe_allow_html=True)
+        """)
 
     # Department Quick-Access Row
     st.markdown("### 🏷️ **Shop by Department**")
@@ -295,20 +299,13 @@ if st.session_state["nav_view"] == "🏠 Home / Discovery":
     ]
     for idx, (cat_name, cat_icon, cat_sub) in enumerate(departments):
         with cat_cols[idx]:
-            st.markdown(f"""
-            <div style="
-                background: #FFFFFF;
-                border: 1px solid #E2E8F0;
-                border-radius: 10px;
-                padding: 1rem;
-                text-align: center;
-                box-shadow: 0 2px 4px rgba(0,0,0,0.02);
-            ">
+            render_html_block(f"""
+            <div style="background: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 10px; padding: 1rem; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
                 <div style="font-size: 2rem; margin-bottom: 0.3rem;">{cat_icon}</div>
                 <div style="font-weight: 700; font-size: 0.95rem; color: #0F172A;">{cat_name}</div>
                 <div style="font-size: 0.75rem; color: #64748B;">{cat_sub}</div>
             </div>
-            """, unsafe_allow_html=True)
+            """)
 
     st.markdown("<br>", unsafe_allow_html=True)
 
@@ -334,7 +331,7 @@ if st.session_state["nav_view"] == "🏠 Home / Discovery":
     st.markdown("### 💡 **How ReviewLens Empowers Your Buying Decisions**")
     vp1, vp2, vp3 = st.columns(3)
     with vp1:
-        st.markdown("""
+        render_html_block("""
         <div style="background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 10px; padding: 1.2rem;">
             <div style="font-size: 1.5rem; margin-bottom: 0.4rem;">🔍</div>
             <div style="font-weight: 700; color: #0F172A; margin-bottom: 0.4rem;">Aspect-Based Sentiment</div>
@@ -342,9 +339,9 @@ if st.session_state["nav_view"] == "🏠 Home / Discovery":
                 A phone may have a 4.5-star overall rating, but terrible 25W charging speeds. ReviewLens deconstructs feedback into 8 separate dimensions.
             </div>
         </div>
-        """, unsafe_allow_html=True)
+        """)
     with vp2:
-        st.markdown("""
+        render_html_block("""
         <div style="background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 10px; padding: 1.2rem;">
             <div style="font-size: 1.5rem; margin-bottom: 0.4rem;">⚔️</div>
             <div style="font-weight: 700; color: #0F172A; margin-bottom: 0.4rem;">Side-by-Side Duel & Radar</div>
@@ -352,9 +349,9 @@ if st.session_state["nav_view"] == "🏠 Home / Discovery":
                 Compare 2 or 3 products on shared specs and customer satisfaction deltas with dual radar charts and honest winner rationales.
             </div>
         </div>
-        """, unsafe_allow_html=True)
+        """)
     with vp3:
-        st.markdown("""
+        render_html_block("""
         <div style="background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 10px; padding: 1.2rem;">
             <div style="font-size: 1.5rem; margin-bottom: 0.4rem;">🛡️</div>
             <div style="font-weight: 700; color: #0F172A; margin-bottom: 0.4rem;">Transparent Data Provenance</div>
@@ -362,7 +359,7 @@ if st.session_state["nav_view"] == "🏠 Home / Discovery":
                 No deceptive claims. Prepared demonstration datasets are clearly flagged, with outbound links to live Amazon India product listings.
             </div>
         </div>
-        """, unsafe_allow_html=True)
+        """)
 
 
 # ==========================================
@@ -397,7 +394,7 @@ elif st.session_state["nav_view"] == "🛍️ Catalogue & Search":
     chip_text.append(f'Price: ₹{filters["price_min"]:,} - ₹{filters["price_max"]:,}')
     chip_text.append(f'Rating: {filters["min_rating"]:.1f}+ ★')
 
-    st.markdown(f"<div style='font-size: 0.85rem; color: #64748B; margin-bottom: 1rem;'><b>Active Filters:</b> {' • '.join(chip_text)} (Found {len(filtered_df)} matches)</div>", unsafe_allow_html=True)
+    render_html_block(f"<div style='font-size: 0.85rem; color: #64748B; margin-bottom: 1rem;'><b>Active Filters:</b> {' • '.join(chip_text)} (Found {len(filtered_df)} matches)</div>")
 
     if filtered_df.empty:
         st.warning("No products matched your search and filter criteria. Try broadening your price range or clearing keyword filters.")
@@ -450,19 +447,8 @@ elif st.session_state["nav_view"] == "🔍 Product Intelligence & ABSA":
             st.rerun()
 
     # Product Header & Info Banner
-    st.markdown(f"""
-    <div style="
-        background: #FFFFFF;
-        border: 1px solid #E2E8F0;
-        border-radius: 14px;
-        padding: 1.5rem;
-        margin-bottom: 1.5rem;
-        display: flex;
-        flex-wrap: wrap;
-        gap: 1.5rem;
-        align-items: center;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.03);
-    ">
+    render_html_block(f"""
+    <div style="background: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 14px; padding: 1.5rem; margin-bottom: 1.5rem; display: flex; flex-wrap: wrap; gap: 1.5rem; align-items: center; box-shadow: 0 4px 12px rgba(0,0,0,0.03);">
         <div style="width: 140px; height: 140px; background: #F8FAFC; border-radius: 10px; display: flex; align-items: center; justify-content: center; overflow: hidden; border: 1px solid #E2E8F0;">
             <img src="{prod.get('image_url')}" style="max-height: 100%; max-width: 100%; object-fit: contain;" alt="{prod.get('product_name')}" />
         </div>
@@ -486,17 +472,17 @@ elif st.session_state["nav_view"] == "🔍 Product Intelligence & ABSA":
             </div>
         </div>
     </div>
-    """, unsafe_allow_html=True)
+    """)
 
     # Provenance disclosure notice
-    st.markdown(f"""
+    render_html_block(f"""
     <div class="provenance-banner">
         <span style="font-size: 1.2rem;">🛡️</span>
         <div>
             <strong>Transparent Data Provenance:</strong> {PROVENANCE_DISCLOSURE}
         </div>
     </div>
-    """, unsafe_allow_html=True)
+    """)
 
     # Run NLP Pipeline on this product's reviews
     sentiment_res = analyze_reviews_sentiment(reviews_df)
@@ -514,43 +500,43 @@ elif st.session_state["nav_view"] == "🔍 Product Intelligence & ABSA":
     # High-Level Metric Cards
     k1, k2, k3, k4 = st.columns(4)
     with k1:
-        st.markdown(f"""
+        render_html_block(f"""
         <div class="metric-card metric-card-orange">
             <div class="metric-label">Amazon Star Rating</div>
             <div class="metric-value">{prod.get('rating'):.1f} <span style="font-size: 1rem; color: #F59E0B;">★</span></div>
             <div class="metric-sub">Out of 5.0 stars</div>
         </div>
-        """, unsafe_allow_html=True)
+        """)
     with k2:
         nss_val = sentiment_res["nss"]
         nss_col = "#10B981" if nss_val > 0 else "#EF4444"
-        st.markdown(f"""
+        render_html_block(f"""
         <div class="metric-card metric-card-green">
             <div class="metric-label">Net Sentiment Score (NSS)</div>
             <div class="metric-value" style="color: {nss_col};">{nss_val:+.1f}</div>
             <div class="metric-sub">% Positive minus % Negative (-100 to +100)</div>
         </div>
-        """, unsafe_allow_html=True)
+        """)
     with k3:
-        st.markdown(f"""
+        render_html_block(f"""
         <div class="metric-card">
             <div class="metric-label">Estimated CSAT</div>
             <div class="metric-value">{sentiment_res['csat_estimate']:.1f}%</div>
             <div class="metric-sub">Calculated customer satisfaction</div>
         </div>
-        """, unsafe_allow_html=True)
+        """)
     with k4:
-        st.markdown(f"""
+        render_html_block(f"""
         <div class="metric-card metric-card-purple">
             <div class="metric-label">Reviews Analyzed</div>
             <div class="metric-value">{sentiment_res['total_reviews']}</div>
             <div class="metric-sub">Synthesized NLP corpus</div>
         </div>
-        """, unsafe_allow_html=True)
+        """)
 
     # Executive Summary & Persona Box
     st.markdown("### 📋 **Executive Intelligence Summary**")
-    st.markdown(f"""
+    render_html_block(f"""
     <div style="background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 12px; padding: 1.2rem; margin-bottom: 1.5rem;">
         <div style="font-size: 1.05rem; font-weight: 700; color: #0F172A; margin-bottom: 0.4rem;">
             🎯 Bottom Line: {exec_summary['verdict']}
@@ -562,7 +548,7 @@ elif st.session_state["nav_view"] == "🔍 Product Intelligence & ABSA":
             {exec_summary['sample_disclosure']}
         </div>
     </div>
-    """, unsafe_allow_html=True)
+    """)
 
     # Pros and Cons Side-by-Side
     pro_col, con_col = st.columns(2)
@@ -570,12 +556,12 @@ elif st.session_state["nav_view"] == "🔍 Product Intelligence & ABSA":
         st.markdown("#### ✅ **Key Product Strengths (Verified Praise)**")
         if exec_summary["pros"]:
             for p in exec_summary["pros"]:
-                st.markdown(f"""
+                render_html_block(f"""
                 <div style="background: #ECFDF5; border-left: 4px solid #10B981; padding: 0.75rem 1rem; border-radius: 6px; margin-bottom: 0.6rem;">
                     <div style="font-weight: 700; color: #065F46; font-size: 0.88rem;">{p['aspect']} (+{p['nss']:.0f} NSS)</div>
                     <div style="font-size: 0.82rem; color: #047857; font-style: italic;">"{p['quote']}"</div>
                 </div>
-                """, unsafe_allow_html=True)
+                """)
         else:
             st.info("No standout positive drivers exceeded threshold.")
 
@@ -583,12 +569,12 @@ elif st.session_state["nav_view"] == "🔍 Product Intelligence & ABSA":
         st.markdown("#### ⚠️ **Key Consumer Pain Points & Trade-offs**")
         if exec_summary["cons"]:
             for c in exec_summary["cons"]:
-                st.markdown(f"""
+                render_html_block(f"""
                 <div style="background: #FEF2F2; border-left: 4px solid #EF4444; padding: 0.75rem 1rem; border-radius: 6px; margin-bottom: 0.6rem;">
                     <div style="font-weight: 700; color: #991B1B; font-size: 0.88rem;">{c['aspect']} ({c['nss']:+.0f} NSS)</div>
                     <div style="font-size: 0.82rem; color: #B91C1C; font-style: italic;">"{c['quote']}"</div>
                 </div>
-                """, unsafe_allow_html=True)
+                """)
         else:
             st.success("No dominant negative pain points detected in this review corpus.")
 
@@ -719,7 +705,7 @@ elif st.session_state["nav_view"] == "⚔️ Product Comparison":
 
     # Winner Banner
     winner_badge = "👑" if comp_result["overall_winner"] != "Close Draw" else "🤝"
-    st.markdown(f"""
+    render_html_block(f"""
     <div style="background: linear-gradient(135deg, #131921 0%, #1e293b 100%); padding: 1.5rem; border-radius: 14px; color: white; margin-bottom: 1.5rem; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
         <div style="font-size: 1.3rem; font-weight: 800; color: #FF9900; margin-bottom: 0.3rem;">
             {winner_badge} Overall Head-to-Head Winner: {comp_result['overall_winner']}
@@ -728,12 +714,12 @@ elif st.session_state["nav_view"] == "⚔️ Product Comparison":
             {comp_result['verdict_reason']}
         </p>
     </div>
-    """, unsafe_allow_html=True)
+    """)
 
     # Side-by-side KPI cards
     c_kpi1, c_kpi2 = st.columns(2)
     with c_kpi1:
-        st.markdown(f"""
+        render_html_block(f"""
         <div class="metric-card" style="border-left-color: #2563EB;">
             <div class="metric-label">{prod_a['product_name']}</div>
             <div class="metric-value" style="color: #2563EB;">{format_currency_inr(prod_a['price'])}</div>
@@ -741,10 +727,10 @@ elif st.session_state["nav_view"] == "⚔️ Product Comparison":
                 NSS: <strong>{sent_a['nss']:+.1f}</strong> | CSAT: <strong>{sent_a['csat_estimate']:.1f}%</strong> | Aspect Wins: <strong>{comp_result['kpi_summary']['wins_a']}</strong>
             </div>
         </div>
-        """, unsafe_allow_html=True)
+        """)
 
     with c_kpi2:
-        st.markdown(f"""
+        render_html_block(f"""
         <div class="metric-card" style="border-left-color: #DC2626;">
             <div class="metric-label">{prod_b['product_name']}</div>
             <div class="metric-value" style="color: #DC2626;">{format_currency_inr(prod_b['price'])}</div>
@@ -752,7 +738,7 @@ elif st.session_state["nav_view"] == "⚔️ Product Comparison":
                 NSS: <strong>{sent_b['nss']:+.1f}</strong> | CSAT: <strong>{sent_b['csat_estimate']:.1f}%</strong> | Aspect Wins: <strong>{comp_result['kpi_summary']['wins_b']}</strong>
             </div>
         </div>
-        """, unsafe_allow_html=True)
+        """)
 
     # Multi-product Radar Chart & Aspect Scorecard
     st.markdown("### 🕸️ **Shared Aspect Dimensions Comparison**")
@@ -845,7 +831,7 @@ elif st.session_state["nav_view"] == "🎯 Smart Recommendations":
         for title, rec_data, color, _ in rec_cards:
             if rec_data and rec_data.get("product"):
                 p = rec_data["product"]
-                st.markdown(f"""
+                render_html_block(f"""
                 <div style="background: #FFFFFF; border: 1px solid #E2E8F0; border-left: 6px solid {color}; border-radius: 12px; padding: 1.2rem; margin-bottom: 1.2rem; box-shadow: 0 2px 6px rgba(0,0,0,0.03);">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.4rem;">
                         <span style="font-weight: 800; font-size: 1.05rem; color: {color};">{title}</span>
@@ -858,7 +844,7 @@ elif st.session_state["nav_view"] == "🎯 Smart Recommendations":
                         <a href="{p.get('amazon_url')}" target="_blank" style="font-size: 0.82rem; color: #FF9900; font-weight: 700; text-decoration: none;">View on Amazon India ↗</a>
                     </div>
                 </div>
-                """, unsafe_allow_html=True)
+                """)
 
         # Transparent Scoring Explanation
         with st.expander("📐 Explain Scoring Methodology & Mathematical Formulas", expanded=False):
