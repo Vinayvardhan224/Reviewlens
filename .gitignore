@@ -1,7 +1,12 @@
 __pycache__/
 *.py[cod]
-.streamlit/secrets.toml
-.env
-.sf/
-.venv/
+*$py.class
+*.so
+.Python
+env/
 venv/
+.venv/
+.sf/
+.idea/
+.vscode/
+*.log

@@ -1,259 +1,155 @@
-# ReviewLens: An NLP-Based Smart Product Review Analysis System
+# ReviewLens: Smart Shopping Platform & NLP Review Intelligence
 
-**ReviewLens** is an end-to-end Natural Language Processing (NLP) intelligence platform designed to analyze e-commerce customer reviews, extract granular aspect-based sentiment, identify fake/spam reviews, discover latent customer discussion topics, and synthesize strategic product recommendations.
-
----
-
-## 🌟 Key Features
-
-1. **Aspect-Based Sentiment Analysis (ABSA)**:
-   - Breaks reviews into discrete clauses (with adversative splitting like *"X is great, but Y is terrible"*).
-   - Deconstructs reviews into core dimensions: **Battery & Power**, **Sound & Audio**, **Build Quality & Durability**, **Display & Visuals**, **Comfort & Ergonomics**, **Performance & Speed**, **Price & Value**, **Ease of Use & Connectivity**, **Customer Support**, and **Packaging & Shipping**.
-   - Computes aspect-specific Net Sentiment Scores (NSS) and polarity distributions.
-
-2. **Multi-Granular Sentiment & Emotion Classification**:
-   - Enhanced VADER sentiment analyzer augmented with domain-specific consumer electronics and retail lexicons.
-   - 5-class psychological consumer emotion mapping (*Joy & Delight*, *Trust & Confidence*, *Frustration & Anger*, *Disappointment*, *Anticipation*).
-   - Predicted star rating (1.0 to 5.0) calibration and confidence scoring.
-
-3. **Spam, Bot & Fake Review Detection**:
-   - Detects rating-sentiment contradictions (e.g. 5-star rating with severe negative complaints, or 1-star rating with promotional praise).
-   - Flags promotional trigger phrases, affiliate links, and WhatsApp spam solicitation.
-   - Identifies copy-paste duplicate reviews across datasets.
-   - Detects excessive capitalization (shouting) and punctuation spam.
-
-4. **Deep NLP & Unsupervised Topic Modeling**:
-   - TF-IDF n-gram extraction isolating positive driver phrases vs. negative pain points.
-   - Latent Dirichlet Allocation (LDA) discovering hidden thematic conversation clusters.
-   - WordCloud generation.
-
-5. **Executive Intelligence & Automated SWOT Synthesis**:
-   - Calculates **Net Sentiment Score (NSS = % Pos - % Neg)** and **Customer Satisfaction Index (CSAT %)**.
-   - Generates automated **SWOT analysis** (Strengths, Weaknesses, Opportunities, Threats).
-   - Produces a prioritized product management & engineering action plan with designated team assignments.
-
-6. **Triple-Interface Architecture**:
-   - **Interactive Web Dashboard**: Modern Streamlit application with interactive Plotly charts, aspect drilldowns, live review tester, and dataset explorer.
-   - **REST API Microservice**: FastAPI server with automatic Swagger UI (`/docs`).
-   - **Rich Command-Line Interface (CLI)**: Terminal analyzer with rich tables and progress bars.
+**ReviewLens** is an independent, explainable Natural Language Processing (NLP) smart shopping platform and decision-support application. It deconstructs e-commerce consumer feedback into granular product dimensions, detects fake rating anomalies, compares electronics side-by-side with multi-dimensional radar charts, and delivers transparent, algorithmic product recommendations.
 
 ---
 
-## 🏗️ Architecture
+## 🌟 Key Capabilities
 
-```mermaid
-flowchart TD
-    A[Raw Product Reviews\nCSV / JSON / Text] --> B[Text Preprocessing & Normalization\nHTML Cleaner, Contraction Expander, Emojis]
-    B --> C[Spam & Fake Review Detector\nDuplicates, Anomalies, Caps, Triggers]
-    B --> D[Multi-Granularity Sentiment & Emotion\nEnhanced VADER + Emotion Lexicon]
-    B --> E[Aspect-Based Sentiment ABSA\nClause Splitting & Aspect Gazetteer]
-    B --> F[Topic Modeling & N-grams\nTF-IDF & Latent Dirichlet Allocation]
-    
-    C --> G[ReviewLens Pipeline Orchestrator]
-    D --> G
-    E --> G
-    F --> G
-    
-    G --> H[Executive Insights Engine\nNSS, CSAT, SWOT, Prioritized Actions]
-    
-    H --> I[Streamlit Web Dashboard]
-    H --> J[FastAPI Microservice]
-    H --> K[Rich CLI Tool]
+1. **Amazon-Inspired Smart Discovery & Catalogue**:
+   - Modern utility header with quick department navigation (*Smartphones, Audio, Laptops, Wearables, Cameras*).
+   - Instant search across product titles, brands, specifications, and descriptions.
+   - Comprehensive multi-attribute filtering (Brand multiselect, INR Price slider, minimum star rating, sort order).
+   - Uniform product cards featuring formatted INR prices (`₹xx,xxx`), star ratings, review counts, outbound retailer links to Amazon India, and a floating **Compare Tray**.
+
+2. **Explainable Aspect-Based Sentiment Analysis (ABSA)**:
+   - Deconstructs feedback into 8 core hardware & software dimensions:
+     - 🚀 **Performance & Speed**
+     - 📱 **Display & Screen**
+     - 📸 **Camera & Photography**
+     - 🔋 **Battery & Charging**
+     - 🛡️ **Build Quality & Design**
+     - 💰 **Value for Money & Price**
+     - 🔊 **Audio & Sound**
+     - ⚙️ **Software & Features**
+   - Calculates **Net Sentiment Score (NSS = % Positive - % Negative)** per aspect from -100 to +100.
+   - Extracts authentic positive and negative quote evidence snippets for full auditability.
+
+3. **Multi-Product Side-by-Side Comparison & Radar Duel**:
+   - Compares 2 or 3 products simultaneously on common hardware specifications.
+   - Computes shared aspect sentiment deltas and highlights head-to-head category winners.
+   - Visualizes multi-trace aspect radar polygons with zero collision.
+   - Delivers transparent overall winner verdicts and rationales.
+
+4. **Algorithmic, Defensible Recommendations**:
+   - Mathematical composite scoring formula:
+     $$\text{Score} = (0.30 \times \text{Star Rating \%}) + (0.45 \times \text{Normalized NSS}) + (0.25 \times \text{CSAT \%})$$
+   - Category-specific winners: *Best Overall*, *Best Budget / Value Pick*, *Best Camera*, *Best Battery*, and *Best Performance*.
+
+5. **Rating Anomaly & Authenticity Detection**:
+   - Spots discrepancies between numeric stars and text sentiment (e.g. 5-star rating with severe negative complaints, or 1-star with glowing praise).
+
+6. **Transparent Data Provenance**:
+   - Prepared demo reviews and specs are explicitly labeled (`data_type='prepared_demo'`) to preserve data integrity.
+   - Outbound links direct users to live Amazon India product listings for real-time market data.
+
+---
+
+## 🏗️ Project Architecture
+
+```
+reviewlens/
+├── app.py                      # Main Streamlit discovery & analytics application
+├── streamlit_app.py            # Streamlit Cloud deployment entrypoint
+├── requirements.txt            # Python dependencies
+├── README.md                   # Documentation & setup instructions
+├── data/
+│   ├── products.csv            # Catalogue dataset (specifications, INR pricing, provenance)
+│   └── reviews.csv             # Verified reviews corpus mapped to product_id
+├── modules/
+│   ├── data_loader.py          # Data ingestion, indexing, and INR currency formatting
+│   ├── validation.py           # Dataset schema validation, ranges, and orphan review checks
+│   ├── preprocessing.py        # Text cleaning, sentence splitting, and negation handling
+│   ├── sentiment.py            # VADER polarity scoring, NSS formula, and anomaly detector
+│   ├── aspect_analysis.py      # Rule-based aspect classification and evidence snippet extractor
+│   ├── keyword_extraction.py   # TF-IDF unigrams & bigrams (positive drivers vs. pain points)
+│   ├── review_summary.py       # Executive summary, buyer personas, and pros/cons synthesis
+│   ├── comparison.py           # Multi-product comparison engine and delta calculator
+│   └── recommendation.py       # Weighted recommendation engine and scoring formulas
+├── components/
+│   ├── header.py               # Amazon-style utility navigation & compare tray counter
+│   ├── product_card.py         # Uniform product discovery cards
+│   ├── filters.py              # Department, brand, price slider, and sorting controls
+│   └── charts.py               # Plotly charts (Aspect breakdown, radar, scatter, TF-IDF bars)
+└── tests/
+    ├── test_data_validation.py # Schema & data integrity tests
+    ├── test_sentiment.py       # Polarity, NSS, and anomaly tests
+    ├── test_aspects.py         # Aspect extraction and aggregation tests
+    └── test_recommendations.py # Recommendation scoring tests
 ```
 
 ---
 
-## 🚀 Quick Start Guide
+## 🚀 Quick Start
 
 ### 1. Installation
-
-Ensure Python 3.9+ is installed, then install the dependencies:
-
+Clone the repository and install required dependencies:
 ```bash
+git clone https://github.com/Vinayvardhan224/reviewlens.git
 cd reviewlens
 pip install -r requirements.txt
 ```
 
-### 2. Launch the Streamlit Web Dashboard
-
+### 2. Run the Web Application
+Launch the Streamlit web dashboard locally:
 ```bash
 streamlit run app.py
 ```
-
-The interactive dashboard will open in your browser at `http://localhost:8501`.
-You can select built-in datasets (including Real-World Amazon Echo Dot), scrape live reviews by ASIN, or upload your own CSV/Excel file.
-
-### 3. Run with Docker & Docker Compose (Zero Setup)
-
-Run the full system (Streamlit Dashboard + FastAPI microservice) in isolated containers:
-
+Or:
 ```bash
-docker compose up --build
+streamlit run streamlit_app.py
 ```
-- Streamlit Web Dashboard: 👉 `http://localhost:8501`
-- FastAPI REST Microservice: 👉 `http://localhost:8000/docs`
+Open your browser at `http://localhost:8501`.
 
-### 4. Deploy 100% Free on Streamlit Cloud
-
-1. Push your repository to GitHub.
-2. Sign in to [share.streamlit.io](https://share.streamlit.io).
-3. Click **New app** → Select your repository → Set Main file to `app.py` → Click **Deploy**!
-*(All dependencies and `.streamlit/config.toml` are pre-configured for automatic deployment).*
-
-### 5. Launch the FastAPI Microservice Locally
-
-```bash
-uvicorn api:app --reload --port 8000
-```
-
-Access the interactive API documentation and Swagger test suite at:
-👉 `http://localhost:8000/docs`
-
-### 6. Use the Command-Line Interface (CLI)
-
-- **Run the Built-in Demo:**
-  ```bash
-  python cli.py demo
-  ```
-
-- **Analyze a Single Review via Terminal:**
-  ```bash
-  python cli.py analyze-text "The battery life is amazing and lasts 3 days, but the earcups hurt after 2 hours." --rating 4.0
-  ```
-
-- **Analyze an Entire Dataset File:**
-  ```bash
-  python cli.py analyze-file data/real_world_amazon_echo_reviews.csv --export output_report.json
-  ```
-
----
-
-## 📡 Live Amazon Review Scraper
-
-ReviewLens includes an anti-blocking Amazon customer review scraper:
-
-```python
-from scraper.amazon_scraper import AmazonReviewScraper
-
-scraper = AmazonReviewScraper()
-
-# Extract reviews by ASIN or Amazon product URL
-reviews = scraper.scrape_product_reviews(asin="B084DCJKSL", max_pages=2)
-print(f"Scraped {len(reviews)} customer reviews!")
-```
-Or use the live scraper directly inside the Streamlit Web Dashboard sidebar!
-
----
-
-## 💻 Python SDK Usage
-
-You can import and use ReviewLens directly in your Python applications or data pipelines:
-
-```python
-from reviewlens import ReviewLensPipeline
-
-pipeline = ReviewLensPipeline()
-
-# 1. Analyze a single review
-analysis = pipeline.analyze_single(
-    text="The AMOLED screen is gorgeous with vibrant colors, but it gets uncomfortably hot during gaming.",
-    rating=3.5
-)
-
-print(f"Sentiment: {analysis.sentiment.label} (Compound: {analysis.sentiment.compound})")
-print(f"Predicted Rating: {analysis.predicted_rating} / 5.0")
-print(f"Is Spam: {analysis.spam.is_spam}")
-
-for aspect in analysis.aspects:
-    print(f"Aspect: {aspect.category} | Polarity: {aspect.sentiment_label} ({aspect.sentiment_score:+.2f})")
-
-# 2. Analyze a batch / dataset
-reviews = [
-    {"id": "1", "text": "Super fast charging and great display!", "rating": 5.0},
-    {"id": "2", "text": "Fragile screen cracked on a tiny drop.", "rating": 1.0},
-]
-result = pipeline.analyze_dataset(reviews)
-
-print(f"Net Sentiment Score: {result.executive_summary.net_sentiment_score}")
-print(f"CSAT: {result.executive_summary.csat_score}%")
-```
-
----
-
-## 🧪 Running Unit Tests
-
-Run the complete test suite:
-
+### 3. Run the Test Suite
+Execute the comprehensive automated test suite (32 tests):
 ```bash
 python -m unittest discover tests
 ```
 
-All tests for text cleaning, sentiment scoring, aspect extraction, spam detection, and the integrated pipeline will execute.
+---
+
+## ☁️ Streamlit Cloud Deployment Guide
+
+When deploying to [Streamlit Community Cloud](https://share.streamlit.io):
+1. **Repository**: `Vinayvardhan224/reviewlens`
+2. **Branch**: `main`
+3. **Main file path**: Set to either `app.py` or `streamlit_app.py` (both files are present and supported).
+4. Click **Deploy!**
 
 ---
 
-## 📁 Project Structure
+## 📊 Dataset Schema
 
-```
-reviewlens/
-│
-├── README.md                      # Complete system documentation & guides
-├── requirements.txt               # Dependencies
-├── setup.py                       # Python package configuration
-├── app.py                         # Interactive Streamlit Web Dashboard
-├── cli.py                         # Rich Command-Line Interface tool
-├── api.py                         # FastAPI REST microservice
-│
-├── reviewlens/                    # Core library package
-│   ├── __init__.py                # Public exports
-│   ├── config.py                  # Aspect taxonomy, lexicon, and spam rules
-│   ├── models.py                  # Pydantic schemas and typed data models
-│   ├── pipeline.py                # ReviewLensPipeline orchestrator
-│   │
-│   ├── preprocessing/             # Text cleaning, emoji normalization, tokenization
-│   │   ├── __init__.py
-│   │   ├── cleaner.py
-│   │   └── tokenizer.py
-│   │
-│   ├── spam_detector/             # Spam, fake reviews & rating-sentiment mismatch
-│   │   ├── __init__.py
-│   │   └── detector.py
-│   │
-│   ├── sentiment/                 # Multi-granularity sentiment & emotion classification
-│   │   ├── __init__.py
-│   │   ├── vader_analyzer.py
-│   │   └── emotion_analyzer.py
-│   │
-│   ├── absa/                      # Aspect-Based Sentiment Analysis
-│   │   ├── __init__.py
-│   │   ├── aspect_categories.py
-│   │   ├── aspect_extractor.py
-│   │   └── aspect_scorer.py
-│   │
-│   ├── topics/                    # TF-IDF keywords & LDA topic modeling
-│   │   ├── __init__.py
-│   │   ├── tfidf_keywords.py
-│   │   └── topic_modeler.py
-│   │
-│   ├── insights/                  # Strategic intelligence & SWOT
-│   │   ├── __init__.py
-│   │   ├── executive_summary.py
-│   │   └── recommender.py
-│   │
-│   └── visualization/             # Interactive Plotly chart builders & WordCloud
-│       ├── __init__.py
-│       └── charts.py
-│
-├── data/                          # Realistic sample datasets with ground truth
-│   ├── sample_headphones_reviews.csv
-│   ├── sample_smartphone_reviews.csv
-│   └── sample_coffee_maker_reviews.csv
-│
-└── tests/                         # Unit and integration test suite
-    ├── __init__.py
-    ├── test_cleaner.py
-    ├── test_sentiment.py
-    ├── test_absa.py
-    ├── test_spam_detector.py
-    └── test_pipeline.py
-```
+### `data/products.csv`
+| Column | Type | Description |
+| :--- | :--- | :--- |
+| `product_id` | string | Unique product slug (e.g. `samsung-galaxy-s24-fe`) |
+| `product_name` | string | Full commercial product name |
+| `brand` | string | Manufacturer brand |
+| `category` | string | Department (*Smartphones, Audio, Laptops, Wearables, Cameras*) |
+| `price` | float | Retail price in Indian Rupees (INR) |
+| `rating` | float | Customer star rating (1.0 to 5.0) |
+| `review_count`| int | Total user ratings |
+| `description` | string | Marketing description and key specs |
+| `amazon_url` | string | Outbound link to Amazon India |
+| `image_url` | string | Product image URL |
+| `specifications` | JSON string | Key-value dictionary of hardware attributes |
+| `data_type` | string | Provenance flag (`prepared_demo`) |
+
+### `data/reviews.csv`
+| Column | Type | Description |
+| :--- | :--- | :--- |
+| `review_id` | string | Unique review identifier (e.g. `REV-S24FE-0001`) |
+| `product_id` | string | References `products.csv.product_id` |
+| `review_text` | string | Consumer review body covering hardware dimensions |
+| `review_rating`| float | Numeric rating (1.0 to 5.0) |
+| `review_date` | string | Date of review publication |
+| `verified_purchase` | boolean | Verified purchase flag |
+| `source` | string | Origin platform tag |
+| `data_type` | string | Provenance flag (`prepared_demo`) |
+
+---
+
+## 📜 License
+MIT License. Open-source for academic and portfolio demonstration.

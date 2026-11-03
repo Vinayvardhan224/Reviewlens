@@ -299,60 +299,81 @@ def generate_wordcloud_image(texts: List[str], max_words: int = 100):
         except Exception:
             return None
 
+
 def create_competitor_radar_chart(
-    comparisons: List[Any],
+    comparisons: list,
     name_a: str = "Product A",
-    name_b: str = "Product B",
+    name_b: str = "Product B"
 ) -> go.Figure:
-    """Compare two products' net sentiment scores across aspects."""
+    """
+    Overlaid Dual Radar Chart comparing two products across all aspect categories.
+    """
     if not comparisons:
         return go.Figure()
 
-    categories = [item.category for item in comparisons]
-    scores_a = [item.score_a for item in comparisons]
-    scores_b = [item.score_b for item in comparisons]
+    categories = [c.category for c in comparisons]
+    scores_a = [c.score_a for c in comparisons]
+    scores_b = [c.score_b for c in comparisons]
 
-    # Close the radar polygons.
-    categories += [categories[0]]
-    scores_a += [scores_a[0]]
-    scores_b += [scores_b[0]]
+    # Close loops
+    categories_closed = categories + [categories[0]]
+    a_closed = scores_a + [scores_a[0]]
+    b_closed = scores_b + [scores_b[0]]
 
     fig = go.Figure()
     fig.add_trace(go.Scatterpolar(
-        r=scores_a,
-        theta=categories,
+        r=a_closed,
+        theta=categories_closed,
         fill="toself",
         name=name_a,
+        line=dict(color="#3B82F6", width=2.5),
+        fillcolor="rgba(59, 130, 246, 0.22)"
     ))
     fig.add_trace(go.Scatterpolar(
-        r=scores_b,
-        theta=categories,
+        r=b_closed,
+        theta=categories_closed,
         fill="toself",
         name=name_b,
+        line=dict(color="#F59E0B", width=2.5),
+        fillcolor="rgba(245, 158, 11, 0.22)"
     ))
 
     fig.update_layout(
-        title="Competitor Aspect Sentiment Comparison",
-        polar=dict(radialaxis=dict(visible=True, range=[-100, 100])),
-        height=450,
-        margin=dict(t=70, b=50, l=60, r=60),
-        legend=dict(orientation="h", yanchor="top", y=-0.15),
+        polar=dict(
+            radialaxis=dict(
+                visible=True,
+                range=[-100, 100],
+                tickvals=[-100, -50, 0, 50, 100]
+            )
+        ),
+        title=dict(text="Dual Aspect Radar Comparison (NSS: -100 to +100)", x=0.05, y=0.95),
+        height=470,
+        margin=dict(t=70, b=80, l=60, r=60),
+        legend=dict(
+            orientation="h",
+            yanchor="top",
+            y=-0.12,
+            xanchor="center",
+            x=0.5
+        )
     )
     return fig
 
 
 def create_head_to_head_bar_chart(
-    comparisons: List[Any],
+    comparisons: list,
     name_a: str = "Product A",
-    name_b: str = "Product B",
+    name_b: str = "Product B"
 ) -> go.Figure:
-    """Compare two products' net sentiment scores with horizontal bars."""
+    """
+    Side-by-side grouped horizontal bar chart comparing aspect Net Sentiment Scores.
+    """
     if not comparisons:
         return go.Figure()
 
-    categories = [item.category for item in comparisons][::-1]
-    scores_a = [item.score_a for item in comparisons][::-1]
-    scores_b = [item.score_b for item in comparisons][::-1]
+    categories = [c.category for c in comparisons][::-1]
+    scores_a = [c.score_a for c in comparisons][::-1]
+    scores_b = [c.score_b for c in comparisons][::-1]
 
     fig = go.Figure()
     fig.add_trace(go.Bar(
@@ -360,21 +381,30 @@ def create_head_to_head_bar_chart(
         x=scores_a,
         name=name_a,
         orientation="h",
+        marker=dict(color="#3B82F6")
     ))
     fig.add_trace(go.Bar(
         y=categories,
         x=scores_b,
         name=name_b,
         orientation="h",
+        marker=dict(color="#F59E0B")
     ))
 
     fig.update_layout(
-        title="Head-to-Head Net Sentiment Score by Aspect",
+        title=dict(text="Aspect-Level Net Sentiment Score (NSS Delta)", x=0.05, y=0.95),
         barmode="group",
-        xaxis=dict(title="Net Sentiment Score", range=[-100, 100]),
+        height=470,
+        xaxis=dict(title="Net Sentiment Score (-100 to +100)", range=[-100, 100]),
         yaxis=dict(title=""),
-        height=450,
-        margin=dict(t=60, b=80, l=150, r=30),
-        legend=dict(orientation="h", yanchor="top", y=-0.2),
+        margin=dict(t=60, b=90, l=150, r=30),
+        legend=dict(
+            orientation="h",
+            yanchor="top",
+            y=-0.18,
+            xanchor="center",
+            x=0.5
+        )
     )
     return fig
+
