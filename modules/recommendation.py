@@ -56,8 +56,11 @@ def generate_category_recommendations(
         summary = item["summary"]
         composite = compute_product_recommendation_score(prod, summary)
 
-        # Map aspects by name
-        aspect_dict = {a["category"]: a.get("net_sentiment_score", 0.0) for a in summary.get("aspects", [])}
+        # Map aspects by name (safely handling None for unevidenced aspects)
+        aspect_dict = {
+            a["category"]: a.get("net_sentiment_score")
+            for a in summary.get("aspects", [])
+        }
 
         price = float(prod.get("price", 0.0))
         scored.append({
@@ -68,6 +71,28 @@ def generate_category_recommendations(
             "aspect_scores": aspect_dict
         })
 
+    def get_candidate_score(item, candidates):
+        for c in candidates:
+            val = item["aspect_scores"].get(c)
+            if val is not None:
+                return float(val), c
+        return None, None
+
+    def pick_best_by_candidates(candidates, fallback_key="composite_score"):
+        best_item = None
+        best_score = -999.0
+        best_matched_aspect = None
+        for it in scored:
+            val, matched = get_candidate_score(it, candidates)
+            if val is not None and val > best_score:
+                best_score = val
+                best_item = it
+                best_matched_aspect = matched
+        if best_item is None:
+            best_item = max(scored, key=lambda x: x[fallback_key])
+            return best_item, None, None
+        return best_item, best_score, best_matched_aspect
+
     # 1. Best Overall
     best_overall = max(scored, key=lambda x: x["composite_score"])
 
@@ -75,14 +100,23 @@ def generate_category_recommendations(
     # Value index: composite_score / (log or normalized price)
     best_budget = max(scored, key=lambda x: (x["composite_score"] / (max(x["price"], 1000.0) ** 0.35)))
 
-    # 3. Best Camera
-    best_camera = max(scored, key=lambda x: x["aspect_scores"].get("Camera & Photography", -100))
+    # 3. Best Camera / Image Quality
+    camera_candidates = ["Camera", "Image quality", "Camera & Photography", "Lens quality"]
+    best_camera, cam_score, cam_aspect = pick_best_by_candidates(camera_candidates)
 
-    # 4. Best Battery
-    best_battery = max(scored, key=lambda x: x["aspect_scores"].get("Battery & Charging", -100))
+    # 4. Best Battery / Endurance
+    battery_candidates = ["Battery", "Battery & Charging", "Cooling"]
+    best_battery, batt_score, batt_aspect = pick_best_by_candidates(battery_candidates)
 
-    # 5. Best Performance
-    best_perf = max(scored, key=lambda x: x["aspect_scores"].get("Performance & Speed", -100))
+    # 5. Best Performance / Core Experience
+    perf_candidates = ["Performance", "Processor", "Sound quality", "Performance & Speed", "GPU"]
+    best_perf, perf_score, perf_aspect = pick_best_by_candidates(perf_candidates)
+
+    def format_score_str(score, aspect_name):
+        if score is not None and aspect_name:
+            sign = "+" if score > 0 else ""
+            return f"{aspect_name} NSS: {sign}{score:.1f}"
+        return "Strong consumer sentiment"
 
     return {
         "best_overall": {
@@ -97,17 +131,17 @@ def generate_category_recommendations(
         },
         "best_camera": {
             "product": best_camera["product"],
-            "score": best_camera["aspect_scores"].get("Camera & Photography", 0.0),
-            "reason": f"Highest customer satisfaction for camera & photo capture (NSS: +{best_camera['aspect_scores'].get('Camera & Photography', 0.0):.1f})."
+            "score": cam_score if cam_score is not None else best_camera["composite_score"],
+            "reason": f"Highest customer satisfaction for capture & optics ({format_score_str(cam_score, cam_aspect)})."
         },
         "best_battery": {
             "product": best_battery["product"],
-            "score": best_battery["aspect_scores"].get("Battery & Charging", 0.0),
-            "reason": f"Highest customer satisfaction for battery endurance and charging speeds (NSS: +{best_battery['aspect_scores'].get('Battery & Charging', 0.0):.1f})."
+            "score": batt_score if batt_score is not None else best_battery["composite_score"],
+            "reason": f"Highest customer satisfaction for battery endurance and runtime ({format_score_str(batt_score, batt_aspect)})."
         },
         "best_performance": {
             "product": best_perf["product"],
-            "score": best_perf["aspect_scores"].get("Performance & Speed", 0.0),
-            "reason": f"Highest customer satisfaction for processor speed, fluid display, and sustained gaming (NSS: +{best_perf['aspect_scores'].get('Performance & Speed', 0.0):.1f})."
+            "score": perf_score if perf_score is not None else best_perf["composite_score"],
+            "reason": f"Highest customer satisfaction for speed and core user experience ({format_score_str(perf_score, perf_aspect)})."
         }
     }

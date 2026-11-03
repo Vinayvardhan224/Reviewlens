@@ -1,7 +1,7 @@
 """
 ReviewLens Product Card Component.
 Presents uniform, structured product cards with imagery, pricing in INR,
-provenance badges, outbound retailer links, and action buttons.
+original price, discount savings badge, star rating, and actions.
 """
 
 from typing import Dict, Any, Callable, Optional
@@ -22,13 +22,24 @@ def render_product_card(
     name = prod.get("product_name", "Product")
     brand = prod.get("brand", "")
     category = prod.get("category", "")
-    price = prod.get("price", 0.0)
-    rating = prod.get("rating", 4.0)
-    review_count = prod.get("review_count", 0)
+    price = float(prod.get("price", 0.0))
+    orig_price = float(prod.get("original_price", price))
+    rating = float(prod.get("rating", 4.0))
+    review_count = int(prod.get("review_count", 0))
     img_url = prod.get("image_url", "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=600")
-    amazon_url = prod.get("amazon_url", f"https://www.amazon.in/s?k={name}")
+    amazon_url = prod.get("product_url") or prod.get("amazon_url") or f"https://www.amazon.in/s?k={name}"
 
     formatted_price = format_currency_inr(price)
+
+    # Calculate discount savings
+    price_html = f'<span style="font-size: 1.25rem; font-weight: 800; color: #0F172A;">{formatted_price}</span>'
+    if orig_price > price:
+        formatted_orig = format_currency_inr(orig_price)
+        discount_pct = int(round((orig_price - price) / orig_price * 100))
+        price_html += (
+            f' <span style="font-size: 0.85rem; color: #94A3B8; text-decoration: line-through;">{formatted_orig}</span>'
+            f' <span style="font-size: 0.72rem; font-weight: 700; color: #16A34A; background: #DCFCE7; padding: 0.15rem 0.45rem; border-radius: 4px;">{discount_pct}% OFF</span>'
+        )
 
     card_html = (
         '<div style="background: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 12px; '
@@ -45,9 +56,7 @@ def render_product_card(
         '<div style="font-weight: 700; font-size: 0.95rem; color: #0F172A; min-height: 2.6rem; line-height: 1.3rem; margin-bottom: 0.4rem; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;">'
         f'{name}'
         '</div>'
-        '<div style="display: flex; align-items: baseline; gap: 0.5rem; margin-bottom: 0.4rem;">'
-        f'<span style="font-size: 1.25rem; font-weight: 800; color: #0F172A;">{formatted_price}</span>'
-        '</div>'
+        f'<div style="display: flex; align-items: baseline; gap: 0.4rem; margin-bottom: 0.4rem; flex-wrap: wrap;">{price_html}</div>'
         '<div style="display: flex; align-items: center; gap: 0.4rem; font-size: 0.85rem; color: #64748B; margin-bottom: 0.8rem;">'
         f'<span style="color: #F59E0B; font-weight: 700;">★ {rating:.1f}</span>'
         f'<span>({review_count:,} ratings)</span>'
@@ -60,7 +69,7 @@ def render_product_card(
 
         col1, col2 = st.columns([1, 1])
         with col1:
-            if st.button("🔍 Inspect", key=f"btn_inspect_{pid}", use_container_width=True):
+            if st.button("🔍 Details", key=f"btn_inspect_{pid}", use_container_width=True):
                 if on_inspect:
                     on_inspect(pid)
 

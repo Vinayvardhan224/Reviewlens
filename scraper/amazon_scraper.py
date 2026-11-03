@@ -148,7 +148,9 @@ class AmazonReviewScraper:
                         "text": text,
                         "rating": rating,
                         "date": date_str,
-                        "verified_purchase": verified
+                        "verified_purchase": verified,
+                        "source": "real_scraped",
+                        "data_type": "scraped"
                     })
             except Exception:
                 continue
@@ -169,7 +171,9 @@ class AmazonReviewScraper:
                 "text": "The audio output on this speaker is surprisingly rich and loud for its compact size. The microphones pick up my voice even with music playing at 80% volume. Setup took less than three minutes via the mobile app.",
                 "rating": 5.0,
                 "date": "2026-02-14",
-                "verified_purchase": True
+                "verified_purchase": True,
+                "source": "synthetic_demo",
+                "data_type": "prepared_demo"
             },
             {
                 "id": f"{asin}_2",
@@ -177,7 +181,9 @@ class AmazonReviewScraper:
                 "text": "Every few days the device drops Wi-Fi connection and glows red. I have to shout across the room for Alexa to wake up. The power adapter cable is also annoyingly short.",
                 "rating": 2.0,
                 "date": "2026-02-20",
-                "verified_purchase": True
+                "verified_purchase": True,
+                "source": "synthetic_demo",
+                "data_type": "prepared_demo"
             },
             {
                 "id": f"{asin}_3",
@@ -185,7 +191,9 @@ class AmazonReviewScraper:
                 "text": "Controlling my Philips Hue lights and smart plugs works seamlessly. Built-in temperature sensor is a great bonus. Definitely worth the price on discount.",
                 "rating": 5.0,
                 "date": "2026-03-01",
-                "verified_purchase": True
+                "verified_purchase": True,
+                "source": "synthetic_demo",
+                "data_type": "prepared_demo"
             },
             {
                 "id": f"{asin}_4",
@@ -193,7 +201,9 @@ class AmazonReviewScraper:
                 "text": "Disappointed by the constant shopping promotions and yellow ring notifications pushing products. Sound is okay, but privacy intrusive features are turning me away.",
                 "rating": 2.0,
                 "date": "2026-03-11",
-                "verified_purchase": True
+                "verified_purchase": True,
+                "source": "synthetic_demo",
+                "data_type": "prepared_demo"
             },
             {
                 "id": f"{asin}_5",
@@ -201,7 +211,9 @@ class AmazonReviewScraper:
                 "text": "AMAZING PRODUCT GET 100 PERCENT CASH BACK CLICK LINK HERE FOR FREE GIFT DISCOUNT CODE FIVE STARS FOR FREE!!!!!!",
                 "rating": 5.0,
                 "date": "2026-03-18",
-                "verified_purchase": False
+                "verified_purchase": False,
+                "source": "synthetic_demo",
+                "data_type": "prepared_demo"
             },
             {
                 "id": f"{asin}_6",
@@ -209,7 +221,9 @@ class AmazonReviewScraper:
                 "text": "The aesthetic blends nicely onto my wooden nightstand. Physical mute button gives reassurance. Bluetooth streaming from my iPhone is stable without lag.",
                 "rating": 4.0,
                 "date": "2026-03-24",
-                "verified_purchase": True
+                "verified_purchase": True,
+                "source": "synthetic_demo",
+                "data_type": "prepared_demo"
             },
             {
                 "id": f"{asin}_7",
@@ -217,7 +231,9 @@ class AmazonReviewScraper:
                 "text": "Woke up to find the unit completely dead and unresponsive to any power outlet. Customer service warranty replacement process was a bureaucratic headache.",
                 "rating": 1.0,
                 "date": "2026-04-02",
-                "verified_purchase": True
+                "verified_purchase": True,
+                "source": "synthetic_demo",
+                "data_type": "prepared_demo"
             },
             {
                 "id": f"{asin}_8",
@@ -225,6 +241,8 @@ class AmazonReviewScraper:
                 "text": "LED clock display auto-dims at night so it does not disturb sleep. Sound quality has noticeably deeper bass than the previous generation.",
                 "rating": 5.0,
                 "date": "2026-04-12",
-                "verified_purchase": True
+                "verified_purchase": True,
+                "source": "synthetic_demo",
+                "data_type": "prepared_demo"
             }
         ]

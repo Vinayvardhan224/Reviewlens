@@ -28,12 +28,19 @@ app = FastAPI(
     version="1.0.0"
 )
 
-# Enable CORS for external frontend or dashboard integration
+import os
+
+# Configurable origins for production security
+ALLOWED_ORIGINS = os.getenv(
+    "REVIEWLENS_ALLOWED_ORIGINS",
+    "http://localhost:8501,http://127.0.0.1:8501,http://localhost:3000,http://127.0.0.1:3000"
+).split(",")
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=ALLOWED_ORIGINS,
     allow_credentials=True,
-    allow_methods=["*"],
+    allow_methods=["GET", "POST", "OPTIONS"],
     allow_headers=["*"],
 )
 
@@ -118,18 +125,50 @@ async def upload_csv_and_analyze(
 ):
     """
     Upload a CSV review dataset and receive complete business intelligence summary.
+    Includes strict validation for file size, row count, schema, and column data types.
     """
-    if not file.filename.endswith(".csv"):
-        raise HTTPException(status_code=400, detail="Only CSV files are supported via this endpoint.")
+    if not file.filename.lower().endswith(".csv"):
+        raise HTTPException(status_code=400, detail="Only CSV files (.csv) are supported via this endpoint.")
 
     contents = await file.read()
+
+    # 1. Size validation (max 15 MB)
+    MAX_SIZE = 15 * 1024 * 1024
+    if len(contents) > MAX_SIZE:
+        raise HTTPException(status_code=413, detail=f"File too large. Maximum allowed size is 15 MB (uploaded {len(contents) / (1024*1024):.1f} MB).")
+
+    if len(contents) == 0:
+        raise HTTPException(status_code=400, detail="Uploaded file is completely empty.")
+
     try:
         df = pd.read_csv(io.BytesIO(contents))
     except Exception as e:
-        raise HTTPException(status_code=400, detail=f"Failed to parse CSV: {str(e)}")
+        raise HTTPException(status_code=400, detail=f"Failed to parse CSV format: {str(e)}")
 
+    # 2. Row count validation
+    if df.empty or len(df) == 0:
+        raise HTTPException(status_code=400, detail="The uploaded CSV contains 0 rows of data.")
+    if len(df) > 50000:
+        raise HTTPException(status_code=400, detail=f"The uploaded CSV exceeds maximum limit of 50,000 rows (found {len(df)} rows).")
+
+    # 3. Schema & column existence
     if text_column not in df.columns:
-        raise HTTPException(status_code=400, detail=f"Text column '{text_column}' not found in CSV.")
+        raise HTTPException(
+            status_code=400,
+            detail=f"Required text column '{text_column}' not found. Available columns: {list(df.columns)}"
+        )
+
+    # 4. Check that text column is not all null
+    valid_text_count = df[text_column].dropna().astype(str).str.strip().ne("").sum()
+    if valid_text_count == 0:
+        raise HTTPException(status_code=400, detail=f"Column '{text_column}' contains no readable review text.")
+
+    # 5. Rating column validation
+    if rating_column and rating_column in df.columns:
+        num_ratings = pd.to_numeric(df[rating_column], errors="coerce")
+        out_of_bounds = ((num_ratings < 1.0) | (num_ratings > 5.0)).sum()
+        if out_of_bounds > 0:
+            raise HTTPException(status_code=400, detail=f"Rating column '{rating_column}' contains {out_of_bounds} values outside the valid 1.0-5.0 range.")
 
     result = pipeline.analyze_dataset(df, text_column=text_column, rating_column=rating_column)
     return result
