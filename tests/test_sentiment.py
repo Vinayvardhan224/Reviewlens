@@ -1,8 +1,17 @@
-"""Unit tests for sentiment analysis and emotion classification."""
+"""
+Unit tests for sentiment analysis, emotion classification, and ReviewLens sentiment module.
+"""
 
 import unittest
+import pandas as pd
 from reviewlens.sentiment.vader_analyzer import SentimentAnalyzer
 from reviewlens.sentiment.emotion_analyzer import EmotionAnalyzer
+from modules.sentiment import (
+    analyze_text_sentiment,
+    compute_nss,
+    detect_rating_anomaly,
+    analyze_reviews_sentiment
+)
 
 
 class TestSentiment(unittest.TestCase):
@@ -26,7 +35,6 @@ class TestSentiment(unittest.TestCase):
         self.assertLessEqual(res.predicted_rating, 2.5)
 
     def test_domain_lexicon(self):
-        # "bricked" and "waste of money" are domain negative additions
         text = "My phone bricked after updating."
         res = self.analyzer.analyze(text)
         self.assertEqual(res.label, "NEGATIVE")
@@ -39,6 +47,22 @@ class TestSentiment(unittest.TestCase):
         neg_text = "Terrible horrible awful scam! I hate this garbage product!"
         dominant_neg, scores_neg = self.emotion_analyzer.analyze(neg_text, sentiment_compound=-0.8)
         self.assertEqual(dominant_neg, "Frustration & Anger")
+
+    def test_module_sentiment_and_nss(self):
+        text = "Superb battery life and blazing fast speed!"
+        sent = analyze_text_sentiment(text)
+        self.assertEqual(sent["label"], "POSITIVE")
+        self.assertGreater(sent["compound"], 0.4)
+
+        nss = compute_nss(80, 20, 100)
+        self.assertEqual(nss, 60.0)
+
+    def test_anomaly_detection(self):
+        res = detect_rating_anomaly(5.0, -0.6)
+        self.assertTrue(res["is_anomaly"])
+
+        res2 = detect_rating_anomaly(5.0, 0.6)
+        self.assertFalse(res2["is_anomaly"])
 
 
 if __name__ == "__main__":
