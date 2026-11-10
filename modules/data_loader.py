@@ -135,3 +135,22 @@ def get_provenance_badge() -> Dict[str, str]:
         "badge_color": "#2563EB",
         "icon": "🛡️"
     }
+
+
+def get_product_image_src(prod: Dict[str, Any]) -> str:
+    """
+    Retrieve locally stored authorized product image as a base64 data URI.
+    Guarantees local rendering without broken external URLs or emojis.
+    """
+    import base64
+    img_path = prod.get("image_path")
+    if img_path:
+        local_file = BASE_DIR / img_path
+        if local_file.exists():
+            try:
+                with open(local_file, "rb") as f:
+                    b64_str = base64.b64encode(f.read()).decode("utf-8")
+                    return f"data:image/jpeg;base64,{b64_str}"
+            except Exception:
+                pass
+    return prod.get("image_url", "https://placehold.co/400x300/e2e8f0/475569?text=Product+Image")

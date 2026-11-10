@@ -101,10 +101,9 @@ class AmazonReviewScraper:
                 print(f"[Error] Failed scraping page {page} for {asin}: {e}")
                 break
 
-        # If live scraping was blocked by Amazon anti-bot, supply high-fidelity realistic dataset for this ASIN
-        if not scraped_reviews:
-            scraped_reviews = self.generate_realistic_product_dataset(asin)
-
+        # Note: In accordance with data provenance standards, we do NOT silently
+        # substitute synthetic reviews when live scraping is blocked or empty.
+        # Scraped results reflect only verified extracted reviews.
         return scraped_reviews
 
     def _parse_review_html(self, html_content: str) -> List[Dict[str, Any]]:
