@@ -10,6 +10,7 @@ benchmark model evaluation metrics, and full access to the original ReviewLens A
 import sys
 from pathlib import Path
 import json
+import html
 import streamlit as st
 import pandas as pd
 import numpy as np
@@ -35,8 +36,8 @@ from modules.aspect_analysis import analyze_reviews_aspects, ASPECT_CAVEAT_DISCL
 from modules.keyword_extraction import extract_keywords_by_sentiment
 from modules.review_summary import generate_executive_summary
 from modules.comparison import compare_two_products
-from modules.recommendation import generate_category_recommendations
-from modules.topic_modeling import extract_topic_clusters
+from modules.recommendation import generate_category_recommendations, RECOMMENDATION_METHODOLOGY_DISCLOSURE
+from modules.topic_modeling import extract_topic_clusters, extract_topic_clusters_result
 from modules.evaluation import evaluate_sentiment_model, evaluate_spam_model, BENCHMARK_DATASET
 from components.header import render_header
 from components.product_card import render_product_card
@@ -182,8 +183,21 @@ if "selected_product_id" not in st.session_state:
 if "nav_view" not in st.session_state:
     st.session_state["nav_view"] = "🏠 Home / Discovery"
 
+if "sidebar_nav_radio" not in st.session_state:
+    st.session_state["sidebar_nav_radio"] = st.session_state["nav_view"]
+
 if "department_filter" not in st.session_state:
     st.session_state["department_filter"] = "All"
+
+
+def navigate_to(view: str) -> None:
+    """
+    Central navigation helper keeping nav_view and sidebar_nav_radio synchronized.
+    Required by Streamlit's keyed radio widget state persistence to prevent programmatic reverts.
+    """
+    st.session_state["nav_view"] = view
+    st.session_state["sidebar_nav_radio"] = view
+    st.rerun()
 
 
 def toggle_compare_item(pid: str):
@@ -203,20 +217,26 @@ def toggle_compare_item(pid: str):
 def inspect_product_action(pid: str):
     """Set selected product and switch view to Product Details."""
     st.session_state["selected_product_id"] = pid
-    st.session_state["nav_view"] = "📦 Product Details"
-    st.rerun()
+    navigate_to("📦 Product Details")
 
 
 def explore_review_intelligence_action(pid: str):
     """Switch directly to deep review intelligence for a product."""
     st.session_state["selected_product_id"] = pid
-    st.session_state["nav_view"] = "🔍 Review Intelligence"
-    st.rerun()
+    navigate_to("🔍 Review Intelligence")
 
 
-# Load catalogue & reviews
-df_products = get_all_products()
-df_reviews = get_all_reviews()
+# Load catalogue & reviews with validation and shared empty-catalogue guard
+try:
+    df_products = get_all_products(validate=True)
+    df_reviews = get_all_reviews(validate=True, products_df=df_products)
+except Exception as e:
+    st.error(f"⚠️ Dataset validation error: {str(e)}")
+    st.stop()
+
+if df_products is None or df_products.empty:
+    st.error("⚠️ The product catalogue is empty or missing. Please ensure data/products.csv is present and valid.")
+    st.stop()
 
 # Top utility header
 render_header(
@@ -267,8 +287,7 @@ if st.session_state["compare_tray"]:
             st.rerun()
 
     if st.sidebar.button("⚔️ Compare Selected Now", use_container_width=True, type="primary"):
-        st.session_state["nav_view"] = "⚔️ Product Comparison"
-        st.rerun()
+        navigate_to("⚔️ Product Comparison")
 else:
     st.sidebar.caption("No products queued. Click '⚔️ Compare' on any product card.")
 
@@ -349,8 +368,7 @@ if st.session_state["nav_view"] == "🏠 Home / Discovery":
             </div>
             """)
             if st.button(f"Browse {dept_id} →", key=f"home_browse_{dept_id}", use_container_width=True):
-                st.session_state["nav_view"] = nav_title
-                st.rerun()
+                navigate_to(nav_title)
 
     st.markdown("<br>", unsafe_allow_html=True)
 
@@ -422,7 +440,7 @@ elif st.session_state["nav_view"] in ["📱 Smartphones", "💻 Laptops", "🎧 
     dept_cat = category_map[view_name]
 
     st.markdown(f"## {view_name}")
-    st.caption("Browse curated electronics, compare specifications, and uncover authentic customer review sentiment.")
+    st.caption("Browse curated electronics, compare specifications, and uncover prepared demo review sentiment.")
 
     # Department-filtered DataFrame
     dept_df = df_products if dept_cat is None else df_products[df_products["category"] == dept_cat]
@@ -436,7 +454,7 @@ elif st.session_state["nav_view"] in ["📱 Smartphones", "💻 Laptops", "🎧 
             label_visibility="collapsed"
         )
     with search_col2:
-        st.caption(f"Showing **{len(dept_df)}** verified items in this department")
+        st.caption(f"Showing **{len(dept_df)}** catalogue items in this department")
 
     # Apply filters
     filters = render_sidebar_filters(dept_df)
@@ -503,7 +521,12 @@ elif st.session_state["nav_view"] == "📦 Product Details":
             toggle_compare_item(selected_pid)
 
     # Breadcrumb
-    st.markdown(f"**Electronics** > **{prod.get('category')}** > **{prod.get('product_name')}**")
+    esc_prod_name = html.escape(str(prod.get('product_name', 'Product')))
+    esc_brand = html.escape(str(prod.get('brand', '')))
+    esc_category = html.escape(str(prod.get('category', '')))
+    esc_description = html.escape(str(prod.get('description', '')))
+
+    st.markdown(f"**Electronics** > **{esc_category}** > **{esc_prod_name}**")
 
     # Main Product Details Card
     orig_price = float(prod.get("original_price", prod.get("price", 0.0)))
@@ -518,18 +541,18 @@ elif st.session_state["nav_view"] == "📦 Product Details":
     with detail_left:
         st.markdown(f"""
         <div style="background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 12px; padding: 1.5rem; text-align: center; height: 320px; display: flex; align-items: center; justify-content: center;">
-            <img src="{img_src}" style="max-height: 280px; max-width: 100%; object-fit: contain; border-radius: 8px;" alt="{prod.get('product_name')}" />
+            <img src="{img_src}" style="max-height: 280px; max-width: 100%; object-fit: contain; border-radius: 8px;" alt="{esc_prod_name}" />
         </div>
         """, unsafe_allow_html=True)
 
     with detail_right:
-        st.markdown(f"## {prod.get('product_name')}")
-        st.markdown(f"**Brand:** {prod.get('brand')} &nbsp;|&nbsp; **Category:** {prod.get('category')} &nbsp;|&nbsp; <span style='background: #EFF6FF; color: #2563EB; font-weight: 600; font-size: 0.8rem; padding: 0.2rem 0.5rem; border-radius: 4px;'>🛡️ Demo (Illustrative Pricing & Ratings)</span>", unsafe_allow_html=True)
+        st.markdown(f"## {esc_prod_name}")
+        st.markdown(f"**Brand:** {esc_brand} &nbsp;|&nbsp; **Category:** {esc_category} &nbsp;|&nbsp; <span style='background: #EFF6FF; color: #2563EB; font-weight: 600; font-size: 0.8rem; padding: 0.2rem 0.5rem; border-radius: 4px;'>🛡️ Demo (Illustrative Pricing & Ratings)</span>", unsafe_allow_html=True)
         st.markdown(f"<div style='margin: 0.8rem 0;'><span style='font-size: 2rem; font-weight: 800; color: #0F172A; margin-right: 0.8rem;'>{format_currency_inr(price)}</span> {discount_html}</div>", unsafe_allow_html=True)
         st.markdown(f"★ **{prod.get('rating'):.1f}** &nbsp;•&nbsp; `{prod.get('review_count'):,}` Illustrative Ratings &nbsp;•&nbsp; `{len(reviews_df)}` Prepared demo reviews analyzed")
-        st.markdown(f"<p style='color: #475569; line-height: 1.6; margin: 0.8rem 0;'>{prod.get('description')}</p>", unsafe_allow_html=True)
+        st.markdown(f"<p style='color: #475569; line-height: 1.6; margin: 0.8rem 0;'>{esc_description}</p>", unsafe_allow_html=True)
 
-        amazon_url = prod.get("product_url") or prod.get("amazon_url") or f"https://www.amazon.in/s?k={prod.get('product_name')}"
+        amazon_url = prod.get("product_url") or prod.get("amazon_url") or f"https://www.amazon.in/s?k={esc_prod_name}"
         btn_c1, btn_c2 = st.columns(2)
         with btn_c1:
             if st.button("🔍 Explore Deep Review Intelligence ↗", key="btn_go_intelligence", type="primary", use_container_width=True):
@@ -537,9 +560,12 @@ elif st.session_state["nav_view"] == "📦 Product Details":
         with btn_c2:
             st.markdown(f"""
             <a href="{amazon_url}" target="_blank" style="display: block; text-align: center; background: #FF9900; color: #131921; font-weight: 700; padding: 0.55rem 1rem; border-radius: 8px; text-decoration: none;">
-                Search on Amazon India ↗ (Verified Search)
+                Search on Amazon India ↗
             </a>
             """, unsafe_allow_html=True)
+
+    if reviews_df.empty:
+        st.info("ℹ️ No prepared demo reviews are available for this specific product in the dataset.")
 
     st.markdown("---")
 
@@ -641,18 +667,22 @@ elif st.session_state["nav_view"] == "🔍 Review Intelligence":
             toggle_compare_item(selected_pid)
 
     # Product Overview Banner
+    p_name_esc = html.escape(str(prod.get('product_name', 'Product')))
+    p_cat_esc = html.escape(str(prod.get('category', '')))
+    p_brand_esc = html.escape(str(prod.get('brand', '')))
+
     render_html_block(f"""
     <div style="background: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 14px; padding: 1.3rem; margin-bottom: 1.5rem; display: flex; flex-wrap: wrap; gap: 1.5rem; align-items: center; box-shadow: 0 4px 12px rgba(0,0,0,0.03);">
         <div style="width: 110px; height: 110px; background: #F8FAFC; border-radius: 10px; display: flex; align-items: center; justify-content: center; overflow: hidden; border: 1px solid #E2E8F0;">
-            <img src="{img_src}" style="max-height: 100%; max-width: 100%; object-fit: contain; border-radius: 6px;" alt="{prod.get('product_name')}" />
+            <img src="{img_src}" style="max-height: 100%; max-width: 100%; object-fit: contain; border-radius: 6px;" alt="{p_name_esc}" />
         </div>
         <div style="flex: 1; min-width: 260px;">
             <div style="display: flex; gap: 0.5rem; margin-bottom: 0.3rem;">
-                <span style="background: #F1F5F9; color: #475569; font-weight: 600; font-size: 0.75rem; padding: 0.2rem 0.6rem; border-radius: 4px;">{prod.get('category')}</span>
-                <span style="background: #EFF6FF; color: #2563EB; font-weight: 600; font-size: 0.75rem; padding: 0.2rem 0.6rem; border-radius: 4px;">{prod.get('brand')}</span>
+                <span style="background: #F1F5F9; color: #475569; font-weight: 600; font-size: 0.75rem; padding: 0.2rem 0.6rem; border-radius: 4px;">{p_cat_esc}</span>
+                <span style="background: #EFF6FF; color: #2563EB; font-weight: 600; font-size: 0.75rem; padding: 0.2rem 0.6rem; border-radius: 4px;">{p_brand_esc}</span>
                 <span style="background: #FEF3C7; color: #D97706; font-weight: 600; font-size: 0.75rem; padding: 0.2rem 0.6rem; border-radius: 4px;">🛡️ Demo Data (Illustrative)</span>
             </div>
-            <h2 style="margin: 0 0 0.3rem 0; font-size: 1.35rem; font-weight: 800; color: #0F172A;">{prod.get('product_name')}</h2>
+            <h2 style="margin: 0 0 0.3rem 0; font-size: 1.35rem; font-weight: 800; color: #0F172A;">{p_name_esc}</h2>
             <div style="display: flex; align-items: baseline; gap: 0.8rem;">
                 <span style="font-size: 1.4rem; font-weight: 800; color: #0F172A;">{format_currency_inr(prod.get('price'))}</span>
                 <span style="color: #F59E0B; font-weight: 700; font-size: 0.95rem;">★ {prod.get('rating'):.1f}</span>
@@ -661,6 +691,9 @@ elif st.session_state["nav_view"] == "🔍 Review Intelligence":
         </div>
     </div>
     """)
+
+    if reviews_df.empty:
+        st.warning(f"⚠️ No customer reviews found for '{p_name_esc}' in the review dataset. Analysis metrics will display baseline zero-review state.")
 
     # Prototype Method Notice
     st.info("ℹ️ **Methodology Notice:** Keyword-based aspect matching is an explainable rule-based prototype method, not a fully trained deep learning ABSA model. Aspect sentiment is computed from sentence-level VADER polarity matching category keywords.")
@@ -758,28 +791,31 @@ elif st.session_state["nav_view"] == "🔍 Review Intelligence":
             key="lda_num_topics_slider"
         )
 
-    review_texts = [r.get("review_text", "") for _, r in reviews_df.iterrows()]
-    discovered_topics = extract_topic_clusters(review_texts, n_topics=num_topics, top_words=6)
+    review_texts = [r.get("review_text", "") for _, r in reviews_df.iterrows() if r.get("review_text")]
+    topic_res = extract_topic_clusters_result(review_texts, n_topics=num_topics, top_words=6)
+    discovered_topics = topic_res.get("clusters", [])
 
     if discovered_topics:
         topic_cols = st.columns(min(len(discovered_topics), 3))
         for idx, t in enumerate(discovered_topics):
             col_target = topic_cols[idx % 3]
             with col_target:
-                pills_html = "".join([f'<span class="topic-pill">{kw}</span>' for kw in t["keywords"]])
-                quotes_html = "".join([f'<li style="font-size: 0.8rem; color: #475569; margin-bottom: 0.4rem; font-style: italic;">"{q[:120]}..."</li>' for q in t["sample_reviews"][:2]])
+                pills_html = "".join([f'<span class="topic-pill">{html.escape(kw)}</span>' for kw in t["keywords"]])
+                quotes_html = "".join([f'<li style="font-size: 0.8rem; color: #475569; margin-bottom: 0.4rem; font-style: italic;">"{html.escape(q[:120])}..."</li>' for q in t["sample_reviews"][:2]])
                 render_html_block(f"""
                 <div class="topic-card">
                     <div style="font-weight: 700; color: #1E293B; font-size: 0.95rem; margin-bottom: 0.5rem;">
-                        🏷️ {t['label']}
+                        🏷️ {html.escape(t['label'])}
                     </div>
                     <div style="margin-bottom: 0.6rem;">{pills_html}</div>
                     <div style="font-size: 0.78rem; font-weight: 600; color: #64748B; margin-bottom: 0.3rem;">Representative Excerpts:</div>
                     <ul style="padding-left: 1.1rem; margin: 0;">{quotes_html}</ul>
                 </div>
                 """)
+    elif topic_res.get("status") == "error":
+        st.warning(f"⚠️ Topic modeling notice: {topic_res.get('error_message', 'Could not run LDA clustering.')}")
     else:
-        st.info("Insufficient text length in review sample to extract multi-topic LDA clusters.")
+        st.info(f"ℹ️ {topic_res.get('error_message', 'Insufficient review text to extract multi-topic LDA clusters.')}")
 
     st.markdown("<br>", unsafe_allow_html=True)
 
@@ -883,13 +919,18 @@ elif st.session_state["nav_view"] == "⚔️ Product Comparison":
 
     # Winner Banner
     winner_badge = "👑" if comp_result["overall_winner"] != "Close Draw" else "🤝"
+    esc_winner = html.escape(str(comp_result['overall_winner']))
+    esc_verdict = html.escape(str(comp_result['verdict_reason']))
+    esc_name_a = html.escape(str(prod_a.get('product_name', 'Product A')))
+    esc_name_b = html.escape(str(prod_b.get('product_name', 'Product B')))
+
     render_html_block(f"""
     <div style="background: linear-gradient(135deg, #131921 0%, #1e293b 100%); padding: 1.5rem; border-radius: 14px; color: white; margin-bottom: 1.5rem; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
         <div style="font-size: 1.3rem; font-weight: 800; color: #FF9900; margin-bottom: 0.3rem;">
-            {winner_badge} Overall Head-to-Head Winner: {comp_result['overall_winner']}
+            {winner_badge} Overall Head-to-Head Winner: {esc_winner}
         </div>
         <p style="margin: 0; font-size: 0.95rem; color: #E2E8F0; line-height: 1.5;">
-            {comp_result['verdict_reason']}
+            {esc_verdict}
         </p>
     </div>
     """)
@@ -899,7 +940,7 @@ elif st.session_state["nav_view"] == "⚔️ Product Comparison":
     with c_kpi1:
         render_html_block(f"""
         <div class="metric-card" style="border-left-color: #2563EB;">
-            <div class="metric-label">{prod_a['product_name']}</div>
+            <div class="metric-label">{esc_name_a}</div>
             <div class="metric-value" style="color: #2563EB;">{format_currency_inr(prod_a['price'])}</div>
             <div class="metric-sub">
                 Rating: <strong>★ {prod_a.get('rating', 4.0):.1f}</strong> | Reviews: <strong>{len(reviews_a)}</strong> | NSS: <strong>{sent_a['nss']:+.1f}</strong> | CSAT: <strong>{sent_a['csat_estimate']:.1f}%</strong> | Aspect Wins: <strong>{comp_result['kpi_summary']['wins_a']}</strong>
@@ -910,7 +951,7 @@ elif st.session_state["nav_view"] == "⚔️ Product Comparison":
     with c_kpi2:
         render_html_block(f"""
         <div class="metric-card" style="border-left-color: #DC2626;">
-            <div class="metric-label">{prod_b['product_name']}</div>
+            <div class="metric-label">{esc_name_b}</div>
             <div class="metric-value" style="color: #DC2626;">{format_currency_inr(prod_b['price'])}</div>
             <div class="metric-sub">
                 Rating: <strong>★ {prod_b.get('rating', 4.0):.1f}</strong> | Reviews: <strong>{len(reviews_b)}</strong> | NSS: <strong>{sent_b['nss']:+.1f}</strong> | CSAT: <strong>{sent_b['csat_estimate']:.1f}%</strong> | Aspect Wins: <strong>{comp_result['kpi_summary']['wins_b']}</strong>
@@ -980,7 +1021,7 @@ elif st.session_state["nav_view"] == "⚔️ Product Comparison":
 # ==========================================
 elif st.session_state["nav_view"] == "🎯 Smart Recommendations":
     st.markdown("## 🎯 **ReviewLens Algorithmic Recommendations**")
-    st.caption("Defensible product recommendations backed by mathematical composite formulas and verified review sentiment.")
+    st.caption("Defensible product recommendations backed by mathematical composite formulas and prepared demo review sentiment.")
 
     dept_opts = ["All Departments"] + sorted([c for c in df_products["category"].dropna().unique()])
     chosen_dept = st.selectbox("Filter Recommendations by Category:", dept_opts, index=0)
@@ -998,7 +1039,8 @@ elif st.session_state["nav_view"] == "🎯 Smart Recommendations":
             "summary": {
                 "nss": s_res["nss"],
                 "csat_estimate": s_res["csat_estimate"],
-                "aspects": a_res["aspects"]
+                "aspects": a_res["aspects"],
+                "total_reviews": s_res["total_reviews"]
             }
         })
 
@@ -1016,29 +1058,44 @@ elif st.session_state["nav_view"] == "🎯 Smart Recommendations":
         for title, rec_data, color in rec_cards:
             if rec_data and rec_data.get("product"):
                 p = rec_data["product"]
-                amazon_url = p.get("product_url") or p.get("amazon_url") or f"https://www.amazon.in/s?k={p.get('product_name')}"
+                esc_p_name = html.escape(str(p.get('product_name', 'Product')))
+                esc_reason = html.escape(str(rec_data.get('reason', '')))
+                amazon_url = p.get("product_url") or p.get("amazon_url") or f"https://www.amazon.in/s?k={esc_p_name}"
                 render_html_block(f"""
                 <div style="background: #FFFFFF; border: 1px solid #E2E8F0; border-left: 6px solid {color}; border-radius: 12px; padding: 1.2rem; margin-bottom: 1.2rem; box-shadow: 0 2px 6px rgba(0,0,0,0.03);">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.4rem;">
                         <span style="font-weight: 800; font-size: 1.05rem; color: {color};">{title}</span>
                         <span style="font-size: 1.2rem; font-weight: 800; color: #0F172A;">{format_currency_inr(p.get('price'))}</span>
                     </div>
-                    <div style="font-size: 1.15rem; font-weight: 700; color: #0F172A; margin-bottom: 0.4rem;">{p.get('product_name')}</div>
-                    <div style="font-size: 0.88rem; color: #475569; line-height: 1.5; margin-bottom: 0.6rem;">{rec_data.get('reason')}</div>
-                    <div style="display: flex; gap: 0.8rem; align-items: center;">
+                    <div style="font-size: 1.15rem; font-weight: 700; color: #0F172A; margin-bottom: 0.4rem;">{esc_p_name}</div>
+                    <div style="font-size: 0.88rem; color: #475569; line-height: 1.5; margin-bottom: 0.6rem;">{esc_reason}</div>
+                    <div style="display: flex; gap: 0.8rem; align-items: center; flex-wrap: wrap;">
                         <span style="font-size: 0.82rem; color: #64748B;">Rating: ★ {p.get('rating'):.1f} ({p.get('review_count'):,} sample ratings)</span>
+                        <span style="font-size: 0.82rem; color: #64748B;">• Reviews Analyzed: {rec_data.get('review_count', 0)}</span>
                         <a href="{amazon_url}" target="_blank" style="font-size: 0.82rem; color: #FF9900; font-weight: 700; text-decoration: none;">Search on Amazon India ↗</a>
                     </div>
                 </div>
                 """)
+            elif rec_data:
+                esc_reason = html.escape(str(rec_data.get('reason', 'Insufficient review evidence for this category award.')))
+                render_html_block(f"""
+                <div style="background: #F8FAFC; border: 1px dashed #CBD5E1; border-left: 6px solid #94A3B8; border-radius: 12px; padding: 1.2rem; margin-bottom: 1.2rem;">
+                    <div style="font-weight: 800; font-size: 1.05rem; color: #64748B; margin-bottom: 0.4rem;">{title}</div>
+                    <div style="font-size: 0.95rem; font-weight: 700; color: #475569; margin-bottom: 0.2rem;">Insufficient review evidence</div>
+                    <div style="font-size: 0.85rem; color: #64748B; line-height: 1.4;">{esc_reason}</div>
+                </div>
+                """)
 
         with st.expander("📐 Explain Scoring Methodology & Mathematical Formulas", expanded=False):
-            st.markdown("""
+            st.markdown(f"""
+            > **Prototype Methodology Disclosure:** {RECOMMENDATION_METHODOLOGY_DISCLOSURE}
+
             **Composite Quality Score Formula (0 to 100):**
-            $$ \\text{Score} = (0.30 \\times \\text{Star Rating \\%}) + (0.45 \\times \\text{Normalized NSS}) + (0.25 \\times \\text{CSAT \\%}) $$
-            - **Star Rating %**: `(Rating / 5.0) * 100`
+            $$ \\text{{Score}} = (0.30 \\times \\text{{Star Rating \\%}}) + (0.45 \\times \\text{{Normalized NSS}}) + (0.25 \\times \\text{{CSAT \\%}}) $$
+            - **Star Rating %**: `(Rating / 5.0) * 100` (from illustrative catalogue metadata)
             - **Normalized NSS**: Rescales `[-100, +100]` to `[0, 100]` via `(NSS + 100) / 2`
             - **CSAT %**: Percentage of total customer feedback expressing positive polarity.
+            - **Aspect Awards**: Strict evidence gating requires products to have verified aspect mentions before receiving Best Camera/Battery/Performance honors.
             - **Budget Index**: Adjusts score by price curve `Score / (Price ^ 0.35)` to identify highest feature return per rupee.
             """)
 
@@ -1055,7 +1112,7 @@ elif st.session_state["nav_view"] == "📊 Original Analytics Dashboard":
 # ==========================================
 elif st.session_state["nav_view"] == "📈 Model Evaluation & Benchmarks":
     st.markdown("## 📈 **Model Evaluation & Ground-Truth Benchmarks**")
-    st.caption("Empirical performance evaluation of VADER Sentiment Classification and Spam Detection against a manually labelled test set (50 ground-truth samples).")
+    st.caption(f"Empirical performance evaluation of VADER Sentiment Classification and Spam Detection against a manually labelled test set ({len(BENCHMARK_DATASET)} ground-truth samples). Serves as a sanity validation suite rather than an empirical proof of generalization on unseen production distribution.")
 
     sentiment_metrics = evaluate_sentiment_model()
     spam_metrics = evaluate_spam_model()

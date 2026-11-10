@@ -66,8 +66,9 @@ class TestDataValidation(unittest.TestCase):
             {"review_id": "r2", "product_id": "p_orphan", "review_text": "Good screen", "review_rating": 4.0}
         ])
         res = validate_reviews_df(reviews_df, products_df=products_df)
-        self.assertTrue(res.is_valid)  # Warnings don't invalidate df unless rating error
-        self.assertTrue(any("orphan" in w.lower() for w in res.warnings))
+        # Strict validation treats orphan product_ids as validation errors
+        self.assertFalse(res.is_valid)
+        self.assertTrue(any("orphan" in e.lower() for e in res.errors))
 
 
 if __name__ == "__main__":

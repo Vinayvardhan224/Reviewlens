@@ -36,35 +36,53 @@ def load_reviews_raw() -> pd.DataFrame:
     return pd.read_csv(path, encoding="utf-8")
 
 
-def get_all_products() -> pd.DataFrame:
+def get_all_products(validate: bool = True) -> pd.DataFrame:
     """Retrieve validated DataFrame of all catalogue products."""
     df = load_products_raw()
     if df.empty:
         return df
 
-    # Ensure price is numeric
-    if "price" in df.columns:
-        df["price_num"] = pd.to_numeric(df["price"], errors="coerce").fillna(0.0)
-    else:
-        df["price_num"] = 0.0
+    if validate:
+        val = validate_products_df(df)
+        if not val.is_valid:
+            raise ValueError(f"Product catalogue validation failed: {'; '.join(val.errors)}")
 
-    # Ensure rating is numeric
+    # Enforce numeric price without silent default imputation
+    if "price" in df.columns:
+        converted_price = pd.to_numeric(df["price"], errors="coerce")
+        if converted_price.isna().any():
+            raise ValueError("Found non-numeric or missing price values in product catalogue.")
+        df["price_num"] = converted_price
+
+    # Enforce numeric rating without silent default imputation
     if "rating" in df.columns:
-        df["rating_num"] = pd.to_numeric(df["rating"], errors="coerce").fillna(4.0)
-    else:
-        df["rating_num"] = 4.0
+        converted_rating = pd.to_numeric(df["rating"], errors="coerce")
+        if converted_rating.isna().any():
+            raise ValueError("Found non-numeric or missing rating values in product catalogue.")
+        df["rating_num"] = converted_rating
 
     return df
 
 
-def get_all_reviews() -> pd.DataFrame:
+def get_all_reviews(validate: bool = True, products_df: Optional[pd.DataFrame] = None) -> pd.DataFrame:
     """Retrieve validated DataFrame of all customer reviews."""
     df = load_reviews_raw()
     if df.empty:
         return df
 
+    if validate:
+        p_ref = products_df if products_df is not None else load_products_raw()
+        val = validate_reviews_df(df, products_df=p_ref)
+        if not val.is_valid:
+            raise ValueError(f"Review dataset validation failed: {'; '.join(val.errors)}")
+
+    # Enforce numeric review rating without silent default imputation
     if "review_rating" in df.columns:
-        df["review_rating_num"] = pd.to_numeric(df["review_rating"], errors="coerce").fillna(3.0)
+        converted_rev_rating = pd.to_numeric(df["review_rating"], errors="coerce")
+        if converted_rev_rating.isna().any():
+            raise ValueError("Found non-numeric or missing review_rating values in reviews dataset.")
+        df["review_rating_num"] = converted_rev_rating
+
     return df
 
 

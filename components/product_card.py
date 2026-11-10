@@ -2,9 +2,11 @@
 ReviewLens Product Card Component.
 Presents uniform, structured product cards with authorized local imagery,
 pricing in INR, original price, discount savings badge, star rating, and actions.
+All user/data strings are escaped against markup injection.
 """
 
 from typing import Dict, Any, Callable, Optional
+import html
 import streamlit as st
 from modules.data_loader import format_currency_inr, get_product_image_src
 
@@ -20,17 +22,22 @@ def render_product_card(
     Uses authorized locally stored images and transparent illustrative pricing labels.
     """
     pid = prod.get("product_id", "")
-    name = prod.get("product_name", "Product")
-    brand = prod.get("brand", "")
-    category = prod.get("category", "")
+    raw_name = prod.get("product_name", "Product")
+    raw_brand = prod.get("brand", "")
+    raw_category = prod.get("category", "")
     price = float(prod.get("price", 0.0))
     orig_price = float(prod.get("original_price", price))
     rating = float(prod.get("rating", 4.0))
     review_count = int(prod.get("review_count", 0))
 
+    # Escape HTML to prevent injection
+    esc_name = html.escape(str(raw_name))
+    esc_brand = html.escape(str(raw_brand))
+    esc_category = html.escape(str(raw_category))
+
     # Retrieve authorized local image
     img_src = get_product_image_src(prod)
-    amazon_url = prod.get("product_url") or prod.get("amazon_url") or f"https://www.amazon.in/s?k={name}"
+    amazon_url = prod.get("product_url") or prod.get("amazon_url") or f"https://www.amazon.in/s?k={raw_name}"
 
     formatted_price = format_currency_inr(price)
 
@@ -50,14 +57,14 @@ def render_product_card(
         '<div style="height: 160px; overflow: hidden; border-radius: 8px; margin-bottom: 0.8rem; '
         'background: #F8FAFC; display: flex; align-items: center; justify-content: center;">'
         f'<img src="{img_src}" style="max-height: 100%; max-width: 100%; object-fit: contain; border-radius: 6px;" '
-        f'alt="{name}" />'
+        f'alt="{esc_name}" />'
         '</div>'
         '<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.3rem;">'
-        f'<span style="background: #F1F5F9; color: #475569; font-size: 0.75rem; font-weight: 600; padding: 0.2rem 0.5rem; border-radius: 4px;">{category} • {brand}</span>'
+        f'<span style="background: #F1F5F9; color: #475569; font-size: 0.75rem; font-weight: 600; padding: 0.2rem 0.5rem; border-radius: 4px;">{esc_category} • {esc_brand}</span>'
         '<span style="background: #EFF6FF; color: #2563EB; font-size: 0.72rem; font-weight: 600; padding: 0.2rem 0.45rem; border-radius: 4px;">🛡️ Demo (Illustrative)</span>'
         '</div>'
         '<div style="font-weight: 700; font-size: 0.95rem; color: #0F172A; min-height: 2.6rem; line-height: 1.3rem; margin-bottom: 0.4rem; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;">'
-        f'{name}'
+        f'{esc_name}'
         '</div>'
         f'<div style="display: flex; align-items: baseline; gap: 0.4rem; margin-bottom: 0.4rem; flex-wrap: wrap;">{price_html}</div>'
         '<div style="display: flex; align-items: center; gap: 0.4rem; font-size: 0.82rem; color: #64748B; margin-bottom: 0.8rem;">'
@@ -86,7 +93,7 @@ def render_product_card(
         link_html = (
             '<div style="text-align: center; margin-top: 0.3rem;">'
             f'<a href="{amazon_url}" target="_blank" style="font-size: 0.78rem; color: #FF9900; font-weight: 600; text-decoration: none;">'
-            'Search on Amazon India ↗ (Verified Search)'
+            'Search on Amazon India ↗'
             '</a>'
             '</div>'
         )

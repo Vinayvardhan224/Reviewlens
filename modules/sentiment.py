@@ -12,9 +12,16 @@ from nltk.sentiment.vader import SentimentIntensityAnalyzer
 # Ensure VADER lexicon is cached and domain-adapted
 try:
     _vader = SentimentIntensityAnalyzer()
-except Exception:
-    nltk.download("vader_lexicon", quiet=True)
-    _vader = SentimentIntensityAnalyzer()
+except (LookupError, AttributeError):
+    try:
+        nltk.download("vader_lexicon", quiet=True)
+        _vader = SentimentIntensityAnalyzer()
+    except Exception as e:
+        raise RuntimeError(
+            "VADER lexicon not found and automatic download failed. "
+            "Please run 'python setup_nltk.py' or 'python -m nltk.downloader vader_lexicon' "
+            "to set up required lexical resources."
+        ) from e
 
 # Domain-specific sentiment modifiers for electronics / product reviews
 DOMAIN_LEXICON = {

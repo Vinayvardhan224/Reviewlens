@@ -6,8 +6,11 @@ using Latent Dirichlet Allocation (LDA) with customizable topic counts.
 
 from typing import List, Dict, Any, Optional
 import re
+import logging
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.decomposition import LatentDirichletAllocation
+
+logger = logging.getLogger("reviewlens.topic_modeling")
 
 # Custom stopwords for electronics domain
 ELECTRONICS_STOPWORDS = {
@@ -18,18 +21,24 @@ ELECTRONICS_STOPWORDS = {
 }
 
 
-def extract_topic_clusters(
+def extract_topic_clusters_result(
     texts: List[str],
     n_topics: int = 3,
     top_words: int = 6
-) -> List[Dict[str, Any]]:
+) -> Dict[str, Any]:
     """
-    Fits Latent Dirichlet Allocation (LDA) over the review texts.
-    Returns a list of topic dictionaries with keywords and representative quotes.
+    Fits Latent Dirichlet Allocation (LDA) over review texts and returns structured status:
+      - status: 'ok', 'insufficient_text', or 'error'
+      - clusters: List of validated topic dicts
+      - error_message: Optional detail on failure
     """
     valid_texts = [t.strip() for t in texts if t and len(t.strip()) > 15]
     if len(valid_texts) < 4:
-        return []
+        return {
+            "status": "insufficient_text",
+            "clusters": [],
+            "error_message": f"Review sample size is too small ({len(valid_texts)} valid reviews; minimum 4 required for LDA clustering)."
+        }
 
     # Bound n_topics between 2 and 6, and not exceeding number of texts // 2
     effective_topics = min(max(2, n_topics), max(2, len(valid_texts) // 3))
@@ -44,14 +53,12 @@ def extract_topic_clusters(
         doc_term_matrix = vectorizer.fit_transform(valid_texts)
         feature_names = vectorizer.get_feature_names_out()
 
-        # Filter out generic domain stop words
-        valid_feature_mask = [
-            f not in ELECTRONICS_STOPWORDS and len(f) > 2
-            for f in feature_names
-        ]
-
         if doc_term_matrix.shape[1] < effective_topics:
-            return []
+            return {
+                "status": "insufficient_text",
+                "clusters": [],
+                "error_message": "Corpus vocabulary size is too small to differentiate distinct latent topics."
+            }
 
         lda = LatentDirichletAllocation(
             n_components=effective_topics,
@@ -76,6 +83,10 @@ def extract_topic_clusters(
             if not chosen_keywords:
                 chosen_keywords = [feature_names[i] for i in sorted_indices[:top_words]]
 
+            # Validate that the topic has at least 2 meaningful terms
+            if len(chosen_keywords) < 2:
+                continue
+
             label = f"Theme {topic_idx + 1}: " + ", ".join([w.title() for w in chosen_keywords[:3]])
 
             # Representative review snippets
@@ -92,6 +103,25 @@ def extract_topic_clusters(
                 "sample_reviews": sample_quotes
             })
 
-        return clusters
-    except Exception:
-        return []
+        return {
+            "status": "ok" if clusters else "insufficient_text",
+            "clusters": clusters,
+            "error_message": None if clusters else "Could not form cohesive clusters with meaningful keywords."
+        }
+    except Exception as e:
+        logger.warning(f"[ReviewLens TopicModeler] Topic extraction failed: {e}")
+        return {
+            "status": "error",
+            "clusters": [],
+            "error_message": f"LDA topic modeling encountered an unexpected error: {str(e)}"
+        }
+
+
+def extract_topic_clusters(
+    texts: List[str],
+    n_topics: int = 3,
+    top_words: int = 6
+) -> List[Dict[str, Any]]:
+    """Convenience helper returning the list of topic clusters."""
+    res = extract_topic_clusters_result(texts, n_topics=n_topics, top_words=top_words)
+    return res["clusters"]
