@@ -6,7 +6,7 @@ Handles missing evidence transparently without assigning false neutral scores.
 
 from typing import Dict, Any, List, Set, Optional
 import re
-from modules.preprocessing import split_into_sentences
+from modules.preprocessing import split_into_sentences, split_into_aspect_clauses
 from modules.sentiment import analyze_text_sentiment, compute_nss
 
 # Section 4.1 Category-Specific Aspect Taxonomy
@@ -195,28 +195,31 @@ def analyze_reviews_aspects(df_reviews, category: Optional[str] = None) -> Dict[
             sentences = split_into_sentences(review_text)
 
             for sent in sentences:
-                aspects_found = extract_aspects_from_sentence(sent, category=category)
-                if not aspects_found:
-                    continue
+                # Split compound sentences on contrastive conjunctions (e.g. 'battery is great, but camera is poor')
+                clauses = split_into_aspect_clauses(sent)
+                for clause in clauses:
+                    aspects_found = extract_aspects_from_sentence(clause, category=category)
+                    if not aspects_found:
+                        continue
 
-                sentiment = analyze_text_sentiment(sent)
-                label = sentiment["label"]
+                    sentiment = analyze_text_sentiment(clause)
+                    label = sentiment["label"]
 
-                for asp in aspects_found:
-                    if asp in aspect_data:
-                        data = aspect_data[asp]
-                        data["mention_count"] += 1
+                    for asp in aspects_found:
+                        if asp in aspect_data:
+                            data = aspect_data[asp]
+                            data["mention_count"] += 1
 
-                        if label == "POSITIVE":
-                            data["pos_count"] += 1
-                            if len(data["positive_quotes"]) < 4:
-                                data["positive_quotes"].append(sent)
-                        elif label == "NEGATIVE":
-                            data["neg_count"] += 1
-                            if len(data["negative_quotes"]) < 4:
-                                data["negative_quotes"].append(sent)
-                        else:
-                            data["neu_count"] += 1
+                            if label == "POSITIVE":
+                                data["pos_count"] += 1
+                                if len(data["positive_quotes"]) < 4:
+                                    data["positive_quotes"].append(sent)
+                            elif label == "NEGATIVE":
+                                data["neg_count"] += 1
+                                if len(data["negative_quotes"]) < 4:
+                                    data["negative_quotes"].append(sent)
+                            else:
+                                data["neu_count"] += 1
 
     # Format summaries and preserve honest 'Insufficient review data' state
     summaries = []

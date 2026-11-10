@@ -57,6 +57,21 @@ def split_into_sentences(text: str) -> List[str]:
     return clean_sentences if clean_sentences else [text.strip()]
 
 
+def split_into_aspect_clauses(sentence: str) -> List[str]:
+    """
+    Split complex sentences containing contrastive conjunctions (e.g. 'but', 'however',
+    'although', 'while', 'yet') into sub-clauses for accurate aspect-level polarity assignment.
+    Example:
+      'The battery is great, but the camera is not good' ->
+      ['The battery is great', 'the camera is not good']
+    """
+    if not sentence:
+        return []
+    clauses = re.split(r",?\s+\b(?:but|however|although|though|yet|whereas|while)\b\s*", sentence, flags=re.I)
+    cleaned = [c.strip() for c in clauses if c.strip() and len(c.strip()) > 3]
+    return cleaned if cleaned else [sentence.strip()]
+
+
 def tokenize(text: str) -> List[str]:
     """Simple alphanumeric tokenizer."""
     if not text:

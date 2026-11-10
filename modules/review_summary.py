@@ -50,19 +50,19 @@ def generate_executive_summary(
 
     # Determine buyer persona
     if nss >= 50:
-        verdict = f"{product_name} enjoys overwhelming customer acclaim (NSS: +{nss:.1f}) with exceptional marks across primary dimensions."
-        persona = "Power users and enthusiasts seeking uncompromising premium quality and reliable day-to-day satisfaction."
+        verdict = f"{product_name} exhibits strong positive review sentiment (NSS: +{nss:.1f}) across primary evaluated dimensions."
+        persona = "Buyers seeking high performance and reliable features across key product dimensions."
     elif nss >= 20:
-        verdict = f"{product_name} delivers a balanced customer experience (NSS: +{nss:.1f}) with standout advantages in specific core features."
-        persona = "Smart shoppers seeking great value, practical features, and solid performance without paying ultra-flagship premiums."
+        verdict = f"{product_name} delivers balanced review sentiment (NSS: +{nss:.1f}) with standout advantages in specific core features."
+        persona = "Value-conscious shoppers seeking practical features and solid everyday performance."
     else:
-        verdict = f"{product_name} exhibits polarized reviews (NSS: {nss:.1f}), with trade-offs that buyers should weigh carefully."
-        persona = "Niche buyers whose specific workflows rely heavily on its unique strengths, while comfortable tolerating its documented limitations."
+        verdict = f"{product_name} exhibits mixed review sentiment (NSS: {nss:.1f}), with trade-offs that buyers should weigh carefully."
+        persona = "Buyers whose specific use-cases align with its strengths, while accepting its noted trade-offs."
 
     return {
         "verdict": verdict,
         "persona": persona,
         "pros": pros,
         "cons": cons,
-        "sample_disclosure": f"Synthesized from {total_reviews} verified customer reviews (NSS: {nss:+.1f}, CSAT: {csat:.1f}%)."
+        "sample_disclosure": f"Synthesized from {total_reviews} prepared demo reviews (NSS: {nss:+.1f}, CSAT: {csat:.1f}%)."
     }

@@ -120,7 +120,7 @@ def validate_reviews_df(df: pd.DataFrame, products_df: Optional[pd.DataFrame] = 
     if "review_id" in df.columns:
         dups = df["review_id"].duplicated().sum()
         if dups > 0:
-            res.add_warning(f"Found {dups} duplicate review_id values.")
+            res.add_error(f"Found {dups} duplicate review_id values.")
 
     # 3. Empty review texts
     if "review_text" in df.columns:
@@ -141,7 +141,7 @@ def validate_reviews_df(df: pd.DataFrame, products_df: Optional[pd.DataFrame] = 
         review_product_ids = set(df["product_id"].dropna().unique())
         orphan_ids = review_product_ids - valid_product_ids
         if orphan_ids:
-            res.add_warning(f"Found reviews for {len(orphan_ids)} unknown product IDs (orphans): {list(orphan_ids)[:3]}")
+            res.add_error(f"Found reviews for {len(orphan_ids)} unknown product IDs (orphans): {list(orphan_ids)[:3]}")
 
         # Review count distribution & sample size warnings
         counts_per_product = df["product_id"].value_counts()
