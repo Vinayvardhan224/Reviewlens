@@ -183,6 +183,12 @@ if "selected_product_id" not in st.session_state:
 if "nav_view" not in st.session_state:
     st.session_state["nav_view"] = "🏠 Home / Discovery"
 
+# Handle pending programmatic navigation before widget instantiation
+if st.session_state.get("pending_nav"):
+    target_nav = st.session_state.pop("pending_nav")
+    st.session_state["sidebar_nav_radio"] = target_nav
+    st.session_state["nav_view"] = target_nav
+
 if "sidebar_nav_radio" not in st.session_state:
     st.session_state["sidebar_nav_radio"] = st.session_state["nav_view"]
 
@@ -193,10 +199,11 @@ if "department_filter" not in st.session_state:
 def navigate_to(view: str) -> None:
     """
     Central navigation helper keeping nav_view and sidebar_nav_radio synchronized.
-    Required by Streamlit's keyed radio widget state persistence to prevent programmatic reverts.
+    Queues navigation in pending_nav so sidebar_nav_radio is safely updated at the start
+    of the rerun before widget instantiation, preventing StreamlitWidgetAlreadyInstantiatedError.
     """
     st.session_state["nav_view"] = view
-    st.session_state["sidebar_nav_radio"] = view
+    st.session_state["pending_nav"] = view
     st.rerun()
 
 
@@ -263,11 +270,9 @@ NAV_OPTIONS = [
     "📖 Methodology & Transparency"
 ]
 
-current_view_idx = NAV_OPTIONS.index(st.session_state["nav_view"]) if st.session_state["nav_view"] in NAV_OPTIONS else 0
 selected_view = st.sidebar.radio(
     "Go to",
     NAV_OPTIONS,
-    index=current_view_idx,
     key="sidebar_nav_radio"
 )
 st.session_state["nav_view"] = selected_view
