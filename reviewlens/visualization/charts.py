@@ -301,19 +301,28 @@ def generate_wordcloud_image(texts: List[str], max_words: int = 100):
 
 
 def create_competitor_radar_chart(
-    comparisons: list,
+    comparisons: Any,
     name_a: str = "Product A",
     name_b: str = "Product B"
 ) -> go.Figure:
     """
     Overlaid Dual Radar Chart comparing two products across all aspect categories.
+    Accepts either a list of AspectComparison objects or a ProductComparisonReport.
     """
+    if comparisons is None:
+        return go.Figure()
+
+    if hasattr(comparisons, "aspect_comparisons"):
+        name_a = getattr(comparisons, "product_a_name", name_a)
+        name_b = getattr(comparisons, "product_b_name", name_b)
+        comparisons = comparisons.aspect_comparisons
+
     if not comparisons:
         return go.Figure()
 
     categories = [c.category for c in comparisons]
-    scores_a = [c.score_a for c in comparisons]
-    scores_b = [c.score_b for c in comparisons]
+    scores_a = [c.score_a if c.score_a is not None else 0.0 for c in comparisons]
+    scores_b = [c.score_b if c.score_b is not None else 0.0 for c in comparisons]
 
     # Close loops
     categories_closed = categories + [categories[0]]
@@ -361,19 +370,28 @@ def create_competitor_radar_chart(
 
 
 def create_head_to_head_bar_chart(
-    comparisons: list,
+    comparisons: Any,
     name_a: str = "Product A",
     name_b: str = "Product B"
 ) -> go.Figure:
     """
     Side-by-side grouped horizontal bar chart comparing aspect Net Sentiment Scores.
+    Accepts either a list of AspectComparison objects or a ProductComparisonReport.
     """
+    if comparisons is None:
+        return go.Figure()
+
+    if hasattr(comparisons, "aspect_comparisons"):
+        name_a = getattr(comparisons, "product_a_name", name_a)
+        name_b = getattr(comparisons, "product_b_name", name_b)
+        comparisons = comparisons.aspect_comparisons
+
     if not comparisons:
         return go.Figure()
 
     categories = [c.category for c in comparisons][::-1]
-    scores_a = [c.score_a for c in comparisons][::-1]
-    scores_b = [c.score_b for c in comparisons][::-1]
+    scores_a = [c.score_a if c.score_a is not None else 0.0 for c in comparisons][::-1]
+    scores_b = [c.score_b if c.score_b is not None else 0.0 for c in comparisons][::-1]
 
     fig = go.Figure()
     fig.add_trace(go.Bar(

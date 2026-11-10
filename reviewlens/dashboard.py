@@ -203,13 +203,14 @@ def render_original_dashboard():
             comp_report = ProductComparator.compare(res_a, res_b, name_a=name_a, name_b=name_b)
 
             winner_emoji = "👑" if "Draw" not in comp_report.overall_winner else "🤝"
-            st.success(f"{winner_emoji} Overall Verdict: **{comp_report.overall_winner} Takes the Lead**\n\n{comp_report.summary}")
+            verdict_text = getattr(comp_report, "summary", getattr(comp_report, "executive_verdict", ""))
+            st.success(f"{winner_emoji} Overall Verdict: **{comp_report.overall_winner} Takes the Lead**\n\n{verdict_text}")
 
             cp1, cp2 = st.columns(2)
             with cp1:
-                st.plotly_chart(create_competitor_radar_chart(comp_report), use_container_width=True)
+                st.plotly_chart(create_competitor_radar_chart(comp_report.aspect_comparisons, name_a=comp_report.product_a_name, name_b=comp_report.product_b_name), use_container_width=True)
             with cp2:
-                st.plotly_chart(create_head_to_head_bar_chart(comp_report), use_container_width=True)
+                st.plotly_chart(create_head_to_head_bar_chart(comp_report.aspect_comparisons, name_a=comp_report.product_a_name, name_b=comp_report.product_b_name), use_container_width=True)
 
         # TAB 4: DEEP NLP & TOPICS
         with tabs[3]:

@@ -27,6 +27,8 @@ class TestComparison(unittest.TestCase):
 
         self.assertIsNotNone(report.overall_winner)
         self.assertIsNotNone(report.executive_verdict)
+        self.assertIsNotNone(report.summary)
+        self.assertEqual(report.summary, report.executive_verdict)
         self.assertTrue(len(report.aspect_comparisons) > 0)
 
 
