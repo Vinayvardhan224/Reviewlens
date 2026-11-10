@@ -36,6 +36,7 @@ class ProductComparisonReport(BaseModel):
     a_strengths: List[str]
     b_strengths: List[str]
     executive_verdict: str
+    summary: Optional[str] = None
 
 
 class ProductComparator:
@@ -156,5 +157,6 @@ class ProductComparator:
             aspect_comparisons=aspect_comparisons,
             a_strengths=a_strengths,
             b_strengths=b_strengths,
-            executive_verdict=verdict
+            executive_verdict=verdict,
+            summary=verdict
         )
