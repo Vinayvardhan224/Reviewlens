@@ -29,18 +29,27 @@ from modules.comparison import compare_two_products
 class TestAuditFixes(unittest.TestCase):
 
     def test_navigation_state_sync_concept(self):
-        """Verify navigation helper logic sets both nav_view and sidebar_nav_radio."""
+        """Verify navigation helper logic sets nav_view, pending_nav, and updates sidebar_nav_radio safely."""
         session_state = {"nav_view": "🏠 Home / Discovery", "sidebar_nav_radio": "🏠 Home / Discovery"}
         
         def navigate_to_mock(view: str):
             session_state["nav_view"] = view
-            session_state["sidebar_nav_radio"] = view
+            session_state["pending_nav"] = view
+
+        def resolve_pending_nav():
+            if session_state.get("pending_nav"):
+                target = session_state.pop("pending_nav")
+                session_state["sidebar_nav_radio"] = target
+                session_state["nav_view"] = target
 
         navigate_to_mock("📱 Smartphones")
         self.assertEqual(session_state["nav_view"], "📱 Smartphones")
+        self.assertEqual(session_state["pending_nav"], "📱 Smartphones")
+        resolve_pending_nav()
         self.assertEqual(session_state["sidebar_nav_radio"], "📱 Smartphones")
 
         navigate_to_mock("⚔️ Product Comparison")
+        resolve_pending_nav()
         self.assertEqual(session_state["nav_view"], "⚔️ Product Comparison")
         self.assertEqual(session_state["sidebar_nav_radio"], "⚔️ Product Comparison")
 
