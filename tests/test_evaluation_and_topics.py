@@ -5,6 +5,7 @@ Unit tests for ReviewLens Evaluation Benchmarks and Topic Modeling.
 import unittest
 from modules.evaluation import evaluate_sentiment_model, evaluate_spam_model
 from modules.topic_modeling import extract_topic_clusters
+from reviewlens.visualization.charts import create_keyword_bar_chart
 
 
 class TestEvaluationAndTopics(unittest.TestCase):
@@ -49,6 +50,25 @@ class TestEvaluationAndTopics(unittest.TestCase):
             self.assertIn("label", c)
             self.assertIn("keywords", c)
             self.assertIn("sample_reviews", c)
+
+    def test_create_keyword_bar_chart_signatures(self):
+        """Verify create_keyword_bar_chart supports both single-column and dual-column signatures without TypeError."""
+        pos_kw = [{"term": "battery", "score": 0.8}, {"term": "screen", "score": 0.6}]
+        neg_kw = [{"term": "overheating", "score": 0.7}, {"term": "slow", "score": 0.5}]
+
+        # 1. Single column signature with title and color (used in Original Dashboard)
+        fig_pos = create_keyword_bar_chart(pos_kw, "Top Positive Feedback Drivers", "#10B981")
+        self.assertIsNotNone(fig_pos)
+        self.assertEqual(len(fig_pos.data), 1)
+
+        fig_neg = create_keyword_bar_chart(neg_kw, "Top Customer Pain Points", "#EF4444")
+        self.assertIsNotNone(fig_neg)
+        self.assertEqual(len(fig_neg.data), 1)
+
+        # 2. Dual comparison signature
+        fig_dual = create_keyword_bar_chart(pos_kw, neg_kw)
+        self.assertIsNotNone(fig_dual)
+        self.assertEqual(len(fig_dual.data), 2)
 
 
 if __name__ == "__main__":

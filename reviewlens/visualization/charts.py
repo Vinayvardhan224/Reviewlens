@@ -197,33 +197,86 @@ def create_rating_vs_sentiment_scatter(reviews: List[ReviewAnalysis]) -> go.Figu
     return fig
 
 
-def create_keyword_bar_chart(pos_keywords: List[Dict[str, Any]], neg_keywords: List[Dict[str, Any]]) -> go.Figure:
+def create_keyword_bar_chart(
+    pos_keywords_or_items: Any,
+    neg_keywords_or_title: Any = None,
+    color: Optional[str] = None
+) -> go.Figure:
     """
-    Create dual horizontal bar chart comparing top positive vs negative driver keywords.
-    Clean separated legend at bottom.
+    Creates a horizontal bar chart of top keyword drivers.
+    Supports two calling conventions:
+      1. Single keyword list with custom title and color:
+         create_keyword_bar_chart(keywords, title="Top Positive Drivers", color="#10B981")
+      2. Dual positive vs negative comparison:
+         create_keyword_bar_chart(pos_keywords, neg_keywords)
     """
     fig = go.Figure()
 
+    # Check if second argument is a string (indicating title for a single keyword chart)
+    # or if color is explicitly provided
+    if isinstance(neg_keywords_or_title, str) or color is not None:
+        title = neg_keywords_or_title if isinstance(neg_keywords_or_title, str) else "Top Key Phrases (TF-IDF)"
+        bar_color = color or COLOR_MAP.get("POSITIVE", "#10B981")
+        items = pos_keywords_or_items or []
+
+        terms = []
+        scores = []
+        for k in items[:10]:
+            if isinstance(k, dict):
+                term = k.get("term") or k.get("keyword") or k.get("phrase") or str(k)
+                score = k.get("score") or k.get("weight") or k.get("frequency") or 1.0
+            elif isinstance(k, (list, tuple)) and len(k) >= 2:
+                term = str(k[0])
+                score = float(k[1])
+            else:
+                term = str(k)
+                score = 1.0
+            terms.append(term)
+            scores.append(score)
+
+        if terms:
+            fig.add_trace(go.Bar(
+                y=terms[::-1],
+                x=scores[::-1],
+                name=title,
+                orientation="h",
+                marker=dict(color=bar_color)
+            ))
+
+        fig.update_layout(
+            title=dict(text=title, x=0.05, y=0.95),
+            height=420,
+            xaxis=dict(title="Importance / Frequency Score"),
+            yaxis=dict(title=""),
+            margin=dict(t=60, b=50, l=120, r=20),
+            showlegend=False
+        )
+        return fig
+
+    # Otherwise, handle dual positive vs negative comparison
+    pos_keywords = pos_keywords_or_items or []
+    neg_keywords = neg_keywords_or_title or []
+
     if pos_keywords:
-        pos_terms = [k["term"] for k in pos_keywords[:10]][::-1]
-        pos_scores = [k["score"] for k in pos_keywords[:10]][::-1]
+        pos_terms = [k.get("term", k.get("keyword", str(k))) if isinstance(k, dict) else str(k) for k in pos_keywords[:10]][::-1]
+        pos_scores = [k.get("score", k.get("weight", 1.0)) if isinstance(k, dict) else 1.0 for k in pos_keywords[:10]][::-1]
         fig.add_trace(go.Bar(
             y=pos_terms,
             x=pos_scores,
             name="Positive Drivers",
             orientation="h",
-            marker=dict(color=COLOR_MAP["POSITIVE"])
+            marker=dict(color=COLOR_MAP.get("POSITIVE", "#10B981"))
         ))
 
     if neg_keywords:
-        neg_terms = [k["term"] for k in neg_keywords[:10]][::-1]
-        neg_scores = [k["score"] for k in neg_keywords[:10]][::-1]
+        neg_terms = [k.get("term", k.get("keyword", str(k))) if isinstance(k, dict) else str(k) for k in neg_keywords[:10]][::-1]
+        neg_scores = [k.get("score", k.get("weight", 1.0)) if isinstance(k, dict) else 1.0 for k in neg_keywords[:10]][::-1]
         fig.add_trace(go.Bar(
             y=neg_terms,
             x=neg_scores,
             name="Negative Pain Points",
             orientation="h",
-            marker=dict(color=COLOR_MAP["NEGATIVE"])
+            marker=dict(color=COLOR_MAP.get("NEGATIVE", "#EF4444"))
         ))
 
     fig.update_layout(
