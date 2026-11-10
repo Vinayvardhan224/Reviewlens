@@ -151,5 +151,26 @@ When deploying to [Streamlit Community Cloud](https://share.streamlit.io):
 
 ---
 
+## 🛠️ Installation & NLTK Setup
+
+### 1. Install Dependencies
+```bash
+pip install -r requirements.txt
+```
+
+### 2. NLTK Lexical Resource Setup
+ReviewLens requires NLTK lexicons (`vader_lexicon`, `punkt`, `punkt_tab`, `stopwords`, `wordnet`) for Aspect-Based Sentiment Analysis and tokenization. Run the dedicated setup script:
+```bash
+python setup_nltk.py
+```
+
+### 3. Launch the Application
+```bash
+streamlit run app.py
+```
+Both the **Smart Shopping & Product Intelligence Platform** and the **Original ReviewLens Analytics Dashboard** (with its 7 interactive tabs) are accessible through the sidebar navigation.
+
+---
+
 ## 📜 License
 MIT License. Open-source for academic and portfolio demonstration.
