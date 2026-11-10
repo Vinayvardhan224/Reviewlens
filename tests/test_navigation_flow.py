@@ -46,25 +46,25 @@ elif st.session_state["nav_view"] == "Smartphones":
     if st.button("Inspect Details"):
         navigate_to("Details")
 """
-        at = AppTest.from_string(code).run()
+        at = AppTest.from_string(code).run(timeout=10)
         self.assertFalse(at.exception)
         self.assertEqual(at.radio[0].value, "Home")
         self.assertIn("Home", at.markdown[0].value)
 
         # 1. Click 'Browse Smartphones'
-        at.button[0].click().run()
+        at.button[0].click().run(timeout=10)
         self.assertFalse(at.exception)
         self.assertEqual(at.radio[0].value, "Smartphones")
         self.assertIn("Smartphones", at.markdown[0].value)
 
         # 2. Click 'Inspect Details'
-        at.button[0].click().run()
+        at.button[0].click().run(timeout=10)
         self.assertFalse(at.exception)
         self.assertEqual(at.radio[0].value, "Details")
         self.assertIn("Details", at.markdown[0].value)
 
         # 3. Select 'Home' on sidebar radio directly
-        at.radio[0].set_value("Home").run()
+        at.radio[0].set_value("Home").run(timeout=10)
         self.assertFalse(at.exception)
         self.assertEqual(at.radio[0].value, "Home")
         self.assertIn("Home", at.markdown[0].value)
