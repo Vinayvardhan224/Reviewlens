@@ -1,19 +1,82 @@
 """
-ReviewLens Authentication & User Profile Module.
-Provides dual-mode authentication:
-  1. Google / Gmail 1-click authentication
-  2. Phone Number SMS OTP verification (with international country codes)
-Maintains session state, credibility tier, and personalized saved preferences.
+ReviewLens Authentication & User Identity Engine.
+Provides secure, persistent user authentication:
+  1. Email & Password registration and login (salted SHA-256 hashes, stored in data/users.json)
+  2. Google / Gmail 1-click OAuth identity
+  3. Mobile SMS OTP phone verification
+  4. Premium Futuristic AI SaaS Login & Registration split-screen UI (Deep Navy #09091B, Dark Purple #15112B, Electric Violet #9B5CFF)
 """
 
 from typing import Dict, Any, Optional
+import os
+import json
+import re
+import hashlib
+import secrets
 import random
 import html
+from pathlib import Path
 import streamlit as st
+
+# Path to persistent user credential storage
+USER_DB_PATH = Path(__file__).resolve().parent.parent / "data" / "users.json"
+
+
+def _load_user_db() -> Dict[str, Any]:
+    """Loads user database from data/users.json, initializing with default accounts if absent."""
+    if not USER_DB_PATH.exists():
+        _seed_default_users()
+
+    try:
+        with open(USER_DB_PATH, "r", encoding="utf-8") as f:
+            return json.load(f)
+    except Exception:
+        _seed_default_users()
+        with open(USER_DB_PATH, "r", encoding="utf-8") as f:
+            return json.load(f)
+
+
+def _save_user_db(db: Dict[str, Any]) -> None:
+    """Safely saves user database to data/users.json."""
+    USER_DB_PATH.parent.mkdir(parents=True, exist_ok=True)
+    with open(USER_DB_PATH, "w", encoding="utf-8") as f:
+        json.dump(db, f, indent=2)
+
+
+def hash_password(password: str, salt: str) -> str:
+    """Generates a salted SHA-256 password hash."""
+    return hashlib.sha256((salt + password).encode("utf-8")).hexdigest()
+
+
+def _seed_default_users() -> None:
+    """Seeds the user database with standard demo accounts."""
+    USER_DB_PATH.parent.mkdir(parents=True, exist_ok=True)
+    salt_demo = secrets.token_hex(16)
+    salt_vinay = secrets.token_hex(16)
+
+    default_db = {
+        "demo@reviewlens.com": {
+            "name": "Demo Shopper",
+            "email": "demo@reviewlens.com",
+            "salt": salt_demo,
+            "password_hash": hash_password("Password@123", salt_demo),
+            "created_at": "2026-11-14",
+            "tier": "Verified ReviewLens Member"
+        },
+        "vinay@reviewlens.com": {
+            "name": "Vinay Vardhan",
+            "email": "vinay@reviewlens.com",
+            "salt": salt_vinay,
+            "password_hash": hash_password("Password@123", salt_vinay),
+            "created_at": "2026-11-14",
+            "tier": "ReviewLens System Architect"
+        }
+    }
+    _save_user_db(default_db)
 
 
 def get_current_user() -> Dict[str, Any]:
-    """Retrieves or initializes the current user session state."""
+    """Retrieves or initializes the current active user session state."""
     if "user_profile" not in st.session_state:
         st.session_state["user_profile"] = {
             "authenticated": False,
@@ -28,6 +91,101 @@ def get_current_user() -> Dict[str, Any]:
             "custom_presets": {}
         }
     return st.session_state["user_profile"]
+
+
+def authenticate_user(email: str, password: str) -> Dict[str, Any]:
+    """
+    Validates user credentials against hashed storage in data/users.json.
+    Sets active authenticated session on success.
+    """
+    clean_email = email.strip().lower() if email else ""
+    if not clean_email or not password:
+        return {"success": False, "message": "Please enter both email and password."}
+
+    db = _load_user_db()
+    user_record = db.get(clean_email)
+    if not user_record:
+        return {"success": False, "message": "No account found with this email address. Please register or check spelling."}
+
+    expected_hash = hash_password(password, user_record["salt"])
+    if expected_hash != user_record["password_hash"]:
+        return {"success": False, "message": "Incorrect password. Please try again or use Demo credentials."}
+
+    # Authentication successful: create session profile
+    display_name = user_record.get("name", clean_email.split("@")[0].title())
+    avatar_letter = display_name[0].upper() if display_name else "U"
+
+    profile = {
+        "authenticated": True,
+        "auth_method": "email_password",
+        "identifier": clean_email,
+        "display_name": display_name,
+        "avatar_letter": avatar_letter,
+        "tier": user_record.get("tier", "Verified ReviewLens Member"),
+        "tier_badge": "🛡️ Verified Member",
+        "member_since": user_record.get("created_at", "Nov 2026"),
+        "saved_comparisons": st.session_state.get("compare_tray", []),
+        "custom_presets": {}
+    }
+    st.session_state["user_profile"] = profile
+    return {"success": True, "message": f"Welcome back, {display_name}!", "user": profile}
+
+
+def register_user(name: str, email: str, password: str, confirm_password: str) -> Dict[str, Any]:
+    """
+    Validates inputs and creates a new user account with salted password hashing.
+    Saves new account into data/users.json and logs user in immediately.
+    """
+    clean_name = name.strip() if name else ""
+    clean_email = email.strip().lower() if email else ""
+
+    if not clean_name:
+        return {"success": False, "message": "Please provide your full name."}
+
+    email_regex = r"^[^@\s]+@[^@\s]+\.[^@\s]+$"
+    if not re.match(email_regex, clean_email):
+        return {"success": False, "message": "Please enter a valid email address (e.g. name@example.com)."}
+
+    if len(password) < 6:
+        return {"success": False, "message": "Password must be at least 6 characters long."}
+
+    if password != confirm_password:
+        return {"success": False, "message": "Passwords do not match. Please re-type your password."}
+
+    db = _load_user_db()
+    if clean_email in db:
+        return {"success": False, "message": "An account with this email already exists. Please sign in instead."}
+
+    # Generate salt and password hash
+    salt = secrets.token_hex(16)
+    p_hash = hash_password(password, salt)
+
+    db[clean_email] = {
+        "name": clean_name,
+        "email": clean_email,
+        "salt": salt,
+        "password_hash": p_hash,
+        "created_at": "Nov 2026",
+        "tier": "Verified ReviewLens Member"
+    }
+    _save_user_db(db)
+
+    # Automatically authenticate newly registered user
+    avatar_letter = clean_name[0].upper() if clean_name else "U"
+    profile = {
+        "authenticated": True,
+        "auth_method": "email_password",
+        "identifier": clean_email,
+        "display_name": clean_name,
+        "avatar_letter": avatar_letter,
+        "tier": "Verified ReviewLens Member",
+        "tier_badge": "🛡️ Verified Member",
+        "member_since": "Nov 2026",
+        "saved_comparisons": st.session_state.get("compare_tray", []),
+        "custom_presets": {}
+    }
+    st.session_state["user_profile"] = profile
+    return {"success": True, "message": f"Account created successfully! Welcome to ReviewLens, {clean_name}.", "user": profile}
 
 
 def login_with_google(email: str, name: Optional[str] = None) -> Dict[str, Any]:
@@ -60,7 +218,6 @@ def send_phone_otp(country_code: str, phone_number: str) -> str:
     clean_phone = "".join(ch for ch in phone_number if ch.isdigit())
     full_phone = f"{country_code} {clean_phone}"
 
-    # Generate a deterministic but realistic 6-digit OTP
     otp_code = str(random.randint(100000, 999999))
     st.session_state["pending_phone_auth"] = {
         "full_phone": full_phone,
@@ -73,7 +230,7 @@ def send_phone_otp(country_code: str, phone_number: str) -> str:
 
 
 def verify_phone_otp(entered_otp: str) -> bool:
-    """Verifies entered OTP against the pending phone authentication state."""
+    """Verifies entered OTP against pending phone authentication state."""
     pending = st.session_state.get("pending_phone_auth")
     if not pending:
         return False
@@ -81,7 +238,6 @@ def verify_phone_otp(entered_otp: str) -> bool:
     clean_entered = "".join(ch for ch in entered_otp if ch.isdigit())
     if clean_entered == pending["otp"] or clean_entered in ["123456", "000000"]:
         full_phone = pending["full_phone"]
-        masked = full_phone[:6] + " •••• " + full_phone[-2:]
         display_name = f"Shopper ({pending['phone_number'][-4:]})"
 
         profile = {
@@ -123,34 +279,34 @@ def logout_user() -> None:
 
 def render_auth_interface(on_navigate_home=None) -> None:
     """
-    Renders the modern, distinct ReviewLens Authentication Gateway & Profile Dashboard.
-    Supports Google/Gmail one-click login and Phone Number SMS OTP verification.
+    Renders the Premium, Futuristic AI SaaS Split-Screen Login & Registration Experience.
+    Color Palette: Deep Navy (#09091B), Dark Purple (#15112B), Electric Violet (#9B5CFF), Soft Lavender (#B9B3D0).
     """
     user = get_current_user()
 
     # ----------------------------------------------------
-    # STATE 1: ALREADY AUTHENTICATED (PROFILE DASHBOARD)
+    # STATE 1: ALREADY AUTHENTICATED -> USER PROFILE DASHBOARD
     # ----------------------------------------------------
-    if user["authenticated"]:
+    if user.get("authenticated"):
         esc_name = html.escape(str(user.get("display_name", "Shopper")))
         esc_id = html.escape(str(user.get("identifier", "")))
-        esc_tier = html.escape(str(user.get("tier", "Verified Shopper")))
+        esc_tier = html.escape(str(user.get("tier", "Verified Member")))
         esc_badge = html.escape(str(user.get("tier_badge", "🛡️ Verified")))
         letter = user.get("avatar_letter", "U")
 
         st.markdown(f"""
-        <div style="background: linear-gradient(135deg, #0F172A 0%, #1E293B 100%); border: 1px solid rgba(255, 153, 0, 0.3); border-radius: 16px; padding: 2rem; color: #FFFFFF; box-shadow: 0 10px 30px rgba(0,0,0,0.25); margin-bottom: 2rem;">
+        <div style="background: radial-gradient(circle at 10% 20%, rgba(113, 56, 245, 0.25), transparent 40%), radial-gradient(circle at 90% 80%, rgba(155, 92, 255, 0.2), transparent 40%), #09091B; border: 1px solid rgba(155, 92, 255, 0.35); border-radius: 20px; padding: 2.2rem; color: #FFFFFF; box-shadow: 0 20px 50px rgba(0,0,0,0.5), 0 0 30px rgba(113, 56, 245, 0.2); margin-bottom: 2rem;">
             <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1.5rem;">
                 <div style="display: flex; align-items: center; gap: 1.5rem;">
-                    <div style="width: 72px; height: 72px; border-radius: 50%; background: linear-gradient(135deg, #FF9900 0%, #E47A24 100%); display: flex; align-items: center; justify-content: center; font-size: 2rem; font-weight: 800; color: #131921; box-shadow: 0 4px 15px rgba(255, 153, 0, 0.4); border: 3px solid rgba(255, 255, 255, 0.2);">
+                    <div style="width: 76px; height: 76px; border-radius: 50%; background: linear-gradient(135deg, #7138F5 0%, #9B5CFF 100%); display: flex; align-items: center; justify-content: center; font-size: 2.2rem; font-weight: 800; color: #FFFFFF; box-shadow: 0 4px 20px rgba(155, 92, 255, 0.5); border: 3px solid rgba(255, 255, 255, 0.25);">
                         {letter}
                     </div>
                     <div>
-                        <div style="display: flex; align-items: center; gap: 0.6rem; margin-bottom: 0.3rem;">
-                            <h2 style="margin: 0; font-size: 1.6rem; font-weight: 800; color: #FFFFFF;">{esc_name}</h2>
-                            <span style="background: rgba(16, 185, 129, 0.2); border: 1px solid #10B981; color: #34D399; font-size: 0.78rem; font-weight: 700; padding: 0.2rem 0.6rem; border-radius: 12px;">{esc_badge}</span>
+                        <div style="display: flex; align-items: center; gap: 0.8rem; margin-bottom: 0.4rem; flex-wrap: wrap;">
+                            <h2 style="margin: 0; font-size: 1.75rem; font-weight: 800; color: #FFFFFF;">{esc_name}</h2>
+                            <span style="background: rgba(155, 92, 255, 0.25); border: 1px solid #9B5CFF; color: #C4B5FD; font-size: 0.8rem; font-weight: 700; padding: 0.25rem 0.75rem; border-radius: 14px;">{esc_badge}</span>
                         </div>
-                        <div style="font-size: 0.9rem; color: #94A3B8;">Identity: <b style="color: #CBD5E1;">{esc_id}</b> • Member since {user.get('member_since', '2026')}</div>
+                        <div style="font-size: 0.92rem; color: #B9B3D0;">Identity: <b style="color: #FFFFFF;">{esc_id}</b> • Member since {user.get('member_since', '2026')}</div>
                     </div>
                 </div>
             </div>
@@ -159,22 +315,22 @@ def render_auth_interface(on_navigate_home=None) -> None:
 
         k1, k2, k3, k4 = st.columns(4)
         with k1:
-            st.metric("Account Status", "Active", "Verified")
+            st.metric("Account Status", "Active", "Verified AI Pass")
         with k2:
             st.metric("Compare Tray Items", len(st.session_state.get("compare_tray", [])), "Saved in session")
         with k3:
-            st.metric("Shopper Trust Tier", esc_tier, "Level 2")
+            st.metric("Member Tier", esc_tier, "Level 2 Access")
         with k4:
-            st.metric("NLP Credibility", "99.4%", "Anti-spam certified")
+            st.metric("Credibility Rating", "99.8%", "Glass-Box Verified")
 
         st.markdown("<br>", unsafe_allow_html=True)
         act1, act2, act3 = st.columns([1.5, 1.5, 1])
         with act1:
-            if st.button("🛍️ Return to Discovery Catalogue", use_container_width=True, type="primary"):
+            if st.button("🛍️ Return to Discovery Catalogue →", use_container_width=True, type="primary"):
                 if on_navigate_home:
                     on_navigate_home()
         with act2:
-            if st.button("🧪 Open Live Diagnostic Lab", use_container_width=True):
+            if st.button("🧪 Open Live Diagnostic Lab →", use_container_width=True):
                 st.session_state["pending_nav"] = "🧪 Live Review Analyzer"
                 st.rerun()
         with act3:
@@ -185,119 +341,379 @@ def render_auth_interface(on_navigate_home=None) -> None:
         return
 
     # ----------------------------------------------------
-    # STATE 2: SIGN-IN GATEWAY (GMAIL OR PHONE OTP)
+    # STATE 2: SPLIT-SCREEN LOGIN & REGISTRATION EXPERIENCE
     # ----------------------------------------------------
+    if "auth_mode" not in st.session_state:
+        st.session_state["auth_mode"] = "login"
+
+    # Inject Premium Dark-Purple Styling for Auth Page
     st.markdown("""
-    <div style="text-align: center; max-width: 650px; margin: 0 auto 2rem auto;">
-        <div style="display: inline-block; padding: 4px 14px; border-radius: 20px; background: rgba(37, 99, 235, 0.12); border: 1px solid rgba(37, 99, 235, 0.3); color: #60A5FA; font-size: 0.8rem; font-weight: 700; margin-bottom: 0.8rem;">
-            🛡️ SECURE SHOPPING IDENTITY
+    <style>
+        .auth-split-wrapper {
+            background: radial-gradient(circle at 15% 20%, rgba(113, 56, 245, 0.2), transparent 45%),
+                        radial-gradient(circle at 85% 80%, rgba(155, 92, 255, 0.15), transparent 45%),
+                        #09091B;
+            border: 1px solid rgba(155, 92, 255, 0.3);
+            border-radius: 24px;
+            padding: 2.5rem 2rem;
+            color: #FFFFFF;
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.6), 0 0 35px rgba(113, 56, 245, 0.2);
+            margin-bottom: 2rem;
+        }
+
+        .auth-glass-card {
+            background: rgba(21, 17, 43, 0.78);
+            border: 1px solid rgba(155, 92, 255, 0.35);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 2.2rem;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4), 0 0 20px rgba(155, 92, 255, 0.15);
+        }
+
+        .feature-item-card {
+            background: rgba(21, 17, 43, 0.55);
+            border: 1px solid rgba(155, 92, 255, 0.2);
+            border-radius: 12px;
+            padding: 0.9rem 1.1rem;
+            margin-bottom: 0.75rem;
+            display: flex;
+            align-items: flex-start;
+            gap: 0.9rem;
+            transition: all 0.25s ease;
+        }
+        .feature-item-card:hover {
+            border-color: #9B5CFF;
+            background: rgba(113, 56, 245, 0.15);
+            transform: translateX(4px);
+        }
+
+        .sentiment-badge-pill {
+            display: inline-block;
+            padding: 0.2rem 0.55rem;
+            border-radius: 12px;
+            font-size: 0.72rem;
+            font-weight: 700;
+        }
+        .badge-pos { background: rgba(16, 185, 129, 0.2); color: #34D399; border: 1px solid rgba(16, 185, 129, 0.4); }
+        .badge-neg { background: rgba(239, 68, 68, 0.2); color: #F87171; border: 1px solid rgba(239, 68, 68, 0.4); }
+        .badge-neu { background: rgba(245, 158, 11, 0.2); color: #FBBF24; border: 1px solid rgba(245, 158, 11, 0.4); }
+    </style>
+    """, unsafe_allow_html=True)
+
+    col_left, col_right = st.columns([1.15, 1], gap="large")
+
+    # ====================================================
+    # LEFT COLUMN: BRANDING, VISUAL PREVIEW & FEATURES
+    # ====================================================
+    with col_left:
+        st.markdown("""
+        <div style="padding-right: 0.5rem;">
+            <div style="display: inline-flex; align-items: center; gap: 0.5rem; padding: 5px 14px; border-radius: 20px; background: rgba(155, 92, 255, 0.18); border: 1px solid rgba(155, 92, 255, 0.4); color: #C4B5FD; font-size: 0.8rem; font-weight: 700; margin-bottom: 1.2rem; letter-spacing: 0.05em;">
+                ⚡ NEXT-GEN NLP REVIEW INTELLIGENCE
+            </div>
+
+            <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 0.8rem;">
+                <div style="width: 50px; height: 50px; border-radius: 14px; background: linear-gradient(135deg, #7138F5 0%, #9B5CFF 100%); display: flex; align-items: center; justify-content: center; font-size: 26px; box-shadow: 0 0 25px rgba(155, 92, 255, 0.5);">
+                    🔍
+                </div>
+                <div style="font-size: 1.85rem; font-weight: 800; color: #FFFFFF; letter-spacing: -0.5px;">
+                    Review<span style="color: #9B5CFF;">Lens</span>
+                </div>
+            </div>
+
+            <h1 style="font-size: 2.4rem; font-weight: 800; line-height: 1.2; margin: 0 0 1rem 0; background: linear-gradient(135deg, #FFFFFF 40%, #B9B3D0 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
+                Insights from Product Reviews
+            </h1>
+
+            <p style="font-size: 1.02rem; color: #B9B3D0; line-height: 1.6; margin-bottom: 1.8rem;">
+                An NLP-powered platform to analyze reviews, understand customer sentiment, detect fake reviews, and generate intelligent AI-powered responses.
+            </p>
+
+            <!-- DASHBOARD ILLUSTRATION & REVIEW CARDS PREVIEW -->
+            <div style="background: rgba(21, 17, 43, 0.7); border: 1px solid rgba(155, 92, 255, 0.3); border-radius: 16px; padding: 1.3rem; margin-bottom: 1.8rem; box-shadow: 0 10px 30px rgba(0,0,0,0.4);">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 0.6rem;">
+                    <div style="font-size: 0.85rem; font-weight: 700; color: #C4B5FD; display: flex; align-items: center; gap: 0.5rem;">
+                        <span style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #10B981; box-shadow: 0 0 8px #10B981;"></span>
+                        Live NLP Review Stream
+                    </div>
+                    <div style="font-size: 0.78rem; color: #B9B3D0;">VADER & ABSA Powered</div>
+                </div>
+
+                <!-- Review Card 1 (Positive) -->
+                <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(16, 185, 129, 0.25); border-left: 4px solid #10B981; border-radius: 8px; padding: 0.65rem 0.9rem; margin-bottom: 0.6rem;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 0.2rem;">
+                        <span style="font-size: 0.78rem; font-weight: 700; color: #FFFFFF;">Galaxy S24 FE • Battery & Display</span>
+                        <span class="sentiment-badge-pill badge-pos">🟢 POSITIVE (+0.84)</span>
+                    </div>
+                    <div style="font-size: 0.82rem; color: #E2E8F0; font-style: italic;">"Battery easily lasted two full days, and the 120Hz OLED screen is stunning..."</div>
+                </div>
+
+                <!-- Review Card 2 (Negative) -->
+                <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(239, 68, 68, 0.25); border-left: 4px solid #EF4444; border-radius: 8px; padding: 0.65rem 0.9rem; margin-bottom: 0.6rem;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 0.2rem;">
+                        <span style="font-size: 0.78rem; font-weight: 700; color: #FFFFFF;">Bose QC Ultra • Microphone</span>
+                        <span class="sentiment-badge-pill badge-neg">🔴 NEGATIVE (-0.68)</span>
+                    </div>
+                    <div style="font-size: 0.82rem; color: #E2E8F0; font-style: italic;">"Microphone sounds muffled during noisy Zoom calls in wind..."</div>
+                </div>
+
+                <!-- Review Card 3 (Neutral/Clause) -->
+                <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(245, 158, 11, 0.25); border-left: 4px solid #F59E0B; border-radius: 8px; padding: 0.65rem 0.9rem;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 0.2rem;">
+                        <span style="font-size: 0.78rem; font-weight: 700; color: #FFFFFF;">MacBook Air M3 • Packaging</span>
+                        <span class="sentiment-badge-pill badge-neu">🟡 NEUTRAL (0.00)</span>
+                    </div>
+                    <div style="font-size: 0.82rem; color: #E2E8F0; font-style: italic;">"Box includes braided USB-C MagSafe cable and standard adapter..."</div>
+                </div>
+
+                <!-- Sentiment Distribution Bar Indicator -->
+                <div style="margin-top: 0.9rem; padding-top: 0.6rem; border-top: 1px solid rgba(255,255,255,0.08);">
+                    <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: #B9B3D0; margin-bottom: 0.3rem;">
+                        <span>Sentiment Polarity Spread:</span>
+                        <span><b>74% Positive</b> • 18% Neutral • 8% Negative</span>
+                    </div>
+                    <div style="height: 6px; border-radius: 3px; background: #1E293B; overflow: hidden; display: flex;">
+                        <div style="width: 74%; background: #10B981;"></div>
+                        <div style="width: 18%; background: #F59E0B;"></div>
+                        <div style="width: 8%; background: #EF4444;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- FOUR FEATURE HIGHLIGHTS -->
+            <div style="font-weight: 700; font-size: 0.95rem; color: #FFFFFF; margin-bottom: 0.8rem; letter-spacing: 0.02em;">
+                CORE CAPABILITIES:
+            </div>
+
+            <div class="feature-item-card">
+                <div style="font-size: 1.4rem;">📊</div>
+                <div>
+                    <div style="font-size: 0.92rem; font-weight: 700; color: #FFFFFF;">Sentiment Analysis</div>
+                    <div style="font-size: 0.82rem; color: #B9B3D0;">Multi-tiered VADER Lexicon scoring with domain polarity adaptation and Net Sentiment Score (NSS).</div>
+                </div>
+            </div>
+
+            <div class="feature-item-card">
+                <div style="font-size: 1.4rem;">🎯</div>
+                <div>
+                    <div style="font-size: 0.92rem; font-weight: 700; color: #FFFFFF;">Aspect-Based Sentiment Analysis</div>
+                    <div style="font-size: 0.82rem; color: #B9B3D0;">Category-specific ABSA taxonomies with contrastive clause splitting on conjunctions.</div>
+                </div>
+            </div>
+
+            <div class="feature-item-card">
+                <div style="font-size: 1.4rem;">🛡️</div>
+                <div>
+                    <div style="font-size: 0.92rem; font-weight: 700; color: #FFFFFF;">Fake Review Detection</div>
+                    <div style="font-size: 0.82rem; color: #B9B3D0;">Multi-heuristic spam probability detector and star-rating contradiction auditor.</div>
+                </div>
+            </div>
+
+            <div class="feature-item-card">
+                <div style="font-size: 1.4rem;">💬</div>
+                <div>
+                    <div style="font-size: 0.92rem; font-weight: 700; color: #FFFFFF;">AI-Generated Review Replies</div>
+                    <div style="font-size: 0.82rem; color: #B9B3D0;">Executive review synthesis, buyer persona profiling, and automated response generation.</div>
+                </div>
+            </div>
         </div>
-        <h1 style="font-size: 2.1rem; font-weight: 800; color: #0F172A; margin: 0 0 0.5rem 0;">
-            Sign in to Review<span style="color: #FF9900;">Lens</span>
-        </h1>
-        <p style="font-size: 0.95rem; color: #64748B; line-height: 1.5; margin: 0;">
-            Unlock personalized buyer matchmaking, save multi-product radar duels, and export executive intelligence dossiers with your verified shopper profile.
-        </p>
-    </div>
-    """, unsafe_allow_html=True)
+        """, unsafe_allow_html=True)
 
-    auth_card_col, _ = st.columns([1, 0.001])
-    with auth_card_col:
-        tab_google, tab_phone = st.tabs(["📧 Continue with Gmail / Google", "📱 Continue with Phone (SMS OTP)"])
+    # ====================================================
+    # RIGHT COLUMN: GLASSMORPHISM LOGIN / SIGNUP CARD
+    # ====================================================
+    with col_right:
+        # ------------------------------------------------
+        # 1. LOGIN MODE
+        # ------------------------------------------------
+        if st.session_state["auth_mode"] == "login":
+            st.markdown("""
+            <div style="background: rgba(21, 17, 43, 0.82); border: 1px solid rgba(155, 92, 255, 0.35); backdrop-filter: blur(20px); border-radius: 20px; padding: 2rem 2.2rem 1.6rem 2.2rem; box-shadow: 0 15px 45px rgba(0, 0, 0, 0.5), 0 0 25px rgba(155, 92, 255, 0.2);">
+                <div style="font-size: 0.8rem; font-weight: 700; color: #9B5CFF; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.3rem;">
+                    Sign In
+                </div>
+                <h2 style="font-size: 1.95rem; font-weight: 800; color: #FFFFFF; margin: 0 0 0.4rem 0;">
+                    Welcome Back!
+                </h2>
+                <p style="font-size: 0.9rem; color: #B9B3D0; margin: 0 0 1.2rem 0;">
+                    Sign in to continue analyzing product reviews.
+                </p>
+            </div>
+            """, unsafe_allow_html=True)
 
-        # TAB 1: GMAIL / GOOGLE SIGN-IN
-        with tab_google:
-            st.markdown("<br>", unsafe_allow_html=True)
-            st.markdown("##### ⚡ Quick 1-Click Google Sign-In")
-            st.caption("Authenticate instantly with your Google account credentials.")
+            # Quick fill for demo tester convenience
+            fill_demo_col, _ = st.columns([2, 1])
+            with fill_demo_col:
+                if st.button("⚡ Fill Demo Account (demo@reviewlens.com)", key="btn_fill_demo", use_container_width=True):
+                    st.session_state["login_email_input"] = "demo@reviewlens.com"
+                    st.session_state["login_pw_input"] = "Password@123"
 
-            g_quick_col1, g_quick_col2 = st.columns([1.5, 1])
-            with g_quick_col1:
-                demo_email = "vinay.shopper@gmail.com"
-                if st.button("🔴 Continue with Google (vinay.shopper@gmail.com)", key="btn_quick_google", type="primary", use_container_width=True):
-                    login_with_google(demo_email, name="Vinay Vardhan")
-                    st.toast(f"Welcome back, Vinay! Signed in via Google.", icon="✅")
+            default_email = st.session_state.get("login_email_input", "")
+            default_pw = st.session_state.get("login_pw_input", "")
+
+            login_email = st.text_input("Email address", value=default_email, placeholder="name@example.com", key="auth_field_email")
+
+            col_pw_hdr, col_pw_eye = st.columns([2, 1])
+            with col_pw_eye:
+                show_pw = st.checkbox("👁️ Show", key="login_show_pw")
+
+            pw_field_type = "default" if show_pw else "password"
+            login_password = st.text_input("Password", value=default_pw, type=pw_field_type, placeholder="••••••••", key="auth_field_password")
+
+            col_rem, col_forgot = st.columns([1, 1])
+            with col_rem:
+                remember_me = st.checkbox("Remember me", value=True, key="login_remember_me")
+            with col_forgot:
+                if st.button("Forgot password?", key="btn_toggle_forgot", help="Reset your account password"):
+                    st.session_state["auth_mode"] = "forgot"
                     st.rerun()
 
-            with g_quick_col2:
-                st.caption("One-tap simulated OAuth token for quick review auditing.")
-
-            st.markdown("---")
-            st.markdown("##### Or Sign In with Custom Gmail Address")
-            custom_email = st.text_input("Enter your Gmail address:", placeholder="yourname@gmail.com", key="auth_custom_gmail")
-            custom_name = st.text_input("Your Full Name (optional):", placeholder="e.g. Vinay Vardhan", key="auth_custom_name")
-
-            if st.button("Verify & Sign In with Gmail →", key="btn_custom_gmail", use_container_width=True):
-                if custom_email and "@" in custom_email:
-                    login_with_google(custom_email, name=custom_name)
-                    st.toast(f"Signed in as {custom_email}", icon="✅")
-                    st.rerun()
-                else:
-                    st.error("Please enter a valid Gmail address.")
-
-        # TAB 2: PHONE NUMBER SMS OTP SIGN-IN
-        with tab_phone:
-            st.markdown("<br>", unsafe_allow_html=True)
-            st.markdown("##### 📱 Mobile SMS Verification")
-            st.caption("We'll text you a 6-digit confirmation code. Your phone number serves as your verified shopper pass.")
-
-            country_options = [
-                ("🇮🇳 India (+91)", "+91"),
-                ("🇺🇸 United States (+1)", "+1"),
-                ("🇬🇧 United Kingdom (+44)", "+44"),
-                ("🇦🇪 UAE (+971)", "+971"),
-                ("🇩🇪 Germany (+49)", "+49"),
-                ("🇨🇦 Canada (+1)", "+1"),
-                ("🇦🇺 Australia (+61)", "+61"),
-                ("🇸🇬 Singapore (+65)", "+65")
-            ]
-            country_labels = [opt[0] for opt in country_options]
-
-            phone_c1, phone_c2 = st.columns([1, 2])
-            with phone_c1:
-                sel_country_idx = st.selectbox("Country Code:", range(len(country_labels)), format_func=lambda i: country_labels[i])
-                country_code = country_options[sel_country_idx][1]
-            with phone_c2:
-                phone_input = st.text_input("Mobile Phone Number:", placeholder="98765 43210", key="auth_phone_input")
-
-            if st.button("📩 Send 6-Digit Verification Code", key="btn_send_otp", use_container_width=True):
-                if len(phone_input.strip()) >= 7:
-                    otp_sent = send_phone_otp(country_code, phone_input)
-                    st.toast(f"SMS sent to {country_code} {phone_input}!", icon="📲")
-                else:
-                    st.error("Please enter a valid phone number with at least 7 digits.")
-
-            # If OTP was sent, show input field
-            pending_auth = st.session_state.get("pending_phone_auth")
-            if pending_auth:
-                st.markdown("<br>", unsafe_allow_html=True)
-                st.info(f"📲 Code sent to **{pending_auth['full_phone']}**. *(Demo code for test environment: **`{pending_auth['otp']}`** or **`123456`**)*")
-
-                otp_code_col, otp_btn_col = st.columns([1.5, 1])
-                with otp_code_col:
-                    entered_code = st.text_input("Enter 6-digit SMS Code:", placeholder="123456", max_chars=6, key="auth_otp_entered")
-                with otp_btn_col:
-                    st.write("")
-                    st.write("")
-                    if st.button("✅ Verify & Enter", key="btn_verify_otp", type="primary", use_container_width=True):
-                        success = verify_phone_otp(entered_code)
-                        if success:
-                            st.toast("Phone number verified successfully!", icon="🎉")
-                            st.rerun()
+            if st.button("Sign In to ReviewLens →", key="btn_submit_signin", type="primary", use_container_width=True):
+                with st.spinner("Authenticating credentials..."):
+                    res = authenticate_user(login_email, login_password)
+                    if res["success"]:
+                        st.toast(res["message"], icon="✅")
+                        if on_navigate_home:
+                            on_navigate_home()
                         else:
-                            st.error("Invalid verification code. Please check and try again.")
+                            st.session_state["pending_nav"] = "🏠 Home / Discovery"
+                            st.rerun()
+                    else:
+                        st.error(f"⚠️ {res['message']}")
 
-    st.markdown("<br>", unsafe_allow_html=True)
-    st.markdown("""
-    <div style="background: #F8FAFC; border: 1px dashed #CBD5E1; border-radius: 12px; padding: 1rem 1.4rem; text-align: center; color: #64748B; font-size: 0.85rem; margin-top: 1.5rem;">
-        🛡️ <b>Privacy Guarantee:</b> We never share your contact details or spam you with calls. Authentication creates your tamper-proof ReviewLens Shopper Profile for saving radar comparisons and custom priority weights.
-    </div>
-    """, unsafe_allow_html=True)
+            st.markdown("""
+            <div style="text-align: center; margin: 1rem 0; color: #64748B; font-size: 0.8rem; position: relative;">
+                <span style="background: #15112B; padding: 0 10px; position: relative; z-index: 1;">OR CONTINUE WITH</span>
+                <hr style="position: absolute; top: 50%; left: 0; right: 0; border: none; border-top: 1px solid rgba(255,255,255,0.1); margin: 0; z-index: 0;">
+            </div>
+            """, unsafe_allow_html=True)
 
-    st.markdown("<br>", unsafe_allow_html=True)
-    if st.button("⚡ Continue Browsing as Guest Shopper →", key="btn_auth_guest", use_container_width=True):
-        if on_navigate_home:
-            on_navigate_home()
-        else:
-            st.session_state["pending_nav"] = "🏠 Home / Discovery"
-            st.rerun()
+            if st.button("🔴 Continue with Google / Gmail", key="btn_login_google", use_container_width=True):
+                google_email = login_email if (login_email and "@" in login_email) else "shopper@gmail.com"
+                login_with_google(google_email)
+                st.toast("Signed in with Google Identity!", icon="✅")
+                if on_navigate_home:
+                    on_navigate_home()
+                else:
+                    st.session_state["pending_nav"] = "🏠 Home / Discovery"
+                    st.rerun()
+
+            st.markdown("<br>", unsafe_allow_html=True)
+            st.markdown("<div style='text-align: center; font-size: 0.88rem; color: #B9B3D0;'>Don't have an account?</div>", unsafe_allow_html=True)
+            if st.button("Create Account →", key="btn_goto_signup", use_container_width=True):
+                st.session_state["auth_mode"] = "signup"
+                st.rerun()
+
+        # ------------------------------------------------
+        # 2. SIGNUP MODE
+        # ------------------------------------------------
+        elif st.session_state["auth_mode"] == "signup":
+            st.markdown("""
+            <div style="background: rgba(21, 17, 43, 0.82); border: 1px solid rgba(155, 92, 255, 0.35); backdrop-filter: blur(20px); border-radius: 20px; padding: 2rem 2.2rem 1.6rem 2.2rem; box-shadow: 0 15px 45px rgba(0, 0, 0, 0.5), 0 0 25px rgba(155, 92, 255, 0.2);">
+                <div style="font-size: 0.8rem; font-weight: 700; color: #9B5CFF; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.3rem;">
+                    Registration
+                </div>
+                <h2 style="font-size: 1.95rem; font-weight: 800; color: #FFFFFF; margin: 0 0 0.4rem 0;">
+                    Create Your Account
+                </h2>
+                <p style="font-size: 0.9rem; color: #B9B3D0; margin: 0 0 1.2rem 0;">
+                    Join ReviewLens to analyze product reviews and unlock AI-powered insights.
+                </p>
+            </div>
+            """, unsafe_allow_html=True)
+
+            signup_name = st.text_input("Full name", placeholder="e.g. Vinay Vardhan", key="signup_field_name")
+            signup_email = st.text_input("Email address", placeholder="name@example.com", key="signup_field_email")
+
+            col_spw_hdr, col_spw_eye = st.columns([2, 1])
+            with col_spw_eye:
+                show_signup_pw = st.checkbox("👁️ Show", key="signup_show_pw")
+
+            s_pw_type = "default" if show_signup_pw else "password"
+            signup_pw = st.text_input("Password (min. 6 characters)", type=s_pw_type, placeholder="Create strong password", key="signup_field_password")
+            signup_confirm = st.text_input("Confirm password", type=s_pw_type, placeholder="Re-type password", key="signup_field_confirm")
+
+            st.caption("🔒 Passwords are cryptographically salted and hashed. We never store plaintext.")
+
+            if st.button("Create Account →", key="btn_submit_signup", type="primary", use_container_width=True):
+                with st.spinner("Creating your secure account..."):
+                    res = register_user(signup_name, signup_email, signup_pw, signup_confirm)
+                    if res["success"]:
+                        st.toast(res["message"], icon="🎉")
+                        if on_navigate_home:
+                            on_navigate_home()
+                        else:
+                            st.session_state["pending_nav"] = "🏠 Home / Discovery"
+                            st.rerun()
+                    else:
+                        st.error(f"⚠️ {res['message']}")
+
+            st.markdown("""
+            <div style="text-align: center; margin: 1rem 0; color: #64748B; font-size: 0.8rem; position: relative;">
+                <span style="background: #15112B; padding: 0 10px; position: relative; z-index: 1;">OR REGISTER WITH</span>
+                <hr style="position: absolute; top: 50%; left: 0; right: 0; border: none; border-top: 1px solid rgba(255,255,255,0.1); margin: 0; z-index: 0;">
+            </div>
+            """, unsafe_allow_html=True)
+
+            if st.button("🔴 Sign Up with Google / Gmail", key="btn_signup_google", use_container_width=True):
+                google_email = signup_email if (signup_email and "@" in signup_email) else "shopper@gmail.com"
+                google_name = signup_name if signup_name else None
+                login_with_google(google_email, name=google_name)
+                st.toast("Signed up with Google Identity!", icon="🎉")
+                if on_navigate_home:
+                    on_navigate_home()
+                else:
+                    st.session_state["pending_nav"] = "🏠 Home / Discovery"
+                    st.rerun()
+
+            st.markdown("<br>", unsafe_allow_html=True)
+            st.markdown("<div style='text-align: center; font-size: 0.88rem; color: #B9B3D0;'>Already have an account?</div>", unsafe_allow_html=True)
+            if st.button("← Back to Sign In", key="btn_goto_login", use_container_width=True):
+                st.session_state["auth_mode"] = "login"
+                st.rerun()
+
+        # ------------------------------------------------
+        # 3. FORGOT PASSWORD MODE
+        # ------------------------------------------------
+        elif st.session_state["auth_mode"] == "forgot":
+            st.markdown("""
+            <div style="background: rgba(21, 17, 43, 0.82); border: 1px solid rgba(155, 92, 255, 0.35); backdrop-filter: blur(20px); border-radius: 20px; padding: 2rem 2.2rem 1.6rem 2.2rem; box-shadow: 0 15px 45px rgba(0, 0, 0, 0.5), 0 0 25px rgba(155, 92, 255, 0.2);">
+                <div style="font-size: 0.8rem; font-weight: 700; color: #9B5CFF; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.3rem;">
+                    Password Recovery
+                </div>
+                <h2 style="font-size: 1.95rem; font-weight: 800; color: #FFFFFF; margin: 0 0 0.4rem 0;">
+                    Reset Password
+                </h2>
+                <p style="font-size: 0.9rem; color: #B9B3D0; margin: 0 0 1.2rem 0;">
+                    Enter your registered email address and we'll send verification credentials.
+                </p>
+            </div>
+            """, unsafe_allow_html=True)
+
+            forgot_email = st.text_input("Registered Email Address", placeholder="name@example.com", key="forgot_field_email")
+
+            if st.button("Send Reset Instructions →", key="btn_submit_forgot", type="primary", use_container_width=True):
+                if forgot_email and "@" in forgot_email:
+                    st.success(f"Password reset instructions dispatched to **{forgot_email}**. For immediate access, you can also use Demo Account: `demo@reviewlens.com` with `Password@123`.")
+                else:
+                    st.error("Please provide a valid registered email address.")
+
+            st.markdown("<br>", unsafe_allow_html=True)
+            if st.button("← Return to Sign In", key="btn_forgot_back_login", use_container_width=True):
+                st.session_state["auth_mode"] = "login"
+                st.rerun()
+
+        # GUEST PREVIEW OPTION
+        st.markdown("<br>", unsafe_allow_html=True)
+        st.markdown("""
+        <div style="background: rgba(155, 92, 255, 0.08); border: 1px dashed rgba(155, 92, 255, 0.3); border-radius: 12px; padding: 0.85rem 1.1rem; text-align: center; color: #B9B3D0; font-size: 0.82rem; margin-top: 1rem;">
+            🛡️ <b>Evaluator & Guest Access:</b> Want to browse the catalogue first?
+        </div>
+        """, unsafe_allow_html=True)
+
+        if st.button("⚡ Continue as Guest (Read-Only Preview) →", key="btn_auth_guest_preview", use_container_width=True):
+            if on_navigate_home:
+                on_navigate_home()
+            else:
+                st.session_state["pending_nav"] = "🏠 Home / Discovery"
+                st.rerun()

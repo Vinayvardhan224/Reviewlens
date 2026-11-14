@@ -1,16 +1,25 @@
 """
 Unit tests for ReviewLens Authentication & Identity Module (modules/auth.py).
-Verifies Google/Gmail sign-in, Phone SMS OTP generation, and verification flows.
+Verifies:
+  1. Default guest state
+  2. Google/Gmail 1-click authentication
+  3. Mobile SMS OTP phone verification
+  4. Salted SHA-256 password hashing
+  5. User registration & input validation
+  6. Email & password authentication
+  7. Logout session reset
 """
 
 import unittest
-from unittest.mock import patch
 from modules.auth import (
     get_current_user,
     login_with_google,
     send_phone_otp,
     verify_phone_otp,
-    logout_user
+    logout_user,
+    hash_password,
+    register_user,
+    authenticate_user
 )
 
 
@@ -37,6 +46,63 @@ class TestAuthModule(unittest.TestCase):
         user = get_current_user()
         self.assertFalse(user["authenticated"])
         self.assertEqual(user["display_name"], "Guest Shopper")
+
+    def test_hash_password(self):
+        salt = "testsalt12345678"
+        h1 = hash_password("MySecretPass123", salt)
+        h2 = hash_password("MySecretPass123", salt)
+        h3 = hash_password("DifferentPass123", salt)
+        self.assertEqual(h1, h2)
+        self.assertNotEqual(h1, h3)
+        self.assertEqual(len(h1), 64)  # SHA-256 hex length
+
+    def test_demo_account_authentication(self):
+        res = authenticate_user("demo@reviewlens.com", "Password@123")
+        self.assertTrue(res["success"])
+        self.assertIn("Welcome back", res["message"])
+        user = get_current_user()
+        self.assertTrue(user["authenticated"])
+        self.assertEqual(user["identifier"], "demo@reviewlens.com")
+
+    def test_invalid_password_authentication(self):
+        res = authenticate_user("demo@reviewlens.com", "WrongPassword!")
+        self.assertFalse(res["success"])
+        self.assertIn("Incorrect password", res["message"])
+        self.assertFalse(get_current_user()["authenticated"])
+
+    def test_nonexistent_email_authentication(self):
+        res = authenticate_user("nonexistent.user.999@domain.com", "SomePassword123")
+        self.assertFalse(res["success"])
+        self.assertIn("No account found", res["message"])
+
+    def test_register_user_success_and_validation(self):
+        import secrets
+        unique_email = f"user_{secrets.token_hex(4)}@reviewlens.com"
+        res = register_user("Alice Researcher", unique_email, "SecurePass456", "SecurePass456")
+        self.assertTrue(res["success"])
+        self.assertEqual(res["user"]["display_name"], "Alice Researcher")
+        self.assertTrue(get_current_user()["authenticated"])
+
+        # Duplicate registration should fail
+        dup = register_user("Alice Researcher", unique_email, "SecurePass456", "SecurePass456")
+        self.assertFalse(dup["success"])
+        self.assertIn("already exists", dup["message"])
+
+    def test_register_validation_failures(self):
+        # Mismatched passwords
+        res1 = register_user("Bob", "bob@example.com", "Password123", "MismatchPass")
+        self.assertFalse(res1["success"])
+        self.assertIn("do not match", res1["message"])
+
+        # Password too short
+        res2 = register_user("Bob", "bob@example.com", "123", "123")
+        self.assertFalse(res2["success"])
+        self.assertIn("at least 6 characters", res2["message"])
+
+        # Invalid email syntax
+        res3 = register_user("Bob", "invalid-email-address", "Password123", "Password123")
+        self.assertFalse(res3["success"])
+        self.assertIn("valid email", res3["message"])
 
     def test_google_login(self):
         profile = login_with_google("test.buyer@gmail.com", name="Test Buyer")

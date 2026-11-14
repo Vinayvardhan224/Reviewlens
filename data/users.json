@@ -1,0 +1,42 @@
+{
+  "demo@reviewlens.com": {
+    "name": "Demo Shopper",
+    "email": "demo@reviewlens.com",
+    "salt": "ed4959d9d2518e34158d844205007468",
+    "password_hash": "838b8432a869362a724778a11bea3abe497f6e1d84491c29eddba70b57eba6d9",
+    "created_at": "2026-11-14",
+    "tier": "Verified ReviewLens Member"
+  },
+  "vinay@reviewlens.com": {
+    "name": "Vinay Vardhan",
+    "email": "vinay@reviewlens.com",
+    "salt": "0a450507b8be942b22beae9c6f89d23c",
+    "password_hash": "057e0df49d97f8e6e419e002cdf6c432f6d58020cae55aa2ad580aae6d13c93a",
+    "created_at": "2026-11-14",
+    "tier": "ReviewLens System Architect"
+  },
+  "user_6627de5b@reviewlens.com": {
+    "name": "Alice Researcher",
+    "email": "user_6627de5b@reviewlens.com",
+    "salt": "273335c7870e5ca247c81e387b9b3e26",
+    "password_hash": "4aa6cfd890539dbaa089a144d316a7b578d34c99dfb20e1bc5d692268c5f0de3",
+    "created_at": "Nov 2026",
+    "tier": "Verified ReviewLens Member"
+  },
+  "user_526b5cb2@reviewlens.com": {
+    "name": "Alice Researcher",
+    "email": "user_526b5cb2@reviewlens.com",
+    "salt": "0fc7721a2c05db53cf446820e7e1902a",
+    "password_hash": "7062ea7b7a862d6fee9b3d6fb52065d80daf92d24da9284ea85440c3f19de44c",
+    "created_at": "Nov 2026",
+    "tier": "Verified ReviewLens Member"
+  },
+  "user_1e5d704b@reviewlens.com": {
+    "name": "Alice Researcher",
+    "email": "user_1e5d704b@reviewlens.com",
+    "salt": "a81cd0bfe17175958a223cfd5a5337cd",
+    "password_hash": "a853b9b864da88b870a3978323a7dcf7a39147c3fb63fd84154e277779324d9a",
+    "created_at": "Nov 2026",
+    "tier": "Verified ReviewLens Member"
+  }
+}
