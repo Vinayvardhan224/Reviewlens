@@ -898,31 +898,27 @@ def render_auth_interface(on_navigate_home=None) -> None:
                 custom_g_name = st.text_input("Your Full Name", placeholder="👤 e.g. Alex Chen", key="google_custom_name")
                 custom_g_email = st.text_input("Google / Gmail Email Address", placeholder="✉️ e.g. alex.chen@gmail.com", key="google_custom_email")
 
-                col_g_in, col_g_up = st.columns(2)
-                with col_g_in:
-                    if st.button("Sign In with Google →", key="btn_google_custom_signin", type="primary", use_container_width=True):
-                        if custom_g_email and "@" in custom_g_email:
-                            login_with_google(custom_g_email, name=custom_g_name)
-                            st.toast(f"Google Identity verified for {custom_g_email}!", icon="🎉")
-                            if on_navigate_home:
-                                on_navigate_home()
-                            else:
-                                st.session_state["pending_nav"] = "🏠 Home / Discovery"
-                                st.rerun()
+                g_action_type = st.radio(
+                    "Google Action Intent",
+                    ["🔑 Sign In with Google", "✨ Sign Up / Register with Google"],
+                    horizontal=True,
+                    label_visibility="collapsed",
+                    key="google_oauth_intent_choice"
+                )
+
+                btn_label = "Sign In with Google Identity →" if "Sign In" in g_action_type else "Create Account & Sign In with Google →"
+                if st.button(btn_label, key="btn_google_custom_submit", type="primary", use_container_width=True):
+                    if custom_g_email and "@" in custom_g_email:
+                        login_with_google(custom_g_email, name=custom_g_name)
+                        verb = "Welcome back!" if "Sign In" in g_action_type else "Account created successfully!"
+                        st.toast(f"{verb} Authenticated via Google Identity.", icon="🎉")
+                        if on_navigate_home:
+                            on_navigate_home()
                         else:
-                            st.error("Please enter a valid Google email address.")
-                with col_g_up:
-                    if st.button("Sign Up with Google →", key="btn_google_custom_signup", use_container_width=True):
-                        if custom_g_email and "@" in custom_g_email:
-                            login_with_google(custom_g_email, name=custom_g_name)
-                            st.toast(f"New Google account registered for {custom_g_email}!", icon="🎉")
-                            if on_navigate_home:
-                                on_navigate_home()
-                            else:
-                                st.session_state["pending_nav"] = "🏠 Home / Discovery"
-                                st.rerun()
-                        else:
-                            st.error("Please enter a valid Google email address.")
+                            st.session_state["pending_nav"] = "🏠 Home / Discovery"
+                            st.rerun()
+                    else:
+                        st.error("Please enter a valid Google / Gmail address.")
 
                 _render_html("""
                 <div style="background: rgba(155, 92, 255, 0.08); border-radius: 10px; padding: 0.75rem 0.9rem; font-size: 0.78rem; color: #B9B3D0; line-height: 1.5; margin: 1rem 0 0.8rem 0;">

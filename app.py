@@ -110,6 +110,38 @@ st.markdown("""
         color: #F1F5F9;
     }
 
+    /* Sidebar action buttons (Profile, Sign Out) high contrast fix */
+    section[data-testid="stSidebar"] div[data-testid="stButton"] button {
+        background: rgba(255, 255, 255, 0.08) !important;
+        border: 1px solid rgba(255, 255, 255, 0.22) !important;
+        border-radius: 10px !important;
+        color: #FFFFFF !important;
+        font-weight: 700 !important;
+        padding: 0.55rem 0.8rem !important;
+        transition: all 0.2s ease !important;
+    }
+
+    section[data-testid="stSidebar"] div[data-testid="stButton"] button:hover {
+        background: rgba(155, 92, 255, 0.25) !important;
+        border-color: #9B5CFF !important;
+        color: #FFFFFF !important;
+        transform: translateY(-2px) !important;
+        box-shadow: 0 4px 14px rgba(155, 92, 255, 0.4) !important;
+    }
+
+    section[data-testid="stSidebar"] div[data-testid="stButton"] button p,
+    section[data-testid="stSidebar"] div[data-testid="stButton"] button span {
+        color: #FFFFFF !important;
+        font-weight: 700 !important;
+    }
+
+    section[data-testid="stSidebar"] div[data-testid="stButton"] button[kind="primary"] {
+        background: linear-gradient(135deg, #7138F5 0%, #9B5CFF 100%) !important;
+        border: none !important;
+        color: #FFFFFF !important;
+        font-weight: 700 !important;
+    }
+
     /* Smooth sliding hover on sidebar radio navigation */
     div[data-testid="stRadio"] div[role="radiogroup"] > label {
         transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1) !important;
