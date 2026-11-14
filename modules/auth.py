@@ -15,11 +15,24 @@ import hashlib
 import secrets
 import random
 import html
+import base64
 from pathlib import Path
 import streamlit as st
 
 # Path to persistent user credential storage
 USER_DB_PATH = Path(__file__).resolve().parent.parent / "data" / "users.json"
+LAPTOP_IMG_PATH = Path(__file__).resolve().parent.parent / "static" / "images" / "auth_laptop_illustration.png"
+
+
+def _get_laptop_illustration_b64() -> str:
+    """Returns base64 data URI string of the 3D ReviewLens laptop hero illustration."""
+    if LAPTOP_IMG_PATH.exists():
+        try:
+            with open(LAPTOP_IMG_PATH, "rb") as f:
+                return base64.b64encode(f.read()).decode("utf-8")
+        except Exception:
+            return ""
+    return ""
 
 
 def _load_user_db() -> Dict[str, Any]:
@@ -368,174 +381,186 @@ def render_auth_interface(on_navigate_home=None) -> None:
     if "auth_mode" not in st.session_state:
         st.session_state["auth_mode"] = "login"
 
-    # Inject Premium Dark-Purple Styling for Auth Page
+    laptop_b64 = _get_laptop_illustration_b64()
+
+    # Inject Premium Futuristic AI SaaS Theme matching the exact reference design
     st.markdown("""
     <style>
-        .auth-split-wrapper {
-            background: radial-gradient(circle at 15% 20%, rgba(113, 56, 245, 0.2), transparent 45%),
-                        radial-gradient(circle at 85% 80%, rgba(155, 92, 255, 0.15), transparent 45%),
-                        #09091B;
-            border: 1px solid rgba(155, 92, 255, 0.3);
-            border-radius: 24px;
-            padding: 2.5rem 2rem;
-            color: #FFFFFF;
-            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.6), 0 0 35px rgba(113, 56, 245, 0.2);
-            margin-bottom: 2rem;
+        /* Ambient Aurora Glow Background */
+        body, .stApp {
+            background-color: #07051A !important;
+            background-image: 
+                radial-gradient(circle at 12% 18%, rgba(113, 56, 245, 0.45) 0%, transparent 45%),
+                radial-gradient(circle at 88% 12%, rgba(155, 92, 255, 0.38) 0%, transparent 40%),
+                radial-gradient(circle at 50% 88%, rgba(113, 56, 245, 0.35) 0%, transparent 50%),
+                radial-gradient(circle at 85% 82%, rgba(147, 51, 234, 0.28) 0%, transparent 40%) !important;
+            background-attachment: fixed !important;
         }
 
+        /* Glassmorphic Auth Card Container */
         .auth-glass-card {
-            background: rgba(21, 17, 43, 0.78);
-            border: 1px solid rgba(155, 92, 255, 0.35);
-            backdrop-filter: blur(20px);
-            border-radius: 20px;
-            padding: 2.2rem;
-            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4), 0 0 20px rgba(155, 92, 255, 0.15);
+            background: rgba(18, 14, 38, 0.82) !important;
+            border: 1px solid rgba(155, 92, 255, 0.35) !important;
+            backdrop-filter: blur(25px) !important;
+            -webkit-backdrop-filter: blur(25px) !important;
+            border-radius: 24px !important;
+            padding: 2.2rem 2.2rem 1.8rem 2.2rem !important;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.65), 0 0 35px rgba(113, 56, 245, 0.22) !important;
         }
 
-        .feature-item-card {
-            background: rgba(21, 17, 43, 0.55);
-            border: 1px solid rgba(155, 92, 255, 0.2);
-            border-radius: 12px;
-            padding: 0.9rem 1.1rem;
-            margin-bottom: 0.75rem;
-            display: flex;
-            align-items: flex-start;
-            gap: 0.9rem;
+        /* 4 Feature Items Grid Item */
+        .hero-feature-item {
+            background: rgba(22, 17, 46, 0.65);
+            border: 1px solid rgba(155, 92, 255, 0.25);
+            border-radius: 14px;
+            padding: 0.95rem 0.5rem;
             transition: all 0.25s ease;
         }
-        .feature-item-card:hover {
+        .hero-feature-item:hover {
+            background: rgba(113, 56, 245, 0.25);
             border-color: #9B5CFF;
-            background: rgba(113, 56, 245, 0.15);
-            transform: translateX(4px);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(155, 92, 255, 0.3);
         }
 
-        .sentiment-badge-pill {
-            display: inline-block;
-            padding: 0.2rem 0.55rem;
-            border-radius: 12px;
-            font-size: 0.72rem;
-            font-weight: 700;
+        /* Primary Sign In Button */
+        div[data-testid="stButton"] button[kind="primary"] {
+            background: linear-gradient(135deg, #7138F5 0%, #9B5CFF 100%) !important;
+            border: none !important;
+            border-radius: 26px !important;
+            color: #FFFFFF !important;
+            font-weight: 700 !important;
+            font-size: 1.05rem !important;
+            padding: 0.72rem 1.5rem !important;
+            box-shadow: 0 8px 25px rgba(113, 56, 245, 0.45) !important;
+            transition: all 0.25s ease !important;
         }
-        .badge-pos { background: rgba(16, 185, 129, 0.2); color: #34D399; border: 1px solid rgba(16, 185, 129, 0.4); }
-        .badge-neg { background: rgba(239, 68, 68, 0.2); color: #F87171; border: 1px solid rgba(239, 68, 68, 0.4); }
-        .badge-neu { background: rgba(245, 158, 11, 0.2); color: #FBBF24; border: 1px solid rgba(245, 158, 11, 0.4); }
+        div[data-testid="stButton"] button[kind="primary"]:hover {
+            box-shadow: 0 12px 35px rgba(155, 92, 255, 0.7) !important;
+            transform: translateY(-2px) !important;
+        }
+
+        /* Secondary and Google buttons */
+        div[data-testid="stButton"] button[kind="secondary"] {
+            background: rgba(18, 14, 38, 0.8) !important;
+            border: 1px solid rgba(255, 255, 255, 0.16) !important;
+            border-radius: 26px !important;
+            color: #FFFFFF !important;
+            font-weight: 600 !important;
+            transition: all 0.25s ease !important;
+        }
+        div[data-testid="stButton"] button[kind="secondary"]:hover {
+            border-color: rgba(155, 92, 255, 0.7) !important;
+            background: rgba(30, 24, 62, 0.9) !important;
+        }
+
+        /* Input text boxes styling */
+        div[data-testid="stTextInput"] input {
+            background: rgba(12, 9, 28, 0.65) !important;
+            border: 1px solid rgba(155, 92, 255, 0.3) !important;
+            border-radius: 12px !important;
+            color: #FFFFFF !important;
+            padding: 0.7rem 1rem !important;
+            transition: all 0.2s ease !important;
+        }
+        div[data-testid="stTextInput"] input:focus {
+            border-color: #9B5CFF !important;
+            box-shadow: 0 0 15px rgba(155, 92, 255, 0.45) !important;
+            background: rgba(20, 15, 45, 0.85) !important;
+        }
     </style>
     """, unsafe_allow_html=True)
 
-    col_left, col_right = st.columns([1.15, 1], gap="large")
+    col_left, col_right = st.columns([1.18, 1], gap="large")
 
     # ====================================================
-    # LEFT COLUMN: BRANDING, VISUAL PREVIEW & FEATURES
+    # LEFT COLUMN: BRANDING, 3D ILLUSTRATION & FEATURES
     # ====================================================
     with col_left:
-        st.markdown("""
-        <div style="padding-right: 0.5rem;">
-            <div style="display: inline-flex; align-items: center; gap: 0.5rem; padding: 5px 14px; border-radius: 20px; background: rgba(155, 92, 255, 0.18); border: 1px solid rgba(155, 92, 255, 0.4); color: #C4B5FD; font-size: 0.8rem; font-weight: 700; margin-bottom: 1.2rem; letter-spacing: 0.05em;">
-                ⚡ NEXT-GEN NLP REVIEW INTELLIGENCE
-            </div>
-
-            <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 0.8rem;">
-                <div style="width: 50px; height: 50px; border-radius: 14px; background: linear-gradient(135deg, #7138F5 0%, #9B5CFF 100%); display: flex; align-items: center; justify-content: center; font-size: 26px; box-shadow: 0 0 25px rgba(155, 92, 255, 0.5);">
-                    🔍
+        laptop_preview_html = f"""
+        <div style="position: relative; margin-bottom: 1.6rem; border-radius: 20px; overflow: hidden; box-shadow: 0 20px 50px rgba(0,0,0,0.65), 0 0 35px rgba(113, 56, 245, 0.35); border: 1px solid rgba(155, 92, 255, 0.35); background: rgba(14, 10, 30, 0.8);">
+            <img src="data:image/png;base64,{laptop_b64}" style="width: 100%; height: auto; display: block;" alt="ReviewLens 3D NLP Dashboard Preview">
+        </div>
+        """ if laptop_b64 else """
+        <div style="background: rgba(21, 17, 43, 0.7); border: 1px solid rgba(155, 92, 255, 0.3); border-radius: 16px; padding: 1.3rem; margin-bottom: 1.8rem; box-shadow: 0 10px 30px rgba(0,0,0,0.4);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 0.6rem;">
+                <div style="font-size: 0.85rem; font-weight: 700; color: #C4B5FD; display: flex; align-items: center; gap: 0.5rem;">
+                    <span style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #10B981; box-shadow: 0 0 8px #10B981;"></span>
+                    Live NLP Review Stream
                 </div>
-                <div style="font-size: 1.85rem; font-weight: 800; color: #FFFFFF; letter-spacing: -0.5px;">
+                <div style="font-size: 0.78rem; color: #B9B3D0;">VADER & ABSA Powered</div>
+            </div>
+            <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(16, 185, 129, 0.25); border-left: 4px solid #10B981; border-radius: 8px; padding: 0.65rem 0.9rem; margin-bottom: 0.6rem;">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 0.2rem;">
+                    <span style="font-size: 0.78rem; font-weight: 700; color: #FFFFFF;">Galaxy S24 FE • Battery & Display</span>
+                    <span style="color: #34D399; font-weight: 700; font-size: 0.75rem;">🟢 POSITIVE (+0.84)</span>
+                </div>
+                <div style="font-size: 0.82rem; color: #E2E8F0; font-style: italic;">"Battery easily lasted two full days, and the 120Hz OLED screen is stunning..."</div>
+            </div>
+            <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(239, 68, 68, 0.25); border-left: 4px solid #EF4444; border-radius: 8px; padding: 0.65rem 0.9rem; margin-bottom: 0.6rem;">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 0.2rem;">
+                    <span style="font-size: 0.78rem; font-weight: 700; color: #FFFFFF;">Bose QC Ultra • Microphone</span>
+                    <span style="color: #F87171; font-weight: 700; font-size: 0.75rem;">🔴 NEGATIVE (-0.68)</span>
+                </div>
+                <div style="font-size: 0.82rem; color: #E2E8F0; font-style: italic;">"Microphone sounds muffled during noisy Zoom calls in wind..."</div>
+            </div>
+            <div style="margin-top: 0.9rem; padding-top: 0.6rem; border-top: 1px solid rgba(255,255,255,0.08);">
+                <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: #B9B3D0; margin-bottom: 0.3rem;">
+                    <span>Sentiment Polarity Spread:</span>
+                    <span><b>74% Positive</b> • 18% Neutral • 8% Negative</span>
+                </div>
+                <div style="height: 6px; border-radius: 3px; background: #1E293B; overflow: hidden; display: flex;">
+                    <div style="width: 74%; background: #10B981;"></div>
+                    <div style="width: 18%; background: #F59E0B;"></div>
+                    <div style="width: 8%; background: #EF4444;"></div>
+                </div>
+            </div>
+        </div>
+        """
+
+        st.markdown(f"""
+        <div style="padding-right: 0.5rem;">
+            <!-- BRAND LOGO -->
+            <div style="display: inline-flex; align-items: center; gap: 0.75rem; margin-bottom: 1.5rem;">
+                <div style="width: 44px; height: 44px; border-radius: 12px; background: linear-gradient(135deg, #7138F5 0%, #9B5CFF 100%); display: flex; align-items: center; justify-content: center; font-size: 22px; color: #FFFFFF; box-shadow: 0 0 22px rgba(155, 92, 255, 0.6);">
+                    ★
+                </div>
+                <div style="font-size: 1.9rem; font-weight: 800; color: #FFFFFF; letter-spacing: -0.5px;">
                     Review<span style="color: #9B5CFF;">Lens</span>
                 </div>
             </div>
 
-            <h1 style="font-size: 2.4rem; font-weight: 800; line-height: 1.2; margin: 0 0 1rem 0; background: linear-gradient(135deg, #FFFFFF 40%, #B9B3D0 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
-                Insights from Product Reviews
+            <!-- MAIN HEADING -->
+            <h1 style="font-size: 2.85rem; font-weight: 800; line-height: 1.15; margin: 0 0 1rem 0; color: #FFFFFF; letter-spacing: -0.5px;">
+                Insights from<br>
+                Product <span style="background: linear-gradient(135deg, #B575FF 0%, #E0A7FF 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Reviews</span>
             </h1>
 
-            <p style="font-size: 1.02rem; color: #B9B3D0; line-height: 1.6; margin-bottom: 1.8rem;">
-                An NLP-powered platform to analyze reviews, understand customer sentiment, detect fake reviews, and generate intelligent AI-powered responses.
+            <!-- DESCRIPTION -->
+            <p style="font-size: 1.05rem; color: #B9B3D0; line-height: 1.6; margin-bottom: 1.6rem; max-width: 520px;">
+                An NLP-powered platform to analyze reviews, understand customer sentiment, detect fake reviews, and get smart, AI-generated replies.
             </p>
 
-            <!-- DASHBOARD ILLUSTRATION & REVIEW CARDS PREVIEW -->
-            <div style="background: rgba(21, 17, 43, 0.7); border: 1px solid rgba(155, 92, 255, 0.3); border-radius: 16px; padding: 1.3rem; margin-bottom: 1.8rem; box-shadow: 0 10px 30px rgba(0,0,0,0.4);">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 0.6rem;">
-                    <div style="font-size: 0.85rem; font-weight: 700; color: #C4B5FD; display: flex; align-items: center; gap: 0.5rem;">
-                        <span style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #10B981; box-shadow: 0 0 8px #10B981;"></span>
-                        Live NLP Review Stream
-                    </div>
-                    <div style="font-size: 0.78rem; color: #B9B3D0;">VADER & ABSA Powered</div>
+            <!-- 3D LAPTOP PREVIEW ILLUSTRATION -->
+            {laptop_preview_html}
+
+            <!-- FOUR FEATURE HIGHLIGHTS IN HORIZONTAL ROW -->
+            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.75rem; text-align: center; margin-top: 1.2rem;">
+                <div class="hero-feature-item">
+                    <div style="font-size: 1.65rem; color: #9B5CFF; margin-bottom: 0.35rem;">📊</div>
+                    <div style="font-size: 0.82rem; font-weight: 700; color: #FFFFFF; line-height: 1.3;">Sentiment<br>Analysis</div>
                 </div>
-
-                <!-- Review Card 1 (Positive) -->
-                <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(16, 185, 129, 0.25); border-left: 4px solid #10B981; border-radius: 8px; padding: 0.65rem 0.9rem; margin-bottom: 0.6rem;">
-                    <div style="display: flex; justify-content: space-between; margin-bottom: 0.2rem;">
-                        <span style="font-size: 0.78rem; font-weight: 700; color: #FFFFFF;">Galaxy S24 FE • Battery & Display</span>
-                        <span class="sentiment-badge-pill badge-pos">🟢 POSITIVE (+0.84)</span>
-                    </div>
-                    <div style="font-size: 0.82rem; color: #E2E8F0; font-style: italic;">"Battery easily lasted two full days, and the 120Hz OLED screen is stunning..."</div>
+                <div class="hero-feature-item">
+                    <div style="font-size: 1.65rem; color: #9B5CFF; margin-bottom: 0.35rem;">🏷️</div>
+                    <div style="font-size: 0.82rem; font-weight: 700; color: #FFFFFF; line-height: 1.3;">Aspect-based<br>Analysis</div>
                 </div>
-
-                <!-- Review Card 2 (Negative) -->
-                <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(239, 68, 68, 0.25); border-left: 4px solid #EF4444; border-radius: 8px; padding: 0.65rem 0.9rem; margin-bottom: 0.6rem;">
-                    <div style="display: flex; justify-content: space-between; margin-bottom: 0.2rem;">
-                        <span style="font-size: 0.78rem; font-weight: 700; color: #FFFFFF;">Bose QC Ultra • Microphone</span>
-                        <span class="sentiment-badge-pill badge-neg">🔴 NEGATIVE (-0.68)</span>
-                    </div>
-                    <div style="font-size: 0.82rem; color: #E2E8F0; font-style: italic;">"Microphone sounds muffled during noisy Zoom calls in wind..."</div>
+                <div class="hero-feature-item">
+                    <div style="font-size: 1.65rem; color: #9B5CFF; margin-bottom: 0.35rem;">🛡️</div>
+                    <div style="font-size: 0.82rem; font-weight: 700; color: #FFFFFF; line-height: 1.3;">Fake Review<br>Detection</div>
                 </div>
-
-                <!-- Review Card 3 (Neutral/Clause) -->
-                <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(245, 158, 11, 0.25); border-left: 4px solid #F59E0B; border-radius: 8px; padding: 0.65rem 0.9rem;">
-                    <div style="display: flex; justify-content: space-between; margin-bottom: 0.2rem;">
-                        <span style="font-size: 0.78rem; font-weight: 700; color: #FFFFFF;">MacBook Air M3 • Packaging</span>
-                        <span class="sentiment-badge-pill badge-neu">🟡 NEUTRAL (0.00)</span>
-                    </div>
-                    <div style="font-size: 0.82rem; color: #E2E8F0; font-style: italic;">"Box includes braided USB-C MagSafe cable and standard adapter..."</div>
-                </div>
-
-                <!-- Sentiment Distribution Bar Indicator -->
-                <div style="margin-top: 0.9rem; padding-top: 0.6rem; border-top: 1px solid rgba(255,255,255,0.08);">
-                    <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: #B9B3D0; margin-bottom: 0.3rem;">
-                        <span>Sentiment Polarity Spread:</span>
-                        <span><b>74% Positive</b> • 18% Neutral • 8% Negative</span>
-                    </div>
-                    <div style="height: 6px; border-radius: 3px; background: #1E293B; overflow: hidden; display: flex;">
-                        <div style="width: 74%; background: #10B981;"></div>
-                        <div style="width: 18%; background: #F59E0B;"></div>
-                        <div style="width: 8%; background: #EF4444;"></div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- FOUR FEATURE HIGHLIGHTS -->
-            <div style="font-weight: 700; font-size: 0.95rem; color: #FFFFFF; margin-bottom: 0.8rem; letter-spacing: 0.02em;">
-                CORE CAPABILITIES:
-            </div>
-
-            <div class="feature-item-card">
-                <div style="font-size: 1.4rem;">📊</div>
-                <div>
-                    <div style="font-size: 0.92rem; font-weight: 700; color: #FFFFFF;">Sentiment Analysis</div>
-                    <div style="font-size: 0.82rem; color: #B9B3D0;">Multi-tiered VADER Lexicon scoring with domain polarity adaptation and Net Sentiment Score (NSS).</div>
-                </div>
-            </div>
-
-            <div class="feature-item-card">
-                <div style="font-size: 1.4rem;">🎯</div>
-                <div>
-                    <div style="font-size: 0.92rem; font-weight: 700; color: #FFFFFF;">Aspect-Based Sentiment Analysis</div>
-                    <div style="font-size: 0.82rem; color: #B9B3D0;">Category-specific ABSA taxonomies with contrastive clause splitting on conjunctions.</div>
-                </div>
-            </div>
-
-            <div class="feature-item-card">
-                <div style="font-size: 1.4rem;">🛡️</div>
-                <div>
-                    <div style="font-size: 0.92rem; font-weight: 700; color: #FFFFFF;">Fake Review Detection</div>
-                    <div style="font-size: 0.82rem; color: #B9B3D0;">Multi-heuristic spam probability detector and star-rating contradiction auditor.</div>
-                </div>
-            </div>
-
-            <div class="feature-item-card">
-                <div style="font-size: 1.4rem;">💬</div>
-                <div>
-                    <div style="font-size: 0.92rem; font-weight: 700; color: #FFFFFF;">AI-Generated Review Replies</div>
-                    <div style="font-size: 0.82rem; color: #B9B3D0;">Executive review synthesis, buyer persona profiling, and automated response generation.</div>
+                <div class="hero-feature-item">
+                    <div style="font-size: 1.65rem; color: #9B5CFF; margin-bottom: 0.35rem;">✨</div>
+                    <div style="font-size: 0.82rem; font-weight: 700; color: #FFFFFF; line-height: 1.3;">AI Review<br>Replies</div>
                 </div>
             </div>
         </div>
@@ -545,23 +570,38 @@ def render_auth_interface(on_navigate_home=None) -> None:
     # RIGHT COLUMN: GLASSMORPHISM LOGIN / SIGNUP CARD
     # ====================================================
     with col_right:
+        # Wrap in auth-glass-card styling container
+        st.markdown('<div class="auth-glass-card">', unsafe_allow_html=True)
+
         # ------------------------------------------------
         # 1. LOGIN MODE
         # ------------------------------------------------
         if st.session_state["auth_mode"] == "login":
             st.markdown("""
-            <div style="background: rgba(21, 17, 43, 0.82); border: 1px solid rgba(155, 92, 255, 0.35); backdrop-filter: blur(20px); border-radius: 20px; padding: 2rem 2.2rem 1.6rem 2.2rem; box-shadow: 0 15px 45px rgba(0, 0, 0, 0.5), 0 0 25px rgba(155, 92, 255, 0.2);">
-                <div style="font-size: 0.8rem; font-weight: 700; color: #9B5CFF; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.3rem;">
-                    Sign In
+            <div style="text-align: center; margin-bottom: 1.4rem;">
+                <div style="display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; margin-bottom: 0.75rem;">
+                    <div style="width: 36px; height: 36px; border-radius: 10px; background: linear-gradient(135deg, #7138F5 0%, #9B5CFF 100%); display: flex; align-items: center; justify-content: center; font-size: 18px; color: #FFFFFF; box-shadow: 0 0 16px rgba(155, 92, 255, 0.5);">
+                        ★
+                    </div>
+                    <div style="font-size: 1.55rem; font-weight: 800; color: #FFFFFF;">
+                        Review<span style="color: #9B5CFF;">Lens</span>
+                    </div>
                 </div>
-                <h2 style="font-size: 1.95rem; font-weight: 800; color: #FFFFFF; margin: 0 0 0.4rem 0;">
+                <h2 style="font-size: 2.15rem; font-weight: 800; color: #FFFFFF; margin: 0 0 0.35rem 0; letter-spacing: -0.5px;">
                     Welcome Back!
                 </h2>
-                <p style="font-size: 0.9rem; color: #B9B3D0; margin: 0 0 1.2rem 0;">
+                <p style="font-size: 0.92rem; color: #B9B3D0; margin: 0;">
                     Sign in to continue analyzing product reviews.
                 </p>
             </div>
             """, unsafe_allow_html=True)
+
+            # Quick fill for demo tester convenience
+            fill_demo_col, _ = st.columns([2, 1])
+            with fill_demo_col:
+                if st.button("⚡ Fill Demo Account (demo@reviewlens.com)", key="btn_fill_demo", use_container_width=True):
+                    st.session_state["login_email_input"] = "demo@reviewlens.com"
+                    st.session_state["login_pw_input"] = "Password@123"
 
             # Sign-in method toggle: Email vs Phone SMS OTP
             login_method = st.radio(
@@ -573,24 +613,30 @@ def render_auth_interface(on_navigate_home=None) -> None:
             )
 
             if login_method == "📧 Email & Password":
-                # Quick fill for demo tester convenience
-                fill_demo_col, _ = st.columns([2, 1])
-                with fill_demo_col:
-                    if st.button("⚡ Fill Demo Account (demo@reviewlens.com)", key="btn_fill_demo", use_container_width=True):
-                        st.session_state["login_email_input"] = "demo@reviewlens.com"
-                        st.session_state["login_pw_input"] = "Password@123"
-
                 default_email = st.session_state.get("login_email_input", "")
                 default_pw = st.session_state.get("login_pw_input", "")
 
-                login_email = st.text_input("Email address", value=default_email, placeholder="name@example.com", key="auth_field_email")
+                login_email = st.text_input(
+                    "Email Address",
+                    value=default_email,
+                    placeholder="✉️ Enter your email",
+                    label_visibility="collapsed",
+                    key="auth_field_email"
+                )
 
-                col_pw_hdr, col_pw_eye = st.columns([2, 1])
-                with col_pw_eye:
-                    show_pw = st.checkbox("👁️ Show", key="login_show_pw")
+                col_pw, col_eye = st.columns([4.2, 1.2])
+                with col_eye:
+                    show_pw = st.checkbox("👁️ Show", key="login_show_pw", help="Show password")
 
                 pw_field_type = "default" if show_pw else "password"
-                login_password = st.text_input("Password", value=default_pw, type=pw_field_type, placeholder="••••••••", key="auth_field_password")
+                login_password = col_pw.text_input(
+                    "Password",
+                    value=default_pw,
+                    type=pw_field_type,
+                    placeholder="🔒 Enter your password",
+                    label_visibility="collapsed",
+                    key="auth_field_password"
+                )
 
                 col_rem, col_forgot = st.columns([1, 1])
                 with col_rem:
@@ -600,7 +646,7 @@ def render_auth_interface(on_navigate_home=None) -> None:
                         st.session_state["auth_mode"] = "forgot"
                         st.rerun()
 
-                if st.button("Sign In to ReviewLens →", key="btn_submit_signin", type="primary", use_container_width=True):
+                if st.button("Sign In →", key="btn_submit_signin", type="primary", use_container_width=True):
                     with st.spinner("Authenticating credentials..."):
                         res = authenticate_user(login_email, login_password)
                         if res["success"]:
@@ -614,13 +660,13 @@ def render_auth_interface(on_navigate_home=None) -> None:
                             st.error(f"⚠️ {res['message']}")
 
                 st.markdown("""
-                <div style="text-align: center; margin: 1rem 0; color: #64748B; font-size: 0.8rem; position: relative;">
-                    <span style="background: #15112B; padding: 0 10px; position: relative; z-index: 1;">OR CONTINUE WITH</span>
-                    <hr style="position: absolute; top: 50%; left: 0; right: 0; border: none; border-top: 1px solid rgba(255,255,255,0.1); margin: 0; z-index: 0;">
+                <div style="text-align: center; margin: 1.1rem 0; color: #7E7A94; font-size: 0.85rem; position: relative;">
+                    <span style="background: #120E26; padding: 0 12px; position: relative; z-index: 1;">Or continue with</span>
+                    <hr style="position: absolute; top: 50%; left: 0; right: 0; border: none; border-top: 1px solid rgba(255,255,255,0.12); margin: 0; z-index: 0;">
                 </div>
                 """, unsafe_allow_html=True)
 
-                if st.button("🔴 Continue with Google / Gmail", key="btn_login_google", use_container_width=True):
+                if st.button("🔴 Continue with Google", key="btn_login_google", use_container_width=True):
                     google_email = login_email if (login_email and "@" in login_email) else "shopper@gmail.com"
                     login_with_google(google_email)
                     st.toast("Signed in with Google Identity!", icon="✅")
@@ -631,9 +677,7 @@ def render_auth_interface(on_navigate_home=None) -> None:
                         st.rerun()
 
             else:
-                # ----------------------------------------------------
                 # PHONE NUMBER + SMS OTP FLOW
-                # ----------------------------------------------------
                 st.caption("Enter your mobile number to receive a secure 6-digit SMS verification code.")
                 c_cc, c_num = st.columns([1.1, 2])
                 with c_cc:
@@ -670,7 +714,11 @@ def render_auth_interface(on_navigate_home=None) -> None:
                             st.error("⚠️ Invalid OTP code. Please enter the generated code or default code 123456.")
 
             st.markdown("<br>", unsafe_allow_html=True)
-            st.markdown("<div style='text-align: center; font-size: 0.88rem; color: #B9B3D0;'>Don't have an account?</div>", unsafe_allow_html=True)
+            st.markdown("""
+            <div style="text-align: center; font-size: 0.92rem; color: #B9B3D0; margin-bottom: 0.5rem;">
+                Don't have an account? <span style="color: #9B5CFF; font-weight: 700;">Create Account</span>
+            </div>
+            """, unsafe_allow_html=True)
             if st.button("Create Account →", key="btn_goto_signup", use_container_width=True):
                 st.session_state["auth_mode"] = "signup"
                 st.rerun()
@@ -680,29 +728,34 @@ def render_auth_interface(on_navigate_home=None) -> None:
         # ------------------------------------------------
         elif st.session_state["auth_mode"] == "signup":
             st.markdown("""
-            <div style="background: rgba(21, 17, 43, 0.82); border: 1px solid rgba(155, 92, 255, 0.35); backdrop-filter: blur(20px); border-radius: 20px; padding: 2rem 2.2rem 1.6rem 2.2rem; box-shadow: 0 15px 45px rgba(0, 0, 0, 0.5), 0 0 25px rgba(155, 92, 255, 0.2);">
-                <div style="font-size: 0.8rem; font-weight: 700; color: #9B5CFF; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.3rem;">
-                    Registration
+            <div style="text-align: center; margin-bottom: 1.4rem;">
+                <div style="display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; margin-bottom: 0.75rem;">
+                    <div style="width: 36px; height: 36px; border-radius: 10px; background: linear-gradient(135deg, #7138F5 0%, #9B5CFF 100%); display: flex; align-items: center; justify-content: center; font-size: 18px; color: #FFFFFF; box-shadow: 0 0 16px rgba(155, 92, 255, 0.5);">
+                        ★
+                    </div>
+                    <div style="font-size: 1.55rem; font-weight: 800; color: #FFFFFF;">
+                        Review<span style="color: #9B5CFF;">Lens</span>
+                    </div>
                 </div>
-                <h2 style="font-size: 1.95rem; font-weight: 800; color: #FFFFFF; margin: 0 0 0.4rem 0;">
+                <h2 style="font-size: 2.15rem; font-weight: 800; color: #FFFFFF; margin: 0 0 0.35rem 0; letter-spacing: -0.5px;">
                     Create Your Account
                 </h2>
-                <p style="font-size: 0.9rem; color: #B9B3D0; margin: 0 0 1.2rem 0;">
-                    Join ReviewLens to analyze product reviews and unlock AI-powered insights.
+                <p style="font-size: 0.92rem; color: #B9B3D0; margin: 0;">
+                    Join ReviewLens to analyze product reviews and unlock AI insights.
                 </p>
             </div>
             """, unsafe_allow_html=True)
 
-            signup_name = st.text_input("Full name", placeholder="e.g. Vinay Vardhan", key="signup_field_name")
-            signup_email = st.text_input("Email address", placeholder="name@example.com", key="signup_field_email")
+            signup_name = st.text_input("Full Name", placeholder="👤 Enter your full name", label_visibility="collapsed", key="signup_field_name")
+            signup_email = st.text_input("Email Address", placeholder="✉️ Enter your email", label_visibility="collapsed", key="signup_field_email")
 
-            col_spw_hdr, col_spw_eye = st.columns([2, 1])
-            with col_spw_eye:
+            col_spw, col_seye = st.columns([4.2, 1.2])
+            with col_seye:
                 show_signup_pw = st.checkbox("👁️ Show", key="signup_show_pw")
 
             s_pw_type = "default" if show_signup_pw else "password"
-            signup_pw = st.text_input("Password (min. 6 characters)", type=s_pw_type, placeholder="Create strong password", key="signup_field_password")
-            signup_confirm = st.text_input("Confirm password", type=s_pw_type, placeholder="Re-type password", key="signup_field_confirm")
+            signup_pw = col_spw.text_input("Password", type=s_pw_type, placeholder="🔒 Create strong password (min. 6 chars)", label_visibility="collapsed", key="signup_field_password")
+            signup_confirm = st.text_input("Confirm Password", type=s_pw_type, placeholder="🔒 Confirm your password", label_visibility="collapsed", key="signup_field_confirm")
 
             st.caption("🔒 Passwords are cryptographically salted and hashed. We never store plaintext.")
 
@@ -720,13 +773,13 @@ def render_auth_interface(on_navigate_home=None) -> None:
                         st.error(f"⚠️ {res['message']}")
 
             st.markdown("""
-            <div style="text-align: center; margin: 1rem 0; color: #64748B; font-size: 0.8rem; position: relative;">
-                <span style="background: #15112B; padding: 0 10px; position: relative; z-index: 1;">OR REGISTER WITH</span>
-                <hr style="position: absolute; top: 50%; left: 0; right: 0; border: none; border-top: 1px solid rgba(255,255,255,0.1); margin: 0; z-index: 0;">
+            <div style="text-align: center; margin: 1.1rem 0; color: #7E7A94; font-size: 0.85rem; position: relative;">
+                <span style="background: #120E26; padding: 0 12px; position: relative; z-index: 1;">Or continue with</span>
+                <hr style="position: absolute; top: 50%; left: 0; right: 0; border: none; border-top: 1px solid rgba(255,255,255,0.12); margin: 0; z-index: 0;">
             </div>
             """, unsafe_allow_html=True)
 
-            if st.button("🔴 Sign Up with Google / Gmail", key="btn_signup_google", use_container_width=True):
+            if st.button("🔴 Sign Up with Google", key="btn_signup_google", use_container_width=True):
                 google_email = signup_email if (signup_email and "@" in signup_email) else "shopper@gmail.com"
                 google_name = signup_name if signup_name else None
                 login_with_google(google_email, name=google_name)
@@ -738,7 +791,11 @@ def render_auth_interface(on_navigate_home=None) -> None:
                     st.rerun()
 
             st.markdown("<br>", unsafe_allow_html=True)
-            st.markdown("<div style='text-align: center; font-size: 0.88rem; color: #B9B3D0;'>Already have an account?</div>", unsafe_allow_html=True)
+            st.markdown("""
+            <div style="text-align: center; font-size: 0.92rem; color: #B9B3D0; margin-bottom: 0.5rem;">
+                Already have an account? <span style="color: #9B5CFF; font-weight: 700;">Sign In</span>
+            </div>
+            """, unsafe_allow_html=True)
             if st.button("← Back to Sign In", key="btn_goto_login", use_container_width=True):
                 st.session_state["auth_mode"] = "login"
                 st.rerun()
@@ -748,20 +805,25 @@ def render_auth_interface(on_navigate_home=None) -> None:
         # ------------------------------------------------
         elif st.session_state["auth_mode"] == "forgot":
             st.markdown("""
-            <div style="background: rgba(21, 17, 43, 0.82); border: 1px solid rgba(155, 92, 255, 0.35); backdrop-filter: blur(20px); border-radius: 20px; padding: 2rem 2.2rem 1.6rem 2.2rem; box-shadow: 0 15px 45px rgba(0, 0, 0, 0.5), 0 0 25px rgba(155, 92, 255, 0.2);">
-                <div style="font-size: 0.8rem; font-weight: 700; color: #9B5CFF; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.3rem;">
-                    Password Recovery
+            <div style="text-align: center; margin-bottom: 1.4rem;">
+                <div style="display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; margin-bottom: 0.75rem;">
+                    <div style="width: 36px; height: 36px; border-radius: 10px; background: linear-gradient(135deg, #7138F5 0%, #9B5CFF 100%); display: flex; align-items: center; justify-content: center; font-size: 18px; color: #FFFFFF; box-shadow: 0 0 16px rgba(155, 92, 255, 0.5);">
+                        ★
+                    </div>
+                    <div style="font-size: 1.55rem; font-weight: 800; color: #FFFFFF;">
+                        Review<span style="color: #9B5CFF;">Lens</span>
+                    </div>
                 </div>
-                <h2 style="font-size: 1.95rem; font-weight: 800; color: #FFFFFF; margin: 0 0 0.4rem 0;">
+                <h2 style="font-size: 2.15rem; font-weight: 800; color: #FFFFFF; margin: 0 0 0.35rem 0; letter-spacing: -0.5px;">
                     Reset Password
                 </h2>
-                <p style="font-size: 0.9rem; color: #B9B3D0; margin: 0 0 1.2rem 0;">
+                <p style="font-size: 0.92rem; color: #B9B3D0; margin: 0;">
                     Enter your registered email address and we'll send verification credentials.
                 </p>
             </div>
             """, unsafe_allow_html=True)
 
-            forgot_email = st.text_input("Registered Email Address", placeholder="name@example.com", key="forgot_field_email")
+            forgot_email = st.text_input("Registered Email Address", placeholder="✉️ Enter your registered email", label_visibility="collapsed", key="forgot_field_email")
 
             if st.button("Send Reset Instructions →", key="btn_submit_forgot", type="primary", use_container_width=True):
                 if forgot_email and "@" in forgot_email:
@@ -777,7 +839,7 @@ def render_auth_interface(on_navigate_home=None) -> None:
         # GUEST PREVIEW OPTION
         st.markdown("<br>", unsafe_allow_html=True)
         st.markdown("""
-        <div style="background: rgba(155, 92, 255, 0.08); border: 1px dashed rgba(155, 92, 255, 0.3); border-radius: 12px; padding: 0.85rem 1.1rem; text-align: center; color: #B9B3D0; font-size: 0.82rem; margin-top: 1rem;">
+        <div style="background: rgba(155, 92, 255, 0.08); border: 1px dashed rgba(155, 92, 255, 0.3); border-radius: 14px; padding: 0.85rem 1.1rem; text-align: center; color: #B9B3D0; font-size: 0.82rem; margin-top: 0.8rem;">
             🛡️ <b>Evaluator & Guest Access:</b> Want to browse the catalogue first?
         </div>
         """, unsafe_allow_html=True)
@@ -789,3 +851,5 @@ def render_auth_interface(on_navigate_home=None) -> None:
             else:
                 st.session_state["pending_nav"] = "🏠 Home / Discovery"
                 st.rerun()
+
+        st.markdown('</div>', unsafe_allow_html=True)
