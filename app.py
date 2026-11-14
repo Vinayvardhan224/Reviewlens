@@ -85,6 +85,38 @@ st.markdown("""
     }
 
     /* ========================================================
+       PREMIUM DARK THEME BACKGROUND (OBSIDIAN & AURORA GLOW)
+       ======================================================== */
+    body, .stApp {
+        background-color: #07051A !important;
+        background-image: 
+            radial-gradient(circle at 12% 15%, rgba(113, 56, 245, 0.32) 0%, transparent 45%),
+            radial-gradient(circle at 88% 12%, rgba(155, 92, 255, 0.28) 0%, transparent 40%),
+            radial-gradient(circle at 50% 90%, rgba(113, 56, 245, 0.25) 0%, transparent 50%),
+            radial-gradient(circle at 85% 80%, rgba(147, 51, 234, 0.22) 0%, transparent 40%) !important;
+        background-attachment: fixed !important;
+        color: #F1F5F9 !important;
+    }
+
+    /* Headings & general typography */
+    h1, h2, h3, h4, h5, h6 {
+        color: #FFFFFF !important;
+        letter-spacing: -0.4px !important;
+    }
+    p, span, label, div {
+        color: #E2E8F0;
+    }
+    .stCaption, caption {
+        color: #94A3B8 !important;
+    }
+
+    /* Hide Streamlit Native Multipage Sidebar Nav List */
+    div[data-testid="stSidebarNav"],
+    ul[data-testid="stSidebarNavItems"] {
+        display: none !important;
+    }
+
+    /* ========================================================
        SLIDING ANIMATION & STYLING FOR SIDEBAR
        ======================================================== */
     @keyframes sidebarSlideIn {
@@ -101,9 +133,9 @@ st.markdown("""
     section[data-testid="stSidebar"] {
         animation: sidebarSlideIn 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards !important;
         transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), width 0.35s ease !important;
-        background: linear-gradient(180deg, #0B0F19 0%, #131921 55%, #0F172A 100%) !important;
-        border-right: 1px solid rgba(255, 255, 255, 0.08) !important;
-        box-shadow: 6px 0 24px rgba(0, 0, 0, 0.35) !important;
+        background: linear-gradient(180deg, #09071A 0%, #120D2A 55%, #0B081C 100%) !important;
+        border-right: 1px solid rgba(155, 92, 255, 0.2) !important;
+        box-shadow: 8px 0 30px rgba(0, 0, 0, 0.5) !important;
     }
 
     section[data-testid="stSidebar"] * {
@@ -113,20 +145,20 @@ st.markdown("""
     /* Sidebar action buttons (Profile, Sign Out) high contrast fix */
     section[data-testid="stSidebar"] div[data-testid="stButton"] button {
         background: rgba(255, 255, 255, 0.08) !important;
-        border: 1px solid rgba(255, 255, 255, 0.22) !important;
-        border-radius: 10px !important;
+        border: 1px solid rgba(155, 92, 255, 0.3) !important;
+        border-radius: 12px !important;
         color: #FFFFFF !important;
         font-weight: 700 !important;
-        padding: 0.55rem 0.8rem !important;
+        padding: 0.6rem 0.8rem !important;
         transition: all 0.2s ease !important;
     }
 
     section[data-testid="stSidebar"] div[data-testid="stButton"] button:hover {
-        background: rgba(155, 92, 255, 0.25) !important;
+        background: rgba(113, 56, 245, 0.35) !important;
         border-color: #9B5CFF !important;
         color: #FFFFFF !important;
         transform: translateY(-2px) !important;
-        box-shadow: 0 4px 14px rgba(155, 92, 255, 0.4) !important;
+        box-shadow: 0 4px 16px rgba(155, 92, 255, 0.45) !important;
     }
 
     section[data-testid="stSidebar"] div[data-testid="stButton"] button p,
@@ -142,42 +174,118 @@ st.markdown("""
         font-weight: 700 !important;
     }
 
-    /* Smooth sliding hover on sidebar radio navigation */
+    /* Modern SaaS Navigation Radio Items in Sidebar */
+    div[data-testid="stRadio"] div[role="radiogroup"] > label > div:first-child {
+        display: none !important; /* Hide raw circular radio dots */
+    }
     div[data-testid="stRadio"] div[role="radiogroup"] > label {
-        transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1) !important;
-        border-radius: 8px !important;
-        padding: 0.35rem 0.65rem !important;
-        margin-bottom: 0.2rem !important;
-        border: 1px solid transparent !important;
-    }
-
-    div[data-testid="stRadio"] div[role="radiogroup"] > label:hover {
-        background: rgba(255, 153, 0, 0.12) !important;
-        border: 1px solid rgba(255, 153, 0, 0.35) !important;
-        transform: translateX(6px) !important;
-    }
-
-    /* ========================================================
-       INNER INTERFACE ELEVATION & CARD HOVER ANIMATIONS
-       ======================================================== */
-    .stButton>button {
+        background: rgba(255, 255, 255, 0.04) !important;
+        border: 1px solid rgba(255, 255, 255, 0.08) !important;
         border-radius: 10px !important;
+        padding: 0.55rem 0.85rem !important;
+        margin-bottom: 0.35rem !important;
+        color: #E2E8F0 !important;
         font-weight: 600 !important;
+        font-size: 0.88rem !important;
+        transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+        cursor: pointer !important;
+        display: flex !important;
+        align-items: center !important;
+    }
+    div[data-testid="stRadio"] div[role="radiogroup"] > label:hover {
+        background: rgba(113, 56, 245, 0.22) !important;
+        border-color: rgba(155, 92, 255, 0.7) !important;
+        color: #FFFFFF !important;
+        transform: translateX(4px) !important;
+        box-shadow: 0 4px 16px rgba(113, 56, 245, 0.25) !important;
+    }
+    div[data-testid="stRadio"] div[role="radiogroup"] > label[data-checked="true"],
+    div[data-testid="stRadio"] div[role="radiogroup"] > label:has(input:checked) {
+        background: linear-gradient(135deg, rgba(113, 56, 245, 0.45) 0%, rgba(155, 92, 255, 0.3) 100%) !important;
+        border: 1px solid #9B5CFF !important;
+        color: #FFFFFF !important;
+        font-weight: 700 !important;
+        box-shadow: 0 4px 18px rgba(155, 92, 255, 0.4) !important;
+    }
+
+    /* Primary and Secondary Action Buttons in Main View */
+    .stButton>button {
+        border-radius: 12px !important;
+        font-weight: 700 !important;
         transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
     }
     .stButton>button:hover {
         transform: translateY(-2px) !important;
-        box-shadow: 0 6px 18px rgba(0, 0, 0, 0.12) !important;
+        box-shadow: 0 8px 22px rgba(113, 56, 245, 0.35) !important;
+    }
+    div[data-testid="stButton"] button[kind="primary"] {
+        background: linear-gradient(135deg, #7138F5 0%, #9B5CFF 100%) !important;
+        border: none !important;
+        color: #FFFFFF !important;
+        box-shadow: 0 6px 20px rgba(113, 56, 245, 0.4) !important;
+    }
+    div[data-testid="stButton"] button[kind="secondary"] {
+        background: rgba(22, 17, 46, 0.8) !important;
+        border: 1px solid rgba(155, 92, 255, 0.3) !important;
+        color: #FFFFFF !important;
     }
 
+    /* Dark Theme Cards (Metric cards, Topic cards) */
     .metric-card, .topic-card {
-        background: #FFFFFF;
-        border: 1px solid #E2E8F0;
-        border-radius: 14px;
-        padding: 1.15rem;
-        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
-        margin-bottom: 1rem;
-        border-left: 4px solid #2563EB;
+        background: rgba(22, 17, 46, 0.8) !important;
+        border: 1px solid rgba(155, 92, 255, 0.25) !important;
+        border-radius: 14px !important;
+        padding: 1.15rem !important;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45) !important;
+        margin-bottom: 1rem !important;
+        border-left: 4px solid #9B5CFF !important;
+        backdrop-filter: blur(16px) !important;
+        -webkit-backdrop-filter: blur(16px) !important;
+        transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s ease !important;
+    }
+    .metric-card:hover, .topic-card:hover {
+        transform: translateY(-3px) !important;
+        border-color: #9B5CFF !important;
+        box-shadow: 0 14px 35px rgba(113, 56, 245, 0.35) !important;
+    }
+    .metric-card .metric-label {
+        font-size: 0.8rem !important;
+        text-transform: uppercase !important;
+        letter-spacing: 0.05em !important;
+        color: #B9B3D0 !important;
+        font-weight: 700 !important;
+        margin-bottom: 0.3rem !important;
+    }
+    .metric-card .metric-value {
+        font-size: 1.6rem !important;
+        font-weight: 800 !important;
+        color: #FFFFFF !important;
+        line-height: 1.2 !important;
+    }
+    .metric-card .metric-sub {
+        font-size: 0.75rem !important;
+        color: #94A3B8 !important;
+        margin-top: 0.2rem !important;
+    }
+
+    .metric-card-orange {
+        border-left-color: #FF9900 !important;
+    }
+    .metric-card-green {
+        border-left-color: #10B981 !important;
+    }
+    .metric-card-purple {
+        border-left-color: #9B5CFF !important;
+    }
+
+    /* Dark theme text inputs and selectboxes */
+    div[data-testid="stTextInput"] input,
+    div[data-testid="stSelectbox"] div[data-baseweb="select"] > div {
+        background: rgba(12, 9, 28, 0.7) !important;
+        border: 1px solid rgba(155, 92, 255, 0.3) !important;
+        border-radius: 10px !important;
+        color: #FFFFFF !important;
+    }
         transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s ease !important;
     }
     .metric-card:hover, .topic-card:hover {
@@ -367,20 +475,42 @@ render_header(
     active_nav=st.session_state["nav_view"]
 )
 
-# Sidebar Account & Auth status card (rendered only when authenticated)
+# ========================================================
+# SIDEBAR: BRAND LOGO, USER ACCOUNT CARD & NAVIGATION
+# ========================================================
 esc_u_name = html.escape(str(current_user.get("display_name", "Shopper")))
 esc_u_badge = html.escape(str(current_user.get("tier_badge", "🛡️ Verified")))
-render_html_block(f"""
-<div style="background: rgba(255, 255, 255, 0.06); border: 1px solid rgba(255, 255, 255, 0.12); border-radius: 12px; padding: 0.8rem; margin-bottom: 0.8rem; display: flex; align-items: center; gap: 0.8rem;">
-    <div style="width: 38px; height: 38px; border-radius: 50%; background: linear-gradient(135deg, #FF9900 0%, #E47A24 100%); color: #131921; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 1.1rem; box-shadow: 0 2px 8px rgba(255, 153, 0, 0.4);">
+
+# 1. ReviewLens Sidebar Brand Header
+st.sidebar.markdown("""
+<div style="display: flex; align-items: center; gap: 0.75rem; padding: 0.2rem 0.2rem 0.8rem 0.2rem; border-bottom: 1px solid rgba(255, 255, 255, 0.08); margin-bottom: 0.9rem;">
+    <div style="width: 38px; height: 38px; border-radius: 11px; background: linear-gradient(135deg, #7138F5 0%, #9B5CFF 100%); display: flex; align-items: center; justify-content: center; font-size: 20px; color: #FFFFFF; box-shadow: 0 0 16px rgba(155, 92, 255, 0.55);">
+        ★
+    </div>
+    <div>
+        <div style="font-size: 1.35rem; font-weight: 800; color: #FFFFFF; letter-spacing: -0.3px; line-height: 1.1;">
+            Review<span style="color: #9B5CFF;">Lens</span>
+        </div>
+        <div style="font-size: 0.72rem; color: #94A3B8; font-weight: 500;">
+            NLP Product Intelligence
+        </div>
+    </div>
+</div>
+""", unsafe_allow_html=True)
+
+# 2. Authenticated User Profile Card (Rendered directly in Sidebar)
+st.sidebar.markdown(f"""
+<div style="background: rgba(22, 17, 46, 0.85); border: 1px solid rgba(155, 92, 255, 0.35); border-radius: 14px; padding: 0.85rem; margin-bottom: 0.75rem; display: flex; align-items: center; gap: 0.85rem; box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35);">
+    <div style="width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, #7138F5 0%, #9B5CFF 100%); color: #FFFFFF; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 1.15rem; box-shadow: 0 0 14px rgba(155, 92, 255, 0.5);">
         {current_user.get('avatar_letter', 'U')}
     </div>
     <div style="flex: 1; overflow: hidden;">
-        <div style="font-weight: 700; font-size: 0.88rem; color: #FFFFFF; white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">{esc_u_name}</div>
-        <div style="font-size: 0.72rem; color: #34D399; font-weight: 600;">{esc_u_badge}</div>
+        <div style="font-weight: 800; font-size: 0.95rem; color: #FFFFFF; white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">{esc_u_name}</div>
+        <div style="font-size: 0.74rem; color: #34D399; font-weight: 700;">{esc_u_badge}</div>
     </div>
 </div>
-""")
+""", unsafe_allow_html=True)
+
 col_sb_prof, col_sb_logout = st.sidebar.columns(2)
 with col_sb_prof:
     if st.button("👤 Profile", key="sidebar_btn_profile", use_container_width=True):
@@ -390,8 +520,8 @@ with col_sb_logout:
         logout_user()
         navigate_to("🏠 Home / Discovery")
 
-# Sidebar Navigation & Controls
-st.sidebar.markdown("## 🧭 **Navigation**")
+st.sidebar.markdown("<div style='margin-top: 0.8rem; border-top: 1px solid rgba(255,255,255,0.08); padding-top: 0.8rem;'></div>", unsafe_allow_html=True)
+st.sidebar.markdown("##### 🧭 **Navigation Menu**")
 NAV_OPTIONS = [
     "🏠 Home / Discovery",
     "📱 Smartphones",
@@ -498,12 +628,12 @@ if st.session_state["nav_view"] == "🏠 Home / Discovery":
 
     # New Features Showcase Callout
     render_html_block("""
-    <div style="background: linear-gradient(135deg, rgba(37, 99, 235, 0.08) 0%, rgba(255, 153, 0, 0.08) 100%); border: 1.5px solid rgba(37, 99, 235, 0.3); border-radius: 12px; padding: 1.2rem 1.5rem; margin-top: 1rem; margin-bottom: 1.2rem;">
+    <div style="background: linear-gradient(135deg, rgba(113, 56, 245, 0.2) 0%, rgba(155, 92, 255, 0.15) 100%); border: 1.5px solid rgba(155, 92, 255, 0.35); border-radius: 14px; padding: 1.2rem 1.5rem; margin-top: 1rem; margin-bottom: 1.2rem; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);">
         <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem;">
             <div>
-                <span style="background: #2563EB; color: #FFFFFF; font-size: 0.75rem; font-weight: 800; padding: 0.2rem 0.6rem; border-radius: 12px; text-transform: uppercase;">✨ New NLP Capabilities</span>
-                <h3 style="margin: 0.4rem 0 0.2rem 0; font-size: 1.25rem; font-weight: 800; color: #0F172A;">Live Review Diagnostic Lab & Personalized Matchmaker</h3>
-                <p style="margin: 0; font-size: 0.88rem; color: #475569; max-width: 750px;">
+                <span style="background: linear-gradient(135deg, #7138F5 0%, #9B5CFF 100%); color: #FFFFFF; font-size: 0.75rem; font-weight: 800; padding: 0.25rem 0.65rem; border-radius: 12px; text-transform: uppercase;">✨ New NLP Capabilities</span>
+                <h3 style="margin: 0.5rem 0 0.3rem 0; font-size: 1.3rem; font-weight: 800; color: #FFFFFF;">Live Review Diagnostic Lab & Personalized Matchmaker</h3>
+                <p style="margin: 0; font-size: 0.9rem; color: #B9B3D0; max-width: 750px; line-height: 1.5;">
                     Test raw customer review text in real-time with clause-level ABSA, spam probability, and rating anomaly checks — or calibrate multi-attribute aspect weights to find products tailored to your preferences.
                 </p>
             </div>
@@ -535,9 +665,9 @@ if st.session_state["nav_view"] == "🏠 Home / Discovery":
     for idx, (nav_title, dept_id, cat_sub) in enumerate(departments):
         with cat_cols[idx]:
             render_html_block(f"""
-            <div style="background: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 10px; padding: 1.1rem; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.02); margin-bottom: 0.5rem;">
-                <div style="font-weight: 700; font-size: 1.05rem; color: #0F172A; margin-bottom: 0.2rem;">{nav_title}</div>
-                <div style="font-size: 0.78rem; color: #64748B;">{cat_sub}</div>
+            <div style="background: rgba(22, 17, 46, 0.78); border: 1px solid rgba(155, 92, 255, 0.25); border-radius: 12px; padding: 1.1rem; text-align: center; box-shadow: 0 8px 24px rgba(0,0,0,0.35); margin-bottom: 0.5rem; transition: all 0.25s ease;">
+                <div style="font-weight: 700; font-size: 1.05rem; color: #FFFFFF; margin-bottom: 0.2rem;">{nav_title}</div>
+                <div style="font-size: 0.8rem; color: #B9B3D0;">{cat_sub}</div>
             </div>
             """)
             if st.button(f"Browse {dept_id} →", key=f"home_browse_{dept_id}", use_container_width=True):
@@ -568,30 +698,30 @@ if st.session_state["nav_view"] == "🏠 Home / Discovery":
     vp1, vp2, vp3 = st.columns(3)
     with vp1:
         render_html_block("""
-        <div style="background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 10px; padding: 1.2rem;">
+        <div style="background: rgba(22, 17, 46, 0.78); border: 1px solid rgba(155, 92, 255, 0.25); border-radius: 12px; padding: 1.2rem; box-shadow: 0 8px 24px rgba(0,0,0,0.35);">
             <div style="font-size: 1.5rem; margin-bottom: 0.4rem;">🎯</div>
-            <div style="font-weight: 700; color: #0F172A; margin-bottom: 0.4rem;">Category-Specific ABSA</div>
-            <div style="font-size: 0.85rem; color: #475569; line-height: 1.5;">
+            <div style="font-weight: 700; color: #FFFFFF; margin-bottom: 0.4rem;">Category-Specific ABSA</div>
+            <div style="font-size: 0.85rem; color: #B9B3D0; line-height: 1.5;">
                 Phones evaluate Camera, Battery & Display; Laptops evaluate Processor, RAM & Cooling; Headphones evaluate Sound Quality & Comfort.
             </div>
         </div>
         """)
     with vp2:
         render_html_block("""
-        <div style="background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 10px; padding: 1.2rem;">
+        <div style="background: rgba(22, 17, 46, 0.78); border: 1px solid rgba(155, 92, 255, 0.25); border-radius: 12px; padding: 1.2rem; box-shadow: 0 8px 24px rgba(0,0,0,0.35);">
             <div style="font-size: 1.5rem; margin-bottom: 0.4rem;">⚔️</div>
-            <div style="font-weight: 700; color: #0F172A; margin-bottom: 0.4rem;">Fair Multi-Product Comparison</div>
-            <div style="font-size: 0.85rem; color: #475569; line-height: 1.5;">
+            <div style="font-weight: 700; color: #FFFFFF; margin-bottom: 0.4rem;">Fair Multi-Product Comparison</div>
+            <div style="font-size: 0.85rem; color: #B9B3D0; line-height: 1.5;">
                 Compare headphones against headphones (Sony vs Bose) or phones against phones with shared specs, dual radar charts, and honest tie verdicts.
             </div>
         </div>
         """)
     with vp3:
         render_html_block("""
-        <div style="background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 10px; padding: 1.2rem;">
+        <div style="background: rgba(22, 17, 46, 0.78); border: 1px solid rgba(155, 92, 255, 0.25); border-radius: 12px; padding: 1.2rem; box-shadow: 0 8px 24px rgba(0,0,0,0.35);">
             <div style="font-size: 1.5rem; margin-bottom: 0.4rem;">📊</div>
-            <div style="font-weight: 700; color: #0F172A; margin-bottom: 0.4rem;">Rigorous NLP Benchmarks</div>
-            <div style="font-size: 0.85rem; color: #475569; line-height: 1.5;">
+            <div style="font-weight: 700; color: #FFFFFF; margin-bottom: 0.4rem;">Rigorous NLP Benchmarks</div>
+            <div style="font-size: 0.85rem; color: #B9B3D0; line-height: 1.5;">
                 We report measured accuracy, precision, recall, and a 3x3 confusion matrix evaluated against 50 manually labelled ground-truth reviews.
             </div>
         </div>
