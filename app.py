@@ -31,14 +31,15 @@ from modules.data_loader import (
     PROVENANCE_DISCLOSURE
 )
 from modules.validation import validate_products_df, validate_reviews_df
-from modules.sentiment import analyze_reviews_sentiment, compute_nss
+from modules.sentiment import analyze_reviews_sentiment, compute_nss, compute_review_timeline_metrics
 from modules.aspect_analysis import analyze_reviews_aspects, ASPECT_CAVEAT_DISCLOSURE, CATEGORY_TAXONOMY, CATEGORY_ASPECTS
 from modules.keyword_extraction import extract_keywords_by_sentiment
-from modules.review_summary import generate_executive_summary
+from modules.review_summary import generate_executive_summary, generate_markdown_dossier
 from modules.comparison import compare_two_products
-from modules.recommendation import generate_category_recommendations, RECOMMENDATION_METHODOLOGY_DISCLOSURE
+from modules.recommendation import generate_category_recommendations, rank_products_by_preferences, RECOMMENDATION_METHODOLOGY_DISCLOSURE
 from modules.topic_modeling import extract_topic_clusters, extract_topic_clusters_result
 from modules.evaluation import evaluate_sentiment_model, evaluate_spam_model, BENCHMARK_DATASET
+from modules.live_analyzer import analyze_custom_review
 from components.header import render_header
 from components.product_card import render_product_card
 from components.filters import render_sidebar_filters, apply_filters
@@ -49,7 +50,9 @@ from components.charts import (
     create_multi_product_radar_chart,
     create_keyword_driver_chart,
     create_rating_scatter_chart,
-    create_confusion_matrix_heatmap
+    create_confusion_matrix_heatmap,
+    create_temporal_sentiment_chart,
+    create_live_sentiment_gauge
 )
 from reviewlens.dashboard import render_original_dashboard
 
@@ -262,6 +265,7 @@ NAV_OPTIONS = [
     "🛍️ All Products",
     "📦 Product Details",
     "🔍 Review Intelligence",
+    "🧪 Live Review Analyzer",
     "⚔️ Product Comparison",
     "🎯 Smart Recommendations",
     "📊 Original Analytics Dashboard",
@@ -638,8 +642,20 @@ elif st.session_state["nav_view"] == "📦 Product Details":
             st.success("No dominant customer pain points flagged in this review corpus.")
 
     st.markdown("<br>", unsafe_allow_html=True)
-    if st.button("🚀 Dive Into Full NLP Review Intelligence & Interactive Topic Modeling →", key="btn_deep_cta", type="primary"):
-        explore_review_intelligence_action(selected_pid)
+    cta_col1, cta_col2 = st.columns([2, 1])
+    with cta_col1:
+        if st.button("🚀 Dive Into Full NLP Review Intelligence & Interactive Topic Modeling →", key="btn_deep_cta", type="primary", use_container_width=True):
+            explore_review_intelligence_action(selected_pid)
+    with cta_col2:
+        dossier_text = generate_markdown_dossier(prod, aspect_list, sentiment_res, exec_summary)
+        st.download_button(
+            label="📥 Export Dossier (.md)",
+            data=dossier_text,
+            file_name=f"{selected_pid}_reviewlens_dossier.md",
+            mime="text/markdown",
+            help="Download formatted executive intelligence dossier with ABSA scorecard, pros/cons, and transparency disclosures",
+            use_container_width=True
+        )
 
 
 # ==========================================
@@ -840,6 +856,60 @@ elif st.session_state["nav_view"] == "🔍 Review Intelligence":
         fig_scatter = create_rating_scatter_chart(sentiment_res.get("records", []))
         st.plotly_chart(fig_scatter, use_container_width=True)
 
+    st.markdown("<br>", unsafe_allow_html=True)
+    st.markdown("### 📈 **Temporal Sentiment Drift & Trust Audit**")
+    st.caption("Tracks how consumer sentiment and review volume evolve over time, alongside automated spam and authenticity health indicators.")
+
+    time_col, trust_col = st.columns([3, 2])
+    with time_col:
+        timeline_pts = compute_review_timeline_metrics(reviews_df)
+        if timeline_pts:
+            fig_time = create_temporal_sentiment_chart(timeline_pts)
+            st.plotly_chart(fig_time, use_container_width=True)
+        else:
+            st.info("ℹ️ Insufficient chronological review date timestamps to construct time-series drift curve.")
+
+    with trust_col:
+        st.markdown("##### 🛡️ Corpus Trust & Authenticity Audit")
+        from reviewlens.spam_detector.detector import SpamDetector
+        detector = SpamDetector()
+        spam_count = 0
+        for _, r_item in reviews_df.iterrows():
+            r_text = str(r_item.get("review_text", ""))
+            r_rating = float(r_item.get("review_rating", 3.0)) if pd.notnull(r_item.get("review_rating")) else None
+            if detector.analyze(r_text, rating=r_rating, check_duplicate=False).is_spam:
+                spam_count += 1
+
+        tot_cnt = max(len(reviews_df), 1)
+        clean_pct = round(((tot_cnt - spam_count) / tot_cnt) * 100.0, 1)
+        anomaly_cnt = sentiment_res.get("anomalies_count", 0)
+
+        health_badge_color = "#10B981" if clean_pct >= 90 else ("#F59E0B" if clean_pct >= 75 else "#EF4444")
+        render_html_block(f"""
+        <div style="background: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 12px; padding: 1.2rem; box-shadow: 0 2px 6px rgba(0,0,0,0.03);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.8rem;">
+                <span style="font-weight: 700; color: #1E293B; font-size: 0.95rem;">Trust Health Score</span>
+                <span style="background: {health_badge_color}; color: #FFFFFF; font-weight: 800; padding: 0.2rem 0.7rem; border-radius: 12px; font-size: 0.85rem;">{clean_pct}% Clean</span>
+            </div>
+            <div style="font-size: 0.85rem; color: #64748B; margin-bottom: 0.8rem;">
+                Automated multi-heuristic review audit evaluating promotional patterns, repetitive templates, and star rating contradictions.
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.6rem;">
+                <div style="background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 8px; padding: 0.6rem;">
+                    <div style="font-size: 0.75rem; color: #64748B;">Spam Flags</div>
+                    <div style="font-size: 1.1rem; font-weight: 800; color: #EF4444;">{spam_count} <span style="font-size: 0.75rem; color: #94A3B8;">/ {len(reviews_df)}</span></div>
+                </div>
+                <div style="background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 8px; padding: 0.6rem;">
+                    <div style="font-size: 0.75rem; color: #64748B;">Rating Anomalies</div>
+                    <div style="font-size: 1.1rem; font-weight: 800; color: #F59E0B;">{anomaly_cnt} <span style="font-size: 0.75rem; color: #94A3B8;">mismatches</span></div>
+                </div>
+            </div>
+            <div style="margin-top: 0.8rem; font-size: 0.78rem; color: #94A3B8;">
+                🛡️ Verified against ReviewLens Heuristic Engine & VADER Sentiment Valence
+            </div>
+        </div>
+        """)
+
     # Raw Analyzed Reviews Table & Download
     with st.expander("📄 View All Analyzed Customer Reviews & Download Dataset", expanded=False):
         rec_df = pd.DataFrame(sentiment_res.get("records", []))
@@ -855,6 +925,171 @@ elif st.session_state["nav_view"] == "🔍 Review Intelligence":
                 file_name=f"{selected_pid}_reviews_reviewlens.csv",
                 mime="text/csv"
             )
+
+
+# ==========================================
+# VIEW: LIVE REVIEW ANALYZER & DIAGNOSTIC LAB
+# ==========================================
+elif st.session_state["nav_view"] == "🧪 Live Review Analyzer":
+    st.markdown("## 🧪 **Live Review Diagnostic Lab & Anomaly Detector**")
+    st.caption("Paste any raw customer review or synthetic comment to evaluate real-time ABSA clauses, VADER valence, spam bot probability, and star-rating contradictions.")
+
+    if "live_sample_text" not in st.session_state:
+        st.session_state["live_sample_text"] = "The battery life and OLED screen are astonishingly good, but the camera autofocus is utterly disappointing in low light and customer support was completely unhelpful."
+    if "live_sample_rating" not in st.session_state:
+        st.session_state["live_sample_rating"] = 3.0
+    if "live_sample_category" not in st.session_state:
+        st.session_state["live_sample_category"] = "Smartphones"
+
+    st.markdown("##### ⚡ Quick Presets (Click to Test)")
+    p_col1, p_col2, p_col3, p_col4 = st.columns(4)
+    with p_col1:
+        if st.button("📱 Mixed Smartphone", use_container_width=True):
+            st.session_state["live_sample_text"] = "The battery life and OLED screen are astonishingly good, but the camera autofocus is utterly disappointing in low light and customer support was completely unhelpful."
+            st.session_state["live_sample_rating"] = 3.0
+            st.session_state["live_sample_category"] = "Smartphones"
+            st.rerun()
+    with p_col2:
+        if st.button("🤖 Bot / Promotional Spam", use_container_width=True):
+            st.session_state["live_sample_text"] = "AMAZING PRODUCT BUY NOW DISCOUNT CLICK HERE BEST BEST BEST FREE GIFT http://promo.example.com CHECK OUT NOW!!!!!"
+            st.session_state["live_sample_rating"] = 5.0
+            st.session_state["live_sample_category"] = "Smartphones"
+            st.rerun()
+    with p_col3:
+        if st.button("🚨 Rating Contradiction", use_container_width=True):
+            st.session_state["live_sample_text"] = "Worst phone I have ever owned. It constantly overheats, crashes every 10 minutes, and the screen shattered on day one."
+            st.session_state["live_sample_rating"] = 5.0
+            st.session_state["live_sample_category"] = "Smartphones"
+            st.rerun()
+    with p_col4:
+        if st.button("🎧 Audiophile Soundstage", use_container_width=True):
+            st.session_state["live_sample_text"] = "Crisp highs, rich sub-bass response, and very wide soundstage. Noise cancellation is decent, but ear cushion padding feels slightly tight."
+            st.session_state["live_sample_rating"] = 4.5
+            st.session_state["live_sample_category"] = "Headphones"
+            st.rerun()
+
+    input_text = st.text_area(
+        "Enter Review Text to Inspect:",
+        value=st.session_state["live_sample_text"],
+        height=120,
+        placeholder="Type or paste any customer review here..."
+    )
+
+    ctrl_col1, ctrl_col2, ctrl_col3 = st.columns([2, 2, 1])
+    with ctrl_col1:
+        input_rating = st.slider(
+            "Associated Star Rating (1.0 to 5.0):",
+            min_value=1.0,
+            max_value=5.0,
+            value=float(st.session_state["live_sample_rating"]),
+            step=0.5
+        )
+    with ctrl_col2:
+        categories = ["Smartphones", "Laptops", "Headphones", "Cameras"]
+        cat_idx = categories.index(st.session_state["live_sample_category"]) if st.session_state["live_sample_category"] in categories else 0
+        input_cat = st.selectbox(
+            "Category Taxonomy Context:",
+            categories,
+            index=cat_idx
+        )
+    with ctrl_col3:
+        st.write("")
+        st.write("")
+        run_nlp = st.button("🔬 Run Diagnostic", type="primary", use_container_width=True)
+
+    if input_text.strip():
+        diag_res = analyze_custom_review(input_text, rating=input_rating, category=input_cat)
+
+        if diag_res.get("status") == "ok":
+            st.markdown("---")
+            st.markdown("### 🔬 **Diagnostic Results & NLP Decomposition**")
+
+            # High-level KPIs
+            d1, d2, d3, d4 = st.columns(4)
+            with d1:
+                sent = diag_res["sentiment"]
+                comp = sent["compound"]
+                s_color = "#10B981" if sent["label"] == "POSITIVE" else ("#EF4444" if sent["label"] == "NEGATIVE" else "#64748B")
+                render_html_block(f"""
+                <div class="metric-card" style="border-left: 4px solid {s_color};">
+                    <div class="metric-label">VADER Sentiment Polarity</div>
+                    <div class="metric-value" style="color: {s_color};">{sent['label']}</div>
+                    <div class="metric-sub">Compound: <b>{comp:+.2f}</b> (Pos: {sent['pos']:.2f}, Neg: {sent['neg']:.2f})</div>
+                </div>
+                """)
+
+            with d2:
+                spam_info = diag_res["spam_analysis"]
+                spam_flag = spam_info["is_spam"]
+                spam_col = "#EF4444" if spam_flag else "#10B981"
+                spam_label = "HIGH RISK / SPAM" if spam_flag else "AUTHENTIC REVIEW"
+                render_html_block(f"""
+                <div class="metric-card" style="border-left: 4px solid {spam_col};">
+                    <div class="metric-label">Spam & Bot Probability</div>
+                    <div class="metric-value" style="color: {spam_col}; font-size: 1.3rem;">{spam_label}</div>
+                    <div class="metric-sub">Spam Score: <b>{spam_info['spam_score'] * 100:.0f}%</b></div>
+                </div>
+                """)
+
+            with d3:
+                anom = diag_res["anomaly"]
+                anom_col = "#EF4444" if anom["is_anomaly"] else "#10B981"
+                anom_title = "CONTRADICTION" if anom["is_anomaly"] else "CONSISTENT"
+                render_html_block(f"""
+                <div class="metric-card" style="border-left: 4px solid {anom_col};">
+                    <div class="metric-label">Rating Alignment</div>
+                    <div class="metric-value" style="color: {anom_col}; font-size: 1.3rem;">{anom_title}</div>
+                    <div class="metric-sub">{input_rating}★ vs {sent['label']} Text</div>
+                </div>
+                """)
+
+            with d4:
+                aspects_found = diag_res["aspects_found"]
+                render_html_block(f"""
+                <div class="metric-card metric-card-purple">
+                    <div class="metric-label">Aspects Identified</div>
+                    <div class="metric-value">{len(aspects_found)}</div>
+                    <div class="metric-sub">{', '.join(aspects_found) if aspects_found else 'No domain keywords'}</div>
+                </div>
+                """)
+
+            # Anomaly alert callout if present
+            if diag_res["anomaly"]["is_anomaly"]:
+                st.error(f"🚨 **Rating Contradiction Detected:** {diag_res['anomaly']['description']}")
+            elif diag_res["spam_analysis"]["is_spam"]:
+                st.warning(f"⚠️ **Spam Triggers Detected:** {', '.join(diag_res['spam_analysis']['reasons'])}")
+
+            # Visual breakdown
+            gauge_col, clause_col = st.columns([1, 2])
+            with gauge_col:
+                st.markdown("##### 🧭 Real-Time Sentiment Polarity")
+                fig_gauge = create_live_sentiment_gauge(comp)
+                st.plotly_chart(fig_gauge, use_container_width=True)
+
+            with clause_col:
+                st.markdown("##### ✂️ Clause-by-Clause ABSA Segmentation")
+                st.caption("Splits multi-aspect sentences on contrastive conjunctions (e.g. 'but', 'however') to decouple opposing sentiments.")
+                for c in diag_res["clause_analysis"]:
+                    c_label = c["sentiment_label"]
+                    c_comp = c["compound"]
+                    c_badge = "🟢 POSITIVE" if c_label == "POSITIVE" else ("🔴 NEGATIVE" if c_label == "NEGATIVE" else "🟡 NEUTRAL")
+                    c_color = "#10B981" if c_label == "POSITIVE" else ("#EF4444" if c_label == "NEGATIVE" else "#64748B")
+                    aspect_tags = "".join([f'<span class="topic-pill">{html.escape(a)}</span>' for a in c["aspects"]]) if c["aspects"] else '<span style="font-size: 0.78rem; color: #94A3B8;">(General statement)</span>'
+
+                    render_html_block(f"""
+                    <div style="background: #FFFFFF; border: 1px solid #E2E8F0; border-left: 4px solid {c_color}; border-radius: 8px; padding: 0.75rem 1rem; margin-bottom: 0.6rem;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.3rem;">
+                            <span style="font-size: 0.78rem; font-weight: 700; color: {c_color};">{c_badge} ({c_comp:+.2f})</span>
+                            <div>{aspect_tags}</div>
+                        </div>
+                        <div style="font-size: 0.88rem; color: #1E293B; font-style: italic;">\"{html.escape(c['text'])}\"</div>
+                    </div>
+                    """)
+
+            with st.expander("🔍 Deep Linguistic & Negation Scope Inspection", expanded=False):
+                neg_words = diag_res.get("negated_words", [])
+                st.markdown(f"**Negated Tokens Detected:** {', '.join([f'`{w}`' for w in neg_words]) if neg_words else 'None (standard polarity weighting)'}")
+                st.markdown(f"**Spam Heuristic Triggers:** {', '.join(diag_res['spam_analysis']['reasons']) if diag_res['spam_analysis']['reasons'] else 'Clean — no repetitive keywords, suspicious URLs, or excessive caps.'}")
 
 
 # ==========================================
@@ -1049,60 +1284,138 @@ elif st.session_state["nav_view"] == "🎯 Smart Recommendations":
             }
         })
 
-    recs = generate_category_recommendations(prod_items, category=category_filter)
+    tab_awards, tab_matchmaker = st.tabs(["🏆 Category Awards", "🎛️ Custom Buyer Matchmaker"])
 
-    if recs:
-        rec_cards = [
-            ("🏆 Best Overall Pick", recs.get("best_overall"), "#2563EB"),
-            ("💰 Best Budget & Value Champion", recs.get("best_budget"), "#10B981"),
-            ("📸 Best for Photography & Camera", recs.get("best_camera"), "#8B5CF6"),
-            ("🔋 Best for Battery & Endurance", recs.get("best_battery"), "#F59E0B"),
-            ("⚡ Best for Speed & Gaming", recs.get("best_performance"), "#EF4444")
-        ]
+    with tab_awards:
+        recs = generate_category_recommendations(prod_items, category=category_filter)
 
-        for title, rec_data, color in rec_cards:
-            if rec_data and rec_data.get("product"):
-                p = rec_data["product"]
-                esc_p_name = html.escape(str(p.get('product_name', 'Product')))
-                esc_reason = html.escape(str(rec_data.get('reason', '')))
-                amazon_url = p.get("product_url") or p.get("amazon_url") or f"https://www.amazon.in/s?k={esc_p_name}"
+        if recs:
+            rec_cards = [
+                ("🏆 Best Overall Pick", recs.get("best_overall"), "#2563EB"),
+                ("💰 Best Budget & Value Champion", recs.get("best_budget"), "#10B981"),
+                ("📸 Best for Photography & Camera", recs.get("best_camera"), "#8B5CF6"),
+                ("🔋 Best for Battery & Endurance", recs.get("best_battery"), "#F59E0B"),
+                ("⚡ Best for Speed & Gaming", recs.get("best_performance"), "#EF4444")
+            ]
+
+            for title, rec_data, color in rec_cards:
+                if rec_data and rec_data.get("product"):
+                    p = rec_data["product"]
+                    esc_p_name = html.escape(str(p.get('product_name', 'Product')))
+                    esc_reason = html.escape(str(rec_data.get('reason', '')))
+                    amazon_url = p.get("product_url") or p.get("amazon_url") or f"https://www.amazon.in/s?k={esc_p_name}"
+                    render_html_block(f"""
+                    <div style="background: #FFFFFF; border: 1px solid #E2E8F0; border-left: 6px solid {color}; border-radius: 12px; padding: 1.2rem; margin-bottom: 1.2rem; box-shadow: 0 2px 6px rgba(0,0,0,0.03);">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.4rem;">
+                            <span style="font-weight: 800; font-size: 1.05rem; color: {color};">{title}</span>
+                            <span style="font-size: 1.2rem; font-weight: 800; color: #0F172A;">{format_currency_inr(p.get('price'))}</span>
+                        </div>
+                        <div style="font-size: 1.15rem; font-weight: 700; color: #0F172A; margin-bottom: 0.4rem;">{esc_p_name}</div>
+                        <div style="font-size: 0.88rem; color: #475569; line-height: 1.5; margin-bottom: 0.6rem;">{esc_reason}</div>
+                        <div style="display: flex; gap: 0.8rem; align-items: center; flex-wrap: wrap;">
+                            <span style="font-size: 0.82rem; color: #64748B;">Rating: ★ {p.get('rating'):.1f} ({p.get('review_count'):,} sample ratings)</span>
+                            <span style="font-size: 0.82rem; color: #64748B;">• Reviews Analyzed: {rec_data.get('review_count', 0)}</span>
+                            <a href="{amazon_url}" target="_blank" style="font-size: 0.82rem; color: #FF9900; font-weight: 700; text-decoration: none;">Search on Amazon India ↗</a>
+                        </div>
+                    </div>
+                    """)
+                elif rec_data:
+                    esc_reason = html.escape(str(rec_data.get('reason', 'Insufficient review evidence for this category award.')))
+                    render_html_block(f"""
+                    <div style="background: #F8FAFC; border: 1px dashed #CBD5E1; border-left: 6px solid #94A3B8; border-radius: 12px; padding: 1.2rem; margin-bottom: 1.2rem;">
+                        <div style="font-weight: 800; font-size: 1.05rem; color: #64748B; margin-bottom: 0.4rem;">{title}</div>
+                        <div style="font-size: 0.95rem; font-weight: 700; color: #475569; margin-bottom: 0.2rem;">Insufficient review evidence</div>
+                        <div style="font-size: 0.85rem; color: #64748B; line-height: 1.4;">{esc_reason}</div>
+                    </div>
+                    """)
+
+    with tab_matchmaker:
+        st.markdown("### 🎛️ **Personalized Buyer Matchmaker Engine**")
+        st.caption("Adjust sliders according to what matters most to you. ReviewLens recalculates multi-attribute utility scores in real time.")
+
+        m_col1, m_col2 = st.columns(2)
+        with m_col1:
+            w_battery = st.slider("🔋 Battery Life & Endurance", 0, 100, 50, step=5)
+            w_camera = st.slider("📸 Camera & Video Quality", 0, 100, 50, step=5)
+            w_perf = st.slider("⚡ Performance & Speed", 0, 100, 60, step=5)
+            w_display = st.slider("🖥️ Display & Screen Clarity", 0, 100, 40, step=5)
+        with m_col2:
+            w_audio = st.slider("🎧 Sound & Audio Quality", 0, 100, 30, step=5)
+            w_price = st.slider("💰 Price Sensitivity & Value", 0, 100, 50, step=5)
+            w_star = st.slider("⭐ Baseline Star Rating Weight", 0, 100, 30, step=5)
+            budget_max = st.number_input("Maximum Budget Ceiling (₹ INR, 0 for no limit):", min_value=0, max_value=500000, value=0, step=5000)
+
+        weights = {
+            "battery": w_battery / 100.0,
+            "camera": w_camera / 100.0,
+            "performance": w_perf / 100.0,
+            "display": w_display / 100.0,
+            "audio": w_audio / 100.0,
+            "value_for_money": w_price / 100.0,
+            "star_rating": w_star / 100.0
+        }
+        max_bud = float(budget_max) if budget_max > 0 else None
+
+        ranked_matches = rank_products_by_preferences(
+            prod_items,
+            weights=weights,
+            max_budget=max_bud,
+            category=category_filter
+        )
+
+        if not ranked_matches:
+            st.warning("No products matched your category and budget filter. Try increasing the budget limit.")
+        else:
+            st.markdown(f"##### Found {len(ranked_matches)} Tailored Matches (Ranked by Compatibility)")
+            for idx, match in enumerate(ranked_matches[:6]):
+                p_item = match["product"]
+                m_score = match["match_score"]
+                p_id = p_item["product_id"]
+                p_name = html.escape(str(p_item.get("product_name", "Product")))
+                badge_bg = "#10B981" if m_score >= 80 else ("#2563EB" if m_score >= 65 else "#F59E0B")
+
+                hl_pills = "".join([f'<span class="topic-pill" style="background: #ECFDF5; color: #065F46; border-color: #A7F3D0;">🟢 {html.escape(h)}</span>' for h in match.get("highlights", [])])
+                to_pills = "".join([f'<span class="topic-pill" style="background: #FEF2F2; color: #991B1B; border-color: #FECACA;">🔴 {html.escape(t)}</span>' for t in match.get("trade_offs", [])])
+
                 render_html_block(f"""
-                <div style="background: #FFFFFF; border: 1px solid #E2E8F0; border-left: 6px solid {color}; border-radius: 12px; padding: 1.2rem; margin-bottom: 1.2rem; box-shadow: 0 2px 6px rgba(0,0,0,0.03);">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.4rem;">
-                        <span style="font-weight: 800; font-size: 1.05rem; color: {color};">{title}</span>
-                        <span style="font-size: 1.2rem; font-weight: 800; color: #0F172A;">{format_currency_inr(p.get('price'))}</span>
+                <div style="background: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 12px; padding: 1.1rem 1.4rem; margin-bottom: 1rem; box-shadow: 0 2px 6px rgba(0,0,0,0.03);">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.3rem;">
+                        <span style="font-weight: 800; font-size: 1.05rem; color: #0F172A;">#{idx+1} {p_name}</span>
+                        <span style="background: {badge_bg}; color: #FFFFFF; font-weight: 800; padding: 0.25rem 0.75rem; border-radius: 20px; font-size: 0.88rem;">{m_score:.0f}% Match</span>
                     </div>
-                    <div style="font-size: 1.15rem; font-weight: 700; color: #0F172A; margin-bottom: 0.4rem;">{esc_p_name}</div>
-                    <div style="font-size: 0.88rem; color: #475569; line-height: 1.5; margin-bottom: 0.6rem;">{esc_reason}</div>
-                    <div style="display: flex; gap: 0.8rem; align-items: center; flex-wrap: wrap;">
-                        <span style="font-size: 0.82rem; color: #64748B;">Rating: ★ {p.get('rating'):.1f} ({p.get('review_count'):,} sample ratings)</span>
-                        <span style="font-size: 0.82rem; color: #64748B;">• Reviews Analyzed: {rec_data.get('review_count', 0)}</span>
-                        <a href="{amazon_url}" target="_blank" style="font-size: 0.82rem; color: #FF9900; font-weight: 700; text-decoration: none;">Search on Amazon India ↗</a>
+                    <div style="display: flex; gap: 1rem; color: #64748B; font-size: 0.85rem; margin-bottom: 0.5rem;">
+                        <span>Price: <b>{format_currency_inr(match['price'])}</b></span>
+                        <span>Rating: <b>★ {match['rating']:.1f}</b></span>
+                        <span>Category: <b>{p_item.get('category')}</b></span>
                     </div>
+                    <div style="font-size: 0.88rem; color: #334155; margin-bottom: 0.5rem;">{html.escape(match['rationale'])}</div>
+                    <div style="display: flex; flex-wrap: wrap; gap: 0.4rem; margin-bottom: 0.6rem;">{hl_pills} {to_pills}</div>
                 </div>
                 """)
-            elif rec_data:
-                esc_reason = html.escape(str(rec_data.get('reason', 'Insufficient review evidence for this category award.')))
-                render_html_block(f"""
-                <div style="background: #F8FAFC; border: 1px dashed #CBD5E1; border-left: 6px solid #94A3B8; border-radius: 12px; padding: 1.2rem; margin-bottom: 1.2rem;">
-                    <div style="font-weight: 800; font-size: 1.05rem; color: #64748B; margin-bottom: 0.4rem;">{title}</div>
-                    <div style="font-size: 0.95rem; font-weight: 700; color: #475569; margin-bottom: 0.2rem;">Insufficient review evidence</div>
-                    <div style="font-size: 0.85rem; color: #64748B; line-height: 1.4;">{esc_reason}</div>
-                </div>
-                """)
 
-        with st.expander("📐 Explain Scoring Methodology & Mathematical Formulas", expanded=False):
-            st.markdown(f"""
-            > **Prototype Methodology Disclosure:** {RECOMMENDATION_METHODOLOGY_DISCLOSURE}
+                act_c1, act_c2, _ = st.columns([1.5, 1.5, 4])
+                with act_c1:
+                    if st.button("Inspect Details", key=f"mm_inspect_{p_id}", use_container_width=True):
+                        inspect_product_action(p_id)
+                with act_c2:
+                    in_tray = p_id in st.session_state["compare_tray"]
+                    t_btn = "✓ In Compare" if in_tray else "⚔️ Add to Compare"
+                    if st.button(t_btn, key=f"mm_tray_{p_id}", use_container_width=True):
+                        toggle_compare_item(p_id)
 
-            **Composite Quality Score Formula (0 to 100):**
-            $$ \\text{{Score}} = (0.30 \\times \\text{{Star Rating \\%}}) + (0.45 \\times \\text{{Normalized NSS}}) + (0.25 \\times \\text{{CSAT \\%}}) $$
-            - **Star Rating %**: `(Rating / 5.0) * 100` (from illustrative catalogue metadata)
-            - **Normalized NSS**: Rescales `[-100, +100]` to `[0, 100]` via `(NSS + 100) / 2`
-            - **CSAT %**: Percentage of total customer feedback expressing positive polarity.
-            - **Aspect Awards**: Strict evidence gating requires products to have verified aspect mentions before receiving Best Camera/Battery/Performance honors.
-            - **Budget Index**: Adjusts score by price curve `Score / (Price ^ 0.35)` to identify highest feature return per rupee.
-            """)
+    with st.expander("📐 Explain Scoring Methodology & Mathematical Formulas", expanded=False):
+        st.markdown(f"""
+        > **Prototype Methodology Disclosure:** {RECOMMENDATION_METHODOLOGY_DISCLOSURE}
+
+        **Composite Quality Score Formula (0 to 100):**
+        $$ \\text{{Score}} = (0.30 \\times \\text{{Star Rating \\%}}) + (0.45 \\times \\text{{Normalized NSS}}) + (0.25 \\times \\text{{CSAT \\%}}) $$
+        - **Star Rating %**: `(Rating / 5.0) * 100` (from illustrative catalogue metadata)
+        - **Normalized NSS**: Rescales `[-100, +100]` to `[0, 100]` via `(NSS + 100) / 2`
+        - **CSAT %**: Percentage of total customer feedback expressing positive polarity.
+        - **Aspect Awards**: Strict evidence gating requires products to have verified aspect mentions before receiving Best Camera/Battery/Performance honors.
+        - **Budget Index**: Adjusts score by price curve `Score / (Price ^ 0.35)` to identify highest feature return per rupee.
+        - **Buyer Matchmaker**: Normalizes user-weighted aspect dimensions and balances sentiment with value sensitivity.
+        """)
 
 
 # ==========================================

@@ -173,3 +173,64 @@ def analyze_reviews_sentiment(df: pd.DataFrame) -> Dict[str, Any]:
         "anomalies_count": anomalies,
         "records": records
     }
+
+
+def compute_review_timeline_metrics(df: pd.DataFrame) -> List[Dict[str, Any]]:
+    """
+    Groups reviews chronologically by month and computes temporal sentiment metrics:
+      - Monthly Review Volume
+      - Average Star Rating
+      - Net Sentiment Score (NSS)
+      - Compound Polarity Trend
+    Returns sorted list of monthly timeline summaries for time-series drift visualization.
+    """
+    if df.empty:
+        return []
+
+    date_col = "review_date" if "review_date" in df.columns else ("date" if "date" in df.columns else None)
+    if not date_col:
+        return []
+
+    work_df = df.copy()
+    parsed_dates = pd.to_datetime(work_df[date_col], errors="coerce")
+    work_df["parsed_date"] = parsed_dates
+    work_df = work_df.dropna(subset=["parsed_date"])
+
+    if work_df.empty:
+        return []
+
+    work_df["year_month"] = work_df["parsed_date"].dt.to_period("M").astype(str)
+
+    timeline_points = []
+    for ym, group in work_df.groupby("year_month", sort=True):
+        count = len(group)
+        ratings = pd.to_numeric(group.get("review_rating", group.get("rating", pd.Series(dtype=float))), errors="coerce").dropna()
+        avg_rating = round(float(ratings.mean()), 2) if not ratings.empty else None
+
+        pos_count = 0
+        neg_count = 0
+        compounds = []
+        for _, row in group.iterrows():
+            text = str(row.get("review_text", row.get("text", "")))
+            s = analyze_text_sentiment(text)
+            compounds.append(s["compound"])
+            if s["label"] == "POSITIVE":
+                pos_count += 1
+            elif s["label"] == "NEGATIVE":
+                neg_count += 1
+
+        nss_month = compute_nss(pos_count, neg_count, count)
+        avg_comp = round(float(sum(compounds) / len(compounds)), 3) if compounds else 0.0
+
+        timeline_points.append({
+            "period": ym,
+            "review_count": count,
+            "average_rating": avg_rating,
+            "net_sentiment_score": nss_month,
+            "average_compound": avg_comp,
+            "positive_count": pos_count,
+            "negative_count": neg_count
+        })
+
+    timeline_points.sort(key=lambda x: x["period"])
+    return timeline_points
