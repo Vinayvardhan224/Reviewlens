@@ -260,8 +260,29 @@ def verify_phone_otp(entered_otp: str) -> bool:
         return False
 
 
+def login_as_guest() -> Dict[str, Any]:
+    """
+    Authenticates the session in Guest/Evaluator Explorer mode.
+    Allows evaluators to explore the full ReviewLens platform without credentials.
+    """
+    profile = {
+        "authenticated": True,
+        "auth_method": "guest",
+        "identifier": "guest@reviewlens.com",
+        "display_name": "Guest Explorer",
+        "avatar_letter": "G",
+        "tier": "Guest Explorer",
+        "tier_badge": "⚪ Guest Preview",
+        "member_since": "Nov 2026",
+        "saved_comparisons": st.session_state.get("compare_tray", []),
+        "custom_presets": {}
+    }
+    st.session_state["user_profile"] = profile
+    return profile
+
+
 def logout_user() -> None:
-    """Resets user session state back to guest mode."""
+    """Resets user session state back to unauthenticated mode."""
     st.session_state["user_profile"] = {
         "authenticated": False,
         "auth_method": None,
@@ -275,6 +296,7 @@ def logout_user() -> None:
         "custom_presets": {}
     }
     st.session_state.pop("pending_phone_auth", None)
+    st.session_state["auth_mode"] = "login"
 
 
 def render_auth_interface(on_navigate_home=None) -> None:
@@ -541,62 +563,111 @@ def render_auth_interface(on_navigate_home=None) -> None:
             </div>
             """, unsafe_allow_html=True)
 
-            # Quick fill for demo tester convenience
-            fill_demo_col, _ = st.columns([2, 1])
-            with fill_demo_col:
-                if st.button("⚡ Fill Demo Account (demo@reviewlens.com)", key="btn_fill_demo", use_container_width=True):
-                    st.session_state["login_email_input"] = "demo@reviewlens.com"
-                    st.session_state["login_pw_input"] = "Password@123"
+            # Sign-in method toggle: Email vs Phone SMS OTP
+            login_method = st.radio(
+                "Sign In Method",
+                ["📧 Email & Password", "📱 Phone Number (SMS OTP)"],
+                horizontal=True,
+                label_visibility="collapsed",
+                key="login_sub_method"
+            )
 
-            default_email = st.session_state.get("login_email_input", "")
-            default_pw = st.session_state.get("login_pw_input", "")
+            if login_method == "📧 Email & Password":
+                # Quick fill for demo tester convenience
+                fill_demo_col, _ = st.columns([2, 1])
+                with fill_demo_col:
+                    if st.button("⚡ Fill Demo Account (demo@reviewlens.com)", key="btn_fill_demo", use_container_width=True):
+                        st.session_state["login_email_input"] = "demo@reviewlens.com"
+                        st.session_state["login_pw_input"] = "Password@123"
 
-            login_email = st.text_input("Email address", value=default_email, placeholder="name@example.com", key="auth_field_email")
+                default_email = st.session_state.get("login_email_input", "")
+                default_pw = st.session_state.get("login_pw_input", "")
 
-            col_pw_hdr, col_pw_eye = st.columns([2, 1])
-            with col_pw_eye:
-                show_pw = st.checkbox("👁️ Show", key="login_show_pw")
+                login_email = st.text_input("Email address", value=default_email, placeholder="name@example.com", key="auth_field_email")
 
-            pw_field_type = "default" if show_pw else "password"
-            login_password = st.text_input("Password", value=default_pw, type=pw_field_type, placeholder="••••••••", key="auth_field_password")
+                col_pw_hdr, col_pw_eye = st.columns([2, 1])
+                with col_pw_eye:
+                    show_pw = st.checkbox("👁️ Show", key="login_show_pw")
 
-            col_rem, col_forgot = st.columns([1, 1])
-            with col_rem:
-                remember_me = st.checkbox("Remember me", value=True, key="login_remember_me")
-            with col_forgot:
-                if st.button("Forgot password?", key="btn_toggle_forgot", help="Reset your account password"):
-                    st.session_state["auth_mode"] = "forgot"
-                    st.rerun()
+                pw_field_type = "default" if show_pw else "password"
+                login_password = st.text_input("Password", value=default_pw, type=pw_field_type, placeholder="••••••••", key="auth_field_password")
 
-            if st.button("Sign In to ReviewLens →", key="btn_submit_signin", type="primary", use_container_width=True):
-                with st.spinner("Authenticating credentials..."):
-                    res = authenticate_user(login_email, login_password)
-                    if res["success"]:
-                        st.toast(res["message"], icon="✅")
-                        if on_navigate_home:
-                            on_navigate_home()
+                col_rem, col_forgot = st.columns([1, 1])
+                with col_rem:
+                    remember_me = st.checkbox("Remember me", value=True, key="login_remember_me")
+                with col_forgot:
+                    if st.button("Forgot password?", key="btn_toggle_forgot", help="Reset your account password"):
+                        st.session_state["auth_mode"] = "forgot"
+                        st.rerun()
+
+                if st.button("Sign In to ReviewLens →", key="btn_submit_signin", type="primary", use_container_width=True):
+                    with st.spinner("Authenticating credentials..."):
+                        res = authenticate_user(login_email, login_password)
+                        if res["success"]:
+                            st.toast(res["message"], icon="✅")
+                            if on_navigate_home:
+                                on_navigate_home()
+                            else:
+                                st.session_state["pending_nav"] = "🏠 Home / Discovery"
+                                st.rerun()
                         else:
-                            st.session_state["pending_nav"] = "🏠 Home / Discovery"
-                            st.rerun()
+                            st.error(f"⚠️ {res['message']}")
+
+                st.markdown("""
+                <div style="text-align: center; margin: 1rem 0; color: #64748B; font-size: 0.8rem; position: relative;">
+                    <span style="background: #15112B; padding: 0 10px; position: relative; z-index: 1;">OR CONTINUE WITH</span>
+                    <hr style="position: absolute; top: 50%; left: 0; right: 0; border: none; border-top: 1px solid rgba(255,255,255,0.1); margin: 0; z-index: 0;">
+                </div>
+                """, unsafe_allow_html=True)
+
+                if st.button("🔴 Continue with Google / Gmail", key="btn_login_google", use_container_width=True):
+                    google_email = login_email if (login_email and "@" in login_email) else "shopper@gmail.com"
+                    login_with_google(google_email)
+                    st.toast("Signed in with Google Identity!", icon="✅")
+                    if on_navigate_home:
+                        on_navigate_home()
                     else:
-                        st.error(f"⚠️ {res['message']}")
+                        st.session_state["pending_nav"] = "🏠 Home / Discovery"
+                        st.rerun()
 
-            st.markdown("""
-            <div style="text-align: center; margin: 1rem 0; color: #64748B; font-size: 0.8rem; position: relative;">
-                <span style="background: #15112B; padding: 0 10px; position: relative; z-index: 1;">OR CONTINUE WITH</span>
-                <hr style="position: absolute; top: 50%; left: 0; right: 0; border: none; border-top: 1px solid rgba(255,255,255,0.1); margin: 0; z-index: 0;">
-            </div>
-            """, unsafe_allow_html=True)
+            else:
+                # ----------------------------------------------------
+                # PHONE NUMBER + SMS OTP FLOW
+                # ----------------------------------------------------
+                st.caption("Enter your mobile number to receive a secure 6-digit SMS verification code.")
+                c_cc, c_num = st.columns([1.1, 2])
+                with c_cc:
+                    country_choice = st.selectbox(
+                        "Country Code",
+                        ["🇺🇸 +1", "🇮🇳 +91", "🇬🇧 +44", "🇩🇪 +49", "🇦🇺 +61", "🇸🇬 +65", "🇦🇪 +971"],
+                        key="auth_phone_country"
+                    )
+                    code_prefix = country_choice.split(" ")[-1]
+                with c_num:
+                    phone_input = st.text_input("Mobile Number", placeholder="e.g. 9876543210", key="auth_phone_number")
 
-            if st.button("🔴 Continue with Google / Gmail", key="btn_login_google", use_container_width=True):
-                google_email = login_email if (login_email and "@" in login_email) else "shopper@gmail.com"
-                login_with_google(google_email)
-                st.toast("Signed in with Google Identity!", icon="✅")
-                if on_navigate_home:
-                    on_navigate_home()
-                else:
-                    st.session_state["pending_nav"] = "🏠 Home / Discovery"
-                    st.rerun()
+                if st.button("📲 Send SMS OTP Code", key="btn_send_otp", use_container_width=True):
+                    digits = "".join(c for c in phone_input if c.isdigit())
+                    if len(digits) >= 7:
+                        gen_otp = send_phone_otp(code_prefix, phone_input)
+                        st.success(f"📲 SMS OTP Code sent to **{code_prefix} {phone_input}**: `{gen_otp}` (or use test code `123456`)")
+                    else:
+                        st.error("Please enter a valid phone number (at least 7 digits).")
+
+                if "pending_phone_auth" in st.session_state:
+                    st.markdown("---")
+                    st.caption(f"Verifying phone: **{st.session_state['pending_phone_auth']['full_phone']}**")
+                    entered_otp = st.text_input("Enter 6-Digit SMS Verification Code", max_chars=6, placeholder="e.g. 123456", key="auth_field_otp")
+                    if st.button("Verify Code & Enter ReviewLens →", key="btn_verify_otp", type="primary", use_container_width=True):
+                        if verify_phone_otp(entered_otp):
+                            st.toast("Phone verification successful! Welcome.", icon="✅")
+                            if on_navigate_home:
+                                on_navigate_home()
+                            else:
+                                st.session_state["pending_nav"] = "🏠 Home / Discovery"
+                                st.rerun()
+                        else:
+                            st.error("⚠️ Invalid OTP code. Please enter the generated code or default code 123456.")
 
             st.markdown("<br>", unsafe_allow_html=True)
             st.markdown("<div style='text-align: center; font-size: 0.88rem; color: #B9B3D0;'>Don't have an account?</div>", unsafe_allow_html=True)
@@ -712,6 +783,7 @@ def render_auth_interface(on_navigate_home=None) -> None:
         """, unsafe_allow_html=True)
 
         if st.button("⚡ Continue as Guest (Read-Only Preview) →", key="btn_auth_guest_preview", use_container_width=True):
+            login_as_guest()
             if on_navigate_home:
                 on_navigate_home()
             else:
