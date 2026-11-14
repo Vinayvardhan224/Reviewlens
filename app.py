@@ -302,8 +302,7 @@ current_user = get_current_user()
 # Top utility header
 render_header(
     compare_count=len(st.session_state["compare_tray"]),
-    active_nav=st.session_state["nav_view"],
-    user=current_user
+    active_nav=st.session_state["nav_view"]
 )
 
 # Sidebar Account & Auth status card
