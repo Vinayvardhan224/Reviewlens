@@ -3,16 +3,18 @@ ReviewLens Navigation & Header Component.
 Amazon-inspired utility header with department navigation and comparison tray counter.
 """
 
-from typing import List, Optional
+import html
+from typing import List, Optional, Dict, Any
 import streamlit as st
 
 
 def render_header(
     compare_count: int = 0,
-    active_nav: str = "Catalogue"
+    active_nav: str = "Catalogue",
+    user: Optional[Dict[str, Any]] = None
 ) -> None:
     """
-    Renders the modern utility header with styling, logo, and comparison tray indicator.
+    Renders the modern utility header with styling, logo, comparison tray indicator, and user status.
     """
     badge_bg = "rgba(255, 153, 0, 0.2)" if compare_count > 0 else "rgba(255, 255, 255, 0.08)"
     badge_border = "#FF9900" if compare_count > 0 else "rgba(255, 255, 255, 0.15)"
@@ -20,16 +22,36 @@ def render_header(
     badge_pill_bg = "#FF9900" if compare_count > 0 else "#64748B"
     badge_pill_color = "#131921" if compare_count > 0 else "#FFFFFF"
 
+    # User identity pill
+    if user and user.get("authenticated"):
+        u_name = html.escape(str(user.get("display_name", "Shopper")))
+        user_badge_html = (
+            f'<div style="background: rgba(16, 185, 129, 0.2); border: 1px solid #10B981; '
+            f'padding: 0.45rem 1rem; border-radius: 20px; font-size: 0.85rem; font-weight: 700; '
+            f'color: #34D399; display: flex; align-items: center; gap: 0.5rem;">'
+            f'<span>👤 {u_name}</span>'
+            f'<span style="background: #10B981; color: #131921; font-size: 0.72rem; padding: 0.1rem 0.45rem; border-radius: 10px; font-weight: 800;">VERIFIED</span>'
+            f'</div>'
+        )
+    else:
+        user_badge_html = (
+            '<div style="background: rgba(255, 153, 0, 0.14); border: 1px solid rgba(255, 153, 0, 0.5); '
+            'padding: 0.45rem 0.95rem; border-radius: 20px; font-size: 0.82rem; font-weight: 600; '
+            'color: #FF9900; display: flex; align-items: center; gap: 0.4rem;">'
+            '<span>🔐 Guest Mode</span>'
+            '</div>'
+        )
+
     # We format HTML without leading indentation and without blank lines so Markdown never creates a code block
     header_html = (
-        '<div style="background: linear-gradient(135deg, #131921 0%, #1e293b 100%); '
-        'padding: 1.1rem 1.8rem; border-radius: 12px; color: #FFFFFF; margin-bottom: 1.5rem; '
-        'box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15); display: flex; flex-wrap: wrap; '
-        'align-items: center; justify-content: space-between; gap: 1rem;">'
+        '<div style="background: linear-gradient(135deg, #0B0F19 0%, #131921 50%, #1e293b 100%); '
+        'padding: 1.1rem 1.8rem; border-radius: 14px; color: #FFFFFF; margin-bottom: 1.5rem; '
+        'box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25); display: flex; flex-wrap: wrap; '
+        'align-items: center; justify-content: space-between; gap: 1rem; border: 1px solid rgba(255, 255, 255, 0.08);">'
         '<div style="display: flex; align-items: center; gap: 1rem;">'
         '<div style="background: linear-gradient(135deg, #FF9900 0%, #E47A24 100%); width: 44px; '
         'height: 44px; border-radius: 10px; display: flex; align-items: center; justify-content: center; '
-        'font-size: 24px; font-weight: bold; box-shadow: 0 2px 8px rgba(255, 153, 0, 0.4);">'
+        'font-size: 24px; font-weight: bold; box-shadow: 0 2px 10px rgba(255, 153, 0, 0.45);">'
         '🔍'
         '</div>'
         '<div>'
@@ -41,7 +63,8 @@ def render_header(
         '</div>'
         '</div>'
         '</div>'
-        '<div style="display: flex; align-items: center; gap: 0.8rem;">'
+        '<div style="display: flex; align-items: center; gap: 0.8rem; flex-wrap: wrap;">'
+        f'{user_badge_html}'
         f'<div style="background: {badge_bg}; border: 1px solid {badge_border}; '
         f'padding: 0.45rem 1rem; border-radius: 20px; font-size: 0.88rem; font-weight: 600; '
         f'color: {badge_color}; display: flex; align-items: center; gap: 0.5rem;">'
