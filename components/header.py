@@ -11,11 +11,17 @@ import streamlit as st
 def render_header(
     compare_count: int = 0,
     active_nav: str = "Catalogue",
-    user: Optional[Dict[str, Any]] = None
+    user: Optional[Dict[str, Any]] = None,
+    *args,
+    **kwargs
 ) -> None:
     """
     Renders the modern utility header with styling, logo, comparison tray indicator, and user status.
+    Safe against cached signature mismatches by accepting *args and **kwargs.
     """
+    if user is None:
+        user = kwargs.get("user") or st.session_state.get("user_profile")
+
     badge_bg = "rgba(255, 153, 0, 0.2)" if compare_count > 0 else "rgba(255, 255, 255, 0.08)"
     badge_border = "#FF9900" if compare_count > 0 else "rgba(255, 255, 255, 0.15)"
     badge_color = "#FF9900" if compare_count > 0 else "#CBD5E1"
