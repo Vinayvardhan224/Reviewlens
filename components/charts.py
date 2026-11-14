@@ -356,3 +356,123 @@ def create_confusion_matrix_heatmap(cm: List[List[int]], labels: List[str]) -> g
         margin=dict(t=30, b=40, l=40, r=40)
     )
     return fig
+
+
+def create_temporal_sentiment_chart(timeline_points: List[Dict[str, Any]]) -> go.Figure:
+    """
+    Renders dual-axis timeline chart:
+      - Primary Axis: Monthly Net Sentiment Score (NSS) line curve
+      - Secondary Axis: Monthly Review Volume bar columns
+    """
+    if not timeline_points:
+        return go.Figure()
+
+    periods = [p["period"] for p in timeline_points]
+    nss_values = [p["net_sentiment_score"] for p in timeline_points]
+    volumes = [p["review_count"] for p in timeline_points]
+
+    fig = go.Figure()
+
+    # Bar chart for review volume (secondary axis)
+    fig.add_trace(
+        go.Bar(
+            x=periods,
+            y=volumes,
+            name="Review Volume",
+            marker=dict(color="rgba(148, 163, 184, 0.35)"),
+            yaxis="y2",
+            hovertemplate="Period: %{x}<br>Reviews: %{y}<extra></extra>"
+        )
+    )
+
+    # Line chart for Net Sentiment Score
+    fig.add_trace(
+        go.Scatter(
+            x=periods,
+            y=nss_values,
+            mode="lines+markers",
+            name="Net Sentiment Score (NSS)",
+            line=dict(color=COLOR_PRIMARY, width=3),
+            marker=dict(size=8, color=[COLOR_POSITIVE if v >= 0 else COLOR_NEGATIVE for v in nss_values]),
+            hovertemplate="Period: %{x}<br>NSS: %{y:+.1f}<extra></extra>"
+        )
+    )
+
+    fig.update_layout(
+        title=dict(text="Consumer Sentiment Trend & Review Volume Over Time", x=0.05, y=0.95),
+        height=380,
+        margin=dict(t=50, b=60, l=40, r=40),
+        xaxis=dict(title="Month / Time Period"),
+        yaxis=dict(
+            title="Net Sentiment Score (-100 to +100)",
+            range=[-100, 100],
+            zeroline=True,
+            zerolinecolor="#94A3B8"
+        ),
+        yaxis2=dict(
+            title="Monthly Reviews",
+            overlaying="y",
+            side="right",
+            showgrid=False
+        ),
+        legend=dict(
+            orientation="h",
+            yanchor="top",
+            y=-0.20,
+            xanchor="center",
+            x=0.5
+        )
+    )
+    return fig
+
+
+def create_live_sentiment_gauge(compound_score: float) -> go.Figure:
+    """
+    Renders an interactive gauge indicator for real-time review sentiment polarity.
+    Compound score ranges from -1.0 to +1.0.
+    """
+    # Scale -1.0..+1.0 into 0..100 for gauge visualization
+    normalized = round((compound_score + 1.0) * 50.0, 1)
+
+    if compound_score >= 0.05:
+        bar_color = COLOR_POSITIVE
+        sentiment_label = "POSITIVE"
+    elif compound_score <= -0.05:
+        bar_color = COLOR_NEGATIVE
+        sentiment_label = "NEGATIVE"
+    else:
+        bar_color = COLOR_NEUTRAL
+        sentiment_label = "NEUTRAL"
+
+    fig = go.Figure(
+        go.Indicator(
+            mode="gauge+number+delta",
+            value=compound_score,
+            delta={"reference": 0.0, "increasing": {"color": COLOR_POSITIVE}, "decreasing": {"color": COLOR_NEGATIVE}},
+            number={"valueformat": "+.2f", "font": {"size": 36, "color": bar_color}},
+            title={"text": f"Valence: <b>{sentiment_label}</b>", "font": {"size": 16, "color": "#0F172A"}},
+            gauge={
+                "axis": {"range": [-1.0, 1.0], "tickwidth": 1, "tickcolor": "#64748B"},
+                "bar": {"color": bar_color, "thickness": 0.3},
+                "bgcolor": "#F8FAFC",
+                "borderwidth": 1,
+                "bordercolor": "#E2E8F0",
+                "steps": [
+                    {"range": [-1.0, -0.05], "color": "rgba(239, 68, 68, 0.12)"},
+                    {"range": [-0.05, 0.05], "color": "rgba(148, 163, 184, 0.12)"},
+                    {"range": [0.05, 1.0], "color": "rgba(16, 185, 129, 0.12)"}
+                ],
+                "threshold": {
+                    "line": {"color": "#0F172A", "width": 3},
+                    "thickness": 0.75,
+                    "value": compound_score
+                }
+            }
+        )
+    )
+
+    fig.update_layout(
+        height=260,
+        margin=dict(t=40, b=20, l=30, r=30)
+    )
+    return fig
