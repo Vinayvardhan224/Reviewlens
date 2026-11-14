@@ -40,6 +40,7 @@ from modules.recommendation import generate_category_recommendations, rank_produ
 from modules.topic_modeling import extract_topic_clusters, extract_topic_clusters_result
 from modules.evaluation import evaluate_sentiment_model, evaluate_spam_model, BENCHMARK_DATASET
 from modules.live_analyzer import analyze_custom_review
+from modules.auth import get_current_user, render_auth_interface, logout_user
 from components.header import render_header
 from components.product_card import render_product_card
 from components.filters import render_sidebar_filters, apply_filters
@@ -74,7 +75,7 @@ def render_html_block(html_content: str) -> None:
     st.markdown("\n".join(clean_lines), unsafe_allow_html=True)
 
 
-# CSS Styling (Amazon Navy #131921, Amber #FF9900, Clean SaaS cards)
+# CSS Styling (Amazon Navy #131921, Amber #FF9900, Clean SaaS cards, Sliding Sidebar)
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
@@ -83,25 +84,75 @@ st.markdown("""
         font-family: 'Plus Jakarta Sans', sans-serif;
     }
 
-    .stButton>button {
-        border-radius: 8px;
-        font-weight: 600;
-        transition: all 0.2s ease;
-    }
-    .stButton>button:hover {
-        transform: translateY(-1px);
-        box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    /* ========================================================
+       SLIDING ANIMATION & STYLING FOR SIDEBAR
+       ======================================================== */
+    @keyframes sidebarSlideIn {
+        0% {
+            transform: translateX(-100%);
+            opacity: 0;
+        }
+        100% {
+            transform: translateX(0);
+            opacity: 1;
+        }
     }
 
-    .metric-card {
+    section[data-testid="stSidebar"] {
+        animation: sidebarSlideIn 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards !important;
+        transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), width 0.35s ease !important;
+        background: linear-gradient(180deg, #0B0F19 0%, #131921 55%, #0F172A 100%) !important;
+        border-right: 1px solid rgba(255, 255, 255, 0.08) !important;
+        box-shadow: 6px 0 24px rgba(0, 0, 0, 0.35) !important;
+    }
+
+    section[data-testid="stSidebar"] * {
+        color: #F1F5F9;
+    }
+
+    /* Smooth sliding hover on sidebar radio navigation */
+    div[data-testid="stRadio"] div[role="radiogroup"] > label {
+        transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1) !important;
+        border-radius: 8px !important;
+        padding: 0.35rem 0.65rem !important;
+        margin-bottom: 0.2rem !important;
+        border: 1px solid transparent !important;
+    }
+
+    div[data-testid="stRadio"] div[role="radiogroup"] > label:hover {
+        background: rgba(255, 153, 0, 0.12) !important;
+        border: 1px solid rgba(255, 153, 0, 0.35) !important;
+        transform: translateX(6px) !important;
+    }
+
+    /* ========================================================
+       INNER INTERFACE ELEVATION & CARD HOVER ANIMATIONS
+       ======================================================== */
+    .stButton>button {
+        border-radius: 10px !important;
+        font-weight: 600 !important;
+        transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+    }
+    .stButton>button:hover {
+        transform: translateY(-2px) !important;
+        box-shadow: 0 6px 18px rgba(0, 0, 0, 0.12) !important;
+    }
+
+    .metric-card, .topic-card {
         background: #FFFFFF;
         border: 1px solid #E2E8F0;
-        border-radius: 12px;
-        padding: 1.1rem;
+        border-radius: 14px;
+        padding: 1.15rem;
         box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
         margin-bottom: 1rem;
         border-left: 4px solid #2563EB;
+        transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s ease !important;
     }
+    .metric-card:hover, .topic-card:hover {
+        transform: translateY(-3px) !important;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08) !important;
+    }
+
     .metric-card-orange {
         border-left-color: #FF9900;
     }
@@ -131,13 +182,15 @@ st.markdown("""
     }
 
     .hero-banner {
-        background: linear-gradient(135deg, #131921 0%, #1e293b 100%);
-        border-radius: 14px;
-        padding: 2.2rem;
-        color: #FFFFFF;
-        margin-bottom: 2rem;
-        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.12);
-        border: 1px solid rgba(255, 255, 255, 0.08);
+        background: linear-gradient(135deg, #0B0F19 0%, #131921 60%, #1E293B 100%) !important;
+        border-radius: 16px !important;
+        padding: 2.2rem !important;
+        color: #FFFFFF !important;
+        margin-bottom: 2rem !important;
+        box-shadow: 0 12px 32px rgba(0, 0, 0, 0.2) !important;
+        border: 1px solid rgba(255, 255, 255, 0.1) !important;
+        position: relative;
+        overflow: hidden;
     }
 
     .provenance-banner {
@@ -153,15 +206,6 @@ st.markdown("""
         gap: 0.8rem;
     }
 
-    .topic-card {
-        background: #FFFFFF;
-        border: 1px solid #E2E8F0;
-        border-radius: 10px;
-        padding: 1.2rem;
-        margin-bottom: 1rem;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.03);
-    }
-
     .topic-pill {
         display: inline-block;
         background: #EEF2FF;
@@ -172,6 +216,10 @@ st.markdown("""
         border-radius: 12px;
         margin-right: 0.4rem;
         margin-bottom: 0.4rem;
+        transition: transform 0.2s ease;
+    }
+    .topic-pill:hover {
+        transform: scale(1.05);
     }
 </style>
 """, unsafe_allow_html=True)
@@ -248,11 +296,36 @@ if df_products is None or df_products.empty:
     st.error("⚠️ The product catalogue is empty or missing. Please ensure data/products.csv is present and valid.")
     st.stop()
 
+# Current authenticated user profile
+current_user = get_current_user()
+
 # Top utility header
 render_header(
     compare_count=len(st.session_state["compare_tray"]),
-    active_nav=st.session_state["nav_view"]
+    active_nav=st.session_state["nav_view"],
+    user=current_user
 )
+
+# Sidebar Account & Auth status card
+if current_user.get("authenticated"):
+    esc_u_name = html.escape(str(current_user.get("display_name", "Shopper")))
+    esc_u_badge = html.escape(str(current_user.get("tier_badge", "🛡️ Verified")))
+    render_html_block(f"""
+    <div style="background: rgba(255, 255, 255, 0.06); border: 1px solid rgba(255, 255, 255, 0.12); border-radius: 12px; padding: 0.8rem; margin-bottom: 0.8rem; display: flex; align-items: center; gap: 0.8rem;">
+        <div style="width: 38px; height: 38px; border-radius: 50%; background: linear-gradient(135deg, #FF9900 0%, #E47A24 100%); color: #131921; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 1.1rem; box-shadow: 0 2px 8px rgba(255, 153, 0, 0.4);">
+            {current_user.get('avatar_letter', 'U')}
+        </div>
+        <div style="flex: 1; overflow: hidden;">
+            <div style="font-weight: 700; font-size: 0.88rem; color: #FFFFFF; white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">{esc_u_name}</div>
+            <div style="font-size: 0.72rem; color: #34D399; font-weight: 600;">{esc_u_badge}</div>
+        </div>
+    </div>
+    """)
+    if st.sidebar.button("👤 View My Profile", key="sidebar_btn_profile", use_container_width=True):
+        navigate_to("🔐 Sign In / Profile")
+else:
+    if st.sidebar.button("🔐 Sign In (Gmail / Phone)", key="sidebar_btn_signin", use_container_width=True, type="primary"):
+        navigate_to("🔐 Sign In / Profile")
 
 # Sidebar Navigation & Controls
 st.sidebar.markdown("## 🧭 **Navigation**")
@@ -268,6 +341,7 @@ NAV_OPTIONS = [
     "🧪 Live Review Analyzer",
     "⚔️ Product Comparison",
     "🎯 Smart Recommendations",
+    "🔐 Sign In / Profile",
     "📊 Original Analytics Dashboard",
     "📈 Model Evaluation & Benchmarks",
     "📂 Data Ingestion & Validator",
@@ -1462,6 +1536,13 @@ elif st.session_state["nav_view"] == "🎯 Smart Recommendations":
         - **Budget Index**: Adjusts score by price curve `Score / (Price ^ 0.35)` to identify highest feature return per rupee.
         - **Buyer Matchmaker**: Normalizes user-weighted aspect dimensions and balances sentiment with value sensitivity.
         """)
+
+
+# ==========================================
+# VIEW: AUTHENTICATION & USER PROFILE
+# ==========================================
+elif st.session_state["nav_view"] == "🔐 Sign In / Profile":
+    render_auth_interface(on_navigate_home=lambda: navigate_to("🏠 Home / Discovery"))
 
 
 # ==========================================
