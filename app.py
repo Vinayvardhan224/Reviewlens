@@ -359,6 +359,33 @@ if st.session_state["nav_view"] == "🏠 Home / Discovery":
         </div>
         """)
 
+    # New Features Showcase Callout
+    render_html_block("""
+    <div style="background: linear-gradient(135deg, rgba(37, 99, 235, 0.08) 0%, rgba(255, 153, 0, 0.08) 100%); border: 1.5px solid rgba(37, 99, 235, 0.3); border-radius: 12px; padding: 1.2rem 1.5rem; margin-top: 1rem; margin-bottom: 1.2rem;">
+        <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem;">
+            <div>
+                <span style="background: #2563EB; color: #FFFFFF; font-size: 0.75rem; font-weight: 800; padding: 0.2rem 0.6rem; border-radius: 12px; text-transform: uppercase;">✨ New NLP Capabilities</span>
+                <h3 style="margin: 0.4rem 0 0.2rem 0; font-size: 1.25rem; font-weight: 800; color: #0F172A;">Live Review Diagnostic Lab & Personalized Matchmaker</h3>
+                <p style="margin: 0; font-size: 0.88rem; color: #475569; max-width: 750px;">
+                    Test raw customer review text in real-time with clause-level ABSA, spam probability, and rating anomaly checks — or calibrate multi-attribute aspect weights to find products tailored to your preferences.
+                </p>
+            </div>
+        </div>
+    </div>
+    """)
+    feat_nav_col1, feat_nav_col2, feat_nav_col3 = st.columns(3)
+    with feat_nav_col1:
+        if st.button("🧪 Launch Live Review Analyzer →", key="home_btn_live_analyzer", type="primary", use_container_width=True):
+            navigate_to("🧪 Live Review Analyzer")
+    with feat_nav_col2:
+        if st.button("🎛️ Custom Buyer Matchmaker →", key="home_btn_matchmaker", use_container_width=True):
+            navigate_to("🎯 Smart Recommendations")
+    with feat_nav_col3:
+        if st.button("📈 Sentiment Drift & Trust Audit →", key="home_btn_drift", use_container_width=True):
+            navigate_to("🔍 Review Intelligence")
+
+    st.markdown("<br>", unsafe_allow_html=True)
+
     # Department Quick-Access Row
     st.markdown("### 🏷️ **Shop by Department**")
     cat_cols = st.columns(4)
