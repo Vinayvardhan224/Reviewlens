@@ -14,6 +14,7 @@ import unittest
 from modules.auth import (
     get_current_user,
     login_with_google,
+    login_as_guest,
     send_phone_otp,
     verify_phone_otp,
     logout_user,
@@ -41,6 +42,16 @@ class TestAuthModule(unittest.TestCase):
             "custom_presets": {}
         }
         st.session_state.pop("pending_phone_auth", None)
+
+    def tearDown(self):
+        # Ensure only permanent seed accounts remain in data/users.json
+        try:
+            from modules.auth import _load_user_db, _save_user_db
+            db = _load_user_db()
+            cleaned = {k: v for k, v in db.items() if k in ["demo@reviewlens.com", "vinay@reviewlens.com"]}
+            _save_user_db(cleaned)
+        except Exception:
+            pass
 
     def test_default_guest_state(self):
         user = get_current_user()
@@ -129,6 +140,13 @@ class TestAuthModule(unittest.TestCase):
         self.assertTrue(user["authenticated"])
         self.assertEqual(user["auth_method"], "phone")
         self.assertIn("+91", user["identifier"])
+
+    def test_guest_login(self):
+        profile = login_as_guest()
+        self.assertTrue(profile["authenticated"])
+        self.assertEqual(profile["auth_method"], "guest")
+        self.assertEqual(profile["display_name"], "Guest Explorer")
+        self.assertTrue(get_current_user()["authenticated"])
 
     def test_logout(self):
         login_with_google("user@gmail.com")

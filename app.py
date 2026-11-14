@@ -299,32 +299,64 @@ if df_products is None or df_products.empty:
 # Current authenticated user profile
 current_user = get_current_user()
 
-# Top utility header
+if not current_user.get("authenticated"):
+    # Enforce pure full-width login page on initial arrival with zero sidebar or header controls
+    st.markdown("""
+    <style>
+        [data-testid="stSidebar"],
+        section[data-testid="stSidebar"],
+        [data-testid="collapsedControl"],
+        div[data-testid="stSidebarCollapsedControl"],
+        [data-testid="stSidebarCollapseButton"] {
+            display: none !important;
+        }
+        .main .block-container {
+            max-width: 1320px !important;
+            padding-top: 1.8rem !important;
+            padding-bottom: 3rem !important;
+            padding-left: 2rem !important;
+            padding-right: 2rem !important;
+        }
+    </style>
+    """, unsafe_allow_html=True)
+
+    render_auth_interface(on_navigate_home=lambda: (
+        st.session_state.update({
+            "nav_view": "🏠 Home / Discovery",
+            "sidebar_nav_radio": "🏠 Home / Discovery"
+        }),
+        st.rerun()
+    ))
+    st.stop()
+
+# Top utility header (rendered only when authenticated)
 render_header(
     compare_count=len(st.session_state["compare_tray"]),
     active_nav=st.session_state["nav_view"]
 )
 
-# Sidebar Account & Auth status card
-if current_user.get("authenticated"):
-    esc_u_name = html.escape(str(current_user.get("display_name", "Shopper")))
-    esc_u_badge = html.escape(str(current_user.get("tier_badge", "🛡️ Verified")))
-    render_html_block(f"""
-    <div style="background: rgba(255, 255, 255, 0.06); border: 1px solid rgba(255, 255, 255, 0.12); border-radius: 12px; padding: 0.8rem; margin-bottom: 0.8rem; display: flex; align-items: center; gap: 0.8rem;">
-        <div style="width: 38px; height: 38px; border-radius: 50%; background: linear-gradient(135deg, #FF9900 0%, #E47A24 100%); color: #131921; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 1.1rem; box-shadow: 0 2px 8px rgba(255, 153, 0, 0.4);">
-            {current_user.get('avatar_letter', 'U')}
-        </div>
-        <div style="flex: 1; overflow: hidden;">
-            <div style="font-weight: 700; font-size: 0.88rem; color: #FFFFFF; white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">{esc_u_name}</div>
-            <div style="font-size: 0.72rem; color: #34D399; font-weight: 600;">{esc_u_badge}</div>
-        </div>
+# Sidebar Account & Auth status card (rendered only when authenticated)
+esc_u_name = html.escape(str(current_user.get("display_name", "Shopper")))
+esc_u_badge = html.escape(str(current_user.get("tier_badge", "🛡️ Verified")))
+render_html_block(f"""
+<div style="background: rgba(255, 255, 255, 0.06); border: 1px solid rgba(255, 255, 255, 0.12); border-radius: 12px; padding: 0.8rem; margin-bottom: 0.8rem; display: flex; align-items: center; gap: 0.8rem;">
+    <div style="width: 38px; height: 38px; border-radius: 50%; background: linear-gradient(135deg, #FF9900 0%, #E47A24 100%); color: #131921; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 1.1rem; box-shadow: 0 2px 8px rgba(255, 153, 0, 0.4);">
+        {current_user.get('avatar_letter', 'U')}
     </div>
-    """)
-    if st.sidebar.button("👤 View My Profile", key="sidebar_btn_profile", use_container_width=True):
+    <div style="flex: 1; overflow: hidden;">
+        <div style="font-weight: 700; font-size: 0.88rem; color: #FFFFFF; white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">{esc_u_name}</div>
+        <div style="font-size: 0.72rem; color: #34D399; font-weight: 600;">{esc_u_badge}</div>
+    </div>
+</div>
+""")
+col_sb_prof, col_sb_logout = st.sidebar.columns(2)
+with col_sb_prof:
+    if st.button("👤 Profile", key="sidebar_btn_profile", use_container_width=True):
         navigate_to("🔐 Sign In / Profile")
-else:
-    if st.sidebar.button("🔐 Sign In (Gmail / Phone)", key="sidebar_btn_signin", use_container_width=True, type="primary"):
-        navigate_to("🔐 Sign In / Profile")
+with col_sb_logout:
+    if st.button("🚪 Sign Out", key="sidebar_btn_logout", use_container_width=True):
+        logout_user()
+        navigate_to("🏠 Home / Discovery")
 
 # Sidebar Navigation & Controls
 st.sidebar.markdown("## 🧭 **Navigation**")
