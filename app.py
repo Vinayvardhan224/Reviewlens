@@ -958,6 +958,13 @@ elif st.session_state["nav_view"] == "🔍 Review Intelligence":
 # VIEW: LIVE REVIEW ANALYZER & DIAGNOSTIC LAB
 # ==========================================
 elif st.session_state["nav_view"] == "🧪 Live Review Analyzer":
+    nav_b_col1, nav_b_col2 = st.columns([1.2, 3.8])
+    with nav_b_col1:
+        if st.button("← Back to Discovery", key="btn_live_back_home", type="secondary", use_container_width=True):
+            navigate_to("🏠 Home / Discovery")
+    with nav_b_col2:
+        st.markdown("<div style='font-size: 0.85rem; color: #64748B; padding-top: 0.4rem;'>🧭 View: <b>Review Diagnostic Lab</b> | Switch views using this button or the sidebar radio</div>", unsafe_allow_html=True)
+
     st.markdown("## 🧪 **Live Review Diagnostic Lab & Anomaly Detector**")
     st.caption("Paste any raw customer review or synthetic comment to evaluate real-time ABSA clauses, VADER valence, spam bot probability, and star-rating contradictions.")
 
@@ -1117,6 +1124,18 @@ elif st.session_state["nav_view"] == "🧪 Live Review Analyzer":
                 neg_words = diag_res.get("negated_words", [])
                 st.markdown(f"**Negated Tokens Detected:** {', '.join([f'`{w}`' for w in neg_words]) if neg_words else 'None (standard polarity weighting)'}")
                 st.markdown(f"**Spam Heuristic Triggers:** {', '.join(diag_res['spam_analysis']['reasons']) if diag_res['spam_analysis']['reasons'] else 'Clean — no repetitive keywords, suspicious URLs, or excessive caps.'}")
+
+    st.markdown("<br>", unsafe_allow_html=True)
+    b_row1, b_row2, b_row3 = st.columns(3)
+    with b_row1:
+        if st.button("← Return to Discovery Catalogue", key="btn_live_bottom_home", use_container_width=True):
+            navigate_to("🏠 Home / Discovery")
+    with b_row2:
+        if st.button("🔍 Explore Full Review Intelligence →", key="btn_live_bottom_intel", use_container_width=True):
+            navigate_to("🔍 Review Intelligence")
+    with b_row3:
+        if st.button("🎯 Try Custom Buyer Matchmaker →", key="btn_live_bottom_match", use_container_width=True):
+            navigate_to("🎯 Smart Recommendations")
 
 
 # ==========================================
