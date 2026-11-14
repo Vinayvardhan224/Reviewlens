@@ -42,32 +42,32 @@ def render_product_card(
     formatted_price = format_currency_inr(price)
 
     # Calculate discount savings
-    price_html = f'<span style="font-size: 1.25rem; font-weight: 800; color: #0F172A;">{formatted_price}</span>'
+    price_html = f'<span style="font-size: 1.25rem; font-weight: 800; color: #FFFFFF;">{formatted_price}</span>'
     if orig_price > price:
         formatted_orig = format_currency_inr(orig_price)
         discount_pct = int(round((orig_price - price) / orig_price * 100))
         price_html += (
             f' <span style="font-size: 0.85rem; color: #94A3B8; text-decoration: line-through;">{formatted_orig}</span>'
-            f' <span style="font-size: 0.72rem; font-weight: 700; color: #16A34A; background: #DCFCE7; padding: 0.15rem 0.45rem; border-radius: 4px;">{discount_pct}% OFF</span>'
+            f' <span style="font-size: 0.72rem; font-weight: 700; color: #34D399; background: rgba(16, 185, 129, 0.2); padding: 0.15rem 0.45rem; border-radius: 4px;">{discount_pct}% OFF</span>'
         )
 
     card_html = (
-        '<div style="background: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 12px; '
-        'padding: 1rem; margin-bottom: 1.2rem; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04); transition: all 0.2s ease;">'
-        '<div style="height: 160px; overflow: hidden; border-radius: 8px; margin-bottom: 0.8rem; '
-        'background: #F8FAFC; display: flex; align-items: center; justify-content: center;">'
-        f'<img src="{img_src}" style="max-height: 100%; max-width: 100%; object-fit: contain; border-radius: 6px;" '
+        '<div style="background: rgba(22, 17, 46, 0.8); border: 1px solid rgba(155, 92, 255, 0.25); border-radius: 14px; '
+        'padding: 1rem; margin-bottom: 1.2rem; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45); transition: all 0.25s ease;">'
+        '<div style="height: 160px; overflow: hidden; border-radius: 10px; margin-bottom: 0.8rem; '
+        'background: rgba(12, 9, 28, 0.75); border: 1px solid rgba(255, 255, 255, 0.05); display: flex; align-items: center; justify-content: center;">'
+        f'<img src="{img_src}" style="max-height: 100%; max-width: 100%; object-fit: contain; border-radius: 8px;" '
         f'alt="{esc_name}" />'
         '</div>'
-        '<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.3rem;">'
-        f'<span style="background: #F1F5F9; color: #475569; font-size: 0.75rem; font-weight: 600; padding: 0.2rem 0.5rem; border-radius: 4px;">{esc_category} • {esc_brand}</span>'
-        '<span style="background: #EFF6FF; color: #2563EB; font-size: 0.72rem; font-weight: 600; padding: 0.2rem 0.45rem; border-radius: 4px;">🛡️ Demo (Illustrative)</span>'
+        '<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.35rem;">'
+        f'<span style="background: rgba(155, 92, 255, 0.15); color: #C4B5FD; font-size: 0.74rem; font-weight: 600; padding: 0.2rem 0.5rem; border-radius: 6px;">{esc_category} • {esc_brand}</span>'
+        '<span style="background: rgba(37, 99, 235, 0.18); color: #93C5FD; font-size: 0.72rem; font-weight: 600; padding: 0.2rem 0.45rem; border-radius: 6px;">🛡️ Demo (Illustrative)</span>'
         '</div>'
-        '<div style="font-weight: 700; font-size: 0.95rem; color: #0F172A; min-height: 2.6rem; line-height: 1.3rem; margin-bottom: 0.4rem; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;">'
+        '<div style="font-weight: 700; font-size: 0.95rem; color: #FFFFFF; min-height: 2.6rem; line-height: 1.3rem; margin-bottom: 0.4rem; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;">'
         f'{esc_name}'
         '</div>'
         f'<div style="display: flex; align-items: baseline; gap: 0.4rem; margin-bottom: 0.4rem; flex-wrap: wrap;">{price_html}</div>'
-        '<div style="display: flex; align-items: center; gap: 0.4rem; font-size: 0.82rem; color: #64748B; margin-bottom: 0.8rem;">'
+        '<div style="display: flex; align-items: center; gap: 0.4rem; font-size: 0.82rem; color: #B9B3D0; margin-bottom: 0.8rem;">'
         f'<span style="color: #F59E0B; font-weight: 700;">★ {rating:.1f}</span>'
         f'<span>({review_count:,} sample ratings)</span>'
         '</div>'
