@@ -491,8 +491,8 @@ def render_auth_interface(on_navigate_home=None) -> None:
     # ====================================================
     with col_left:
         laptop_preview_html = f"""
-        <div style="position: relative; margin-bottom: 1.6rem; border-radius: 20px; overflow: hidden; box-shadow: 0 20px 50px rgba(0,0,0,0.65), 0 0 35px rgba(113, 56, 245, 0.35); border: 1px solid rgba(155, 92, 255, 0.35); background: rgba(14, 10, 30, 0.8);">
-            <img src="data:image/png;base64,{laptop_b64}" style="width: 100%; height: auto; display: block;" alt="ReviewLens 3D NLP Dashboard Preview">
+        <div style="position: relative; margin: 0.2rem 0 1.2rem 0; text-align: center;">
+            <img src="data:image/png;base64,{laptop_b64}" style="max-width: 440px; width: 100%; height: auto; display: inline-block; filter: drop-shadow(0 15px 35px rgba(113, 56, 245, 0.4));" alt="ReviewLens 3D NLP Dashboard Preview">
         </div>
         """ if laptop_b64 else """
         <div style="background: rgba(21, 17, 43, 0.7); border: 1px solid rgba(155, 92, 255, 0.3); border-radius: 16px; padding: 1.3rem; margin-bottom: 1.8rem; box-shadow: 0 10px 30px rgba(0,0,0,0.4);">
@@ -651,14 +651,8 @@ def render_auth_interface(on_navigate_home=None) -> None:
                 """)
 
                 if st.button("🔴 Continue with Google", key="btn_login_google", use_container_width=True):
-                    google_email = login_email if (login_email and "@" in login_email) else "shopper@gmail.com"
-                    login_with_google(google_email)
-                    st.toast("Signed in with Google Identity!", icon="✅")
-                    if on_navigate_home:
-                        on_navigate_home()
-                    else:
-                        st.session_state["pending_nav"] = "🏠 Home / Discovery"
-                        st.rerun()
+                    st.session_state["auth_mode"] = "google"
+                    st.rerun()
 
                 _render_html("""
                 <div style="text-align: center; font-size: 0.92rem; color: #B9B3D0; margin: 1.1rem 0 0.3rem 0;">
@@ -797,15 +791,8 @@ def render_auth_interface(on_navigate_home=None) -> None:
                 """)
 
                 if st.button("🔴 Sign Up with Google", key="btn_signup_google", use_container_width=True):
-                    google_email = signup_email if (signup_email and "@" in signup_email) else "shopper@gmail.com"
-                    google_name = signup_name if signup_name else None
-                    login_with_google(google_email, name=google_name)
-                    st.toast("Signed up with Google Identity!", icon="🎉")
-                    if on_navigate_home:
-                        on_navigate_home()
-                    else:
-                        st.session_state["pending_nav"] = "🏠 Home / Discovery"
-                        st.rerun()
+                    st.session_state["auth_mode"] = "google"
+                    st.rerun()
 
                 _render_html("""
                 <div style="text-align: center; font-size: 0.92rem; color: #B9B3D0; margin: 1.2rem 0 0.3rem 0;">
@@ -849,5 +836,100 @@ def render_auth_interface(on_navigate_home=None) -> None:
 
                 _render_html("<br>")
                 if st.button("← Return to Sign In", key="btn_forgot_back_login", use_container_width=True):
+                    st.session_state["auth_mode"] = "login"
+                    st.rerun()
+
+            # ------------------------------------------------
+            # 5. GOOGLE IDENTITY AUTHENTICATION & ACCESS
+            # ------------------------------------------------
+            elif st.session_state["auth_mode"] == "google":
+                _render_html("""
+                <div style="text-align: center; margin-bottom: 1.3rem;">
+                    <div style="display: inline-flex; align-items: center; justify-content: center; width: 48px; height: 48px; border-radius: 50%; background: #FFFFFF; box-shadow: 0 4px 15px rgba(0,0,0,0.35); margin-bottom: 0.75rem;">
+                        <svg width="26" height="26" viewBox="0 0 48 48">
+                            <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+                            <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+                            <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.55 10.78l7.98-6.19z"/>
+                            <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+                        </svg>
+                    </div>
+                    <h2 style="font-size: 1.85rem; font-weight: 800; color: #FFFFFF; margin: 0 0 0.35rem 0; letter-spacing: -0.5px;">
+                        Sign in with Google
+                    </h2>
+                    <p style="font-size: 0.92rem; color: #B9B3D0; margin: 0;">
+                        Choose an account or sign up to continue to <b>ReviewLens</b>
+                    </p>
+                </div>
+                """)
+
+                _render_html("""
+                <div style="font-size: 0.8rem; font-weight: 700; color: #C4B5FD; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 0.6rem;">
+                    Choose an Account
+                </div>
+                """)
+
+                # Account Option 1: Vinay Vardhan
+                if st.button("👤 Continue as Vinay Vardhan (vinay.vardhan@gmail.com)", key="btn_google_acc_vinay", use_container_width=True):
+                    login_with_google("vinay.vardhan@gmail.com", name="Vinay Vardhan")
+                    st.toast("Signed in with Google Identity as Vinay Vardhan!", icon="✅")
+                    if on_navigate_home:
+                        on_navigate_home()
+                    else:
+                        st.session_state["pending_nav"] = "🏠 Home / Discovery"
+                        st.rerun()
+
+                # Account Option 2: Smart Shopper
+                if st.button("🛍️ Continue as Smart Shopper (shopper.reviewlens@gmail.com)", key="btn_google_acc_shopper", use_container_width=True):
+                    login_with_google("shopper.reviewlens@gmail.com", name="Smart Shopper")
+                    st.toast("Signed in with Google Identity as Smart Shopper!", icon="✅")
+                    if on_navigate_home:
+                        on_navigate_home()
+                    else:
+                        st.session_state["pending_nav"] = "🏠 Home / Discovery"
+                        st.rerun()
+
+                _render_html("""
+                <div style="text-align: center; margin: 1.1rem 0; color: #7E7A94; font-size: 0.82rem; position: relative;">
+                    <span style="background: #120E26; padding: 0 10px; position: relative; z-index: 1;">Or enter another Google account</span>
+                    <hr style="position: absolute; top: 50%; left: 0; right: 0; border: none; border-top: 1px solid rgba(255,255,255,0.12); margin: 0; z-index: 0;">
+                </div>
+                """)
+
+                custom_g_name = st.text_input("Your Full Name", placeholder="👤 e.g. Alex Chen", key="google_custom_name")
+                custom_g_email = st.text_input("Google / Gmail Email Address", placeholder="✉️ e.g. alex.chen@gmail.com", key="google_custom_email")
+
+                col_g_in, col_g_up = st.columns(2)
+                with col_g_in:
+                    if st.button("Sign In with Google →", key="btn_google_custom_signin", type="primary", use_container_width=True):
+                        if custom_g_email and "@" in custom_g_email:
+                            login_with_google(custom_g_email, name=custom_g_name)
+                            st.toast(f"Google Identity verified for {custom_g_email}!", icon="🎉")
+                            if on_navigate_home:
+                                on_navigate_home()
+                            else:
+                                st.session_state["pending_nav"] = "🏠 Home / Discovery"
+                                st.rerun()
+                        else:
+                            st.error("Please enter a valid Google email address.")
+                with col_g_up:
+                    if st.button("Sign Up with Google →", key="btn_google_custom_signup", use_container_width=True):
+                        if custom_g_email and "@" in custom_g_email:
+                            login_with_google(custom_g_email, name=custom_g_name)
+                            st.toast(f"New Google account registered for {custom_g_email}!", icon="🎉")
+                            if on_navigate_home:
+                                on_navigate_home()
+                            else:
+                                st.session_state["pending_nav"] = "🏠 Home / Discovery"
+                                st.rerun()
+                        else:
+                            st.error("Please enter a valid Google email address.")
+
+                _render_html("""
+                <div style="background: rgba(155, 92, 255, 0.08); border-radius: 10px; padding: 0.75rem 0.9rem; font-size: 0.78rem; color: #B9B3D0; line-height: 1.5; margin: 1rem 0 0.8rem 0;">
+                    🛡️ <b>Google Account Access:</b> Google will share your verified name, email address, language preference, and profile picture with <b>ReviewLens</b> to authenticate your session.
+                </div>
+                """)
+
+                if st.button("← Back to Standard Sign In", key="btn_google_back_login", use_container_width=True):
                     st.session_state["auth_mode"] = "login"
                     st.rerun()
