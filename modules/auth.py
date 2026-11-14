@@ -37,8 +37,11 @@ def _get_laptop_illustration_b64() -> str:
 
 def _render_html(html_str: str) -> None:
     """Safely renders HTML without Markdown turning indented lines into code blocks."""
-    clean = "\n".join(line.strip() for line in html_str.splitlines() if line.strip())
-    st.markdown(clean, unsafe_allow_html=True)
+    if hasattr(st, "html"):
+        st.html(html_str)
+    else:
+        clean = "\n".join(line.strip() for line in html_str.splitlines() if line.strip())
+        st.markdown(clean, unsafe_allow_html=True)
 
 
 def _load_user_db() -> Dict[str, Any]:
@@ -530,7 +533,6 @@ def render_auth_interface(on_navigate_home=None) -> None:
 
         _render_html(f"""
         <div style="padding-right: 0.5rem;">
-            <!-- BRAND LOGO -->
             <div style="display: inline-flex; align-items: center; gap: 0.75rem; margin-bottom: 1.5rem;">
                 <div style="width: 44px; height: 44px; border-radius: 12px; background: linear-gradient(135deg, #7138F5 0%, #9B5CFF 100%); display: flex; align-items: center; justify-content: center; font-size: 22px; color: #FFFFFF; box-shadow: 0 0 22px rgba(155, 92, 255, 0.6);">
                     ★
@@ -540,21 +542,17 @@ def render_auth_interface(on_navigate_home=None) -> None:
                 </div>
             </div>
 
-            <!-- MAIN HEADING -->
             <h1 style="font-size: 2.85rem; font-weight: 800; line-height: 1.15; margin: 0 0 1rem 0; color: #FFFFFF; letter-spacing: -0.5px;">
                 Insights from<br>
                 Product <span style="background: linear-gradient(135deg, #B575FF 0%, #E0A7FF 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Reviews</span>
             </h1>
 
-            <!-- DESCRIPTION -->
             <p style="font-size: 1.05rem; color: #B9B3D0; line-height: 1.6; margin-bottom: 1.6rem; max-width: 520px;">
                 An NLP-powered platform to analyze reviews, understand customer sentiment, detect fake reviews, and get smart, AI-generated replies.
             </p>
 
-            <!-- 3D LAPTOP PREVIEW ILLUSTRATION -->
             {laptop_preview_html}
 
-            <!-- FOUR FEATURE HIGHLIGHTS IN HORIZONTAL ROW -->
             <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.75rem; text-align: center; margin-top: 1.2rem;">
                 <div class="hero-feature-item">
                     <div style="font-size: 1.65rem; color: #9B5CFF; margin-bottom: 0.35rem;">📊</div>
