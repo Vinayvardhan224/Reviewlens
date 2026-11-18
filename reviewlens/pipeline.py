@@ -6,6 +6,8 @@ and executive insight synthesis.
 """
 
 from typing import List, Dict, Any, Union, Optional
+import re
+import numpy as np
 import pandas as pd
 from reviewlens.preprocessing.cleaner import clean_text
 from reviewlens.spam_detector.detector import SpamDetector
@@ -23,6 +25,42 @@ from reviewlens.models import (
     AspectMention,
     ExecutiveSummary,
 )
+
+
+def _safe_parse_rating(val: Any) -> Optional[float]:
+    """Coerce arbitrary input values to float rating, returning None for invalid entries."""
+    if val is None or pd.isna(val):
+        return None
+    try:
+        f = float(val)
+        return f if not np.isnan(f) else None
+    except (ValueError, TypeError):
+        return None
+
+
+def _safe_parse_bool(val: Any) -> Optional[bool]:
+    """Correctly parse string and numeric representations of boolean values."""
+    if val is None or pd.isna(val):
+        return None
+    if isinstance(val, bool):
+        return val
+    s = str(val).strip().lower()
+    if s in ("true", "1", "yes", "t", "y"):
+        return True
+    if s in ("false", "0", "no", "f", "n"):
+        return False
+    return None
+
+
+def _normalize_date_str(val: Any) -> Optional[str]:
+    """Extract standard date strings from scraped phrases like 'Reviewed in India on 5 March 2026'."""
+    if val is None or pd.isna(val):
+        return None
+    s = str(val).strip()
+    m = re.search(r"\bon\s+(.+)$", s, re.IGNORECASE)
+    if m:
+        return m.group(1).strip()
+    return s
 
 
 class ReviewLensPipeline:
@@ -51,7 +89,8 @@ class ReviewLensPipeline:
         date: Optional[str] = None,
         verified_purchase: Optional[bool] = None,
         review_id: Optional[str] = None,
-        check_duplicate: bool = False
+        check_duplicate: bool = False,
+        spam_detector: Optional[SpamDetector] = None
     ) -> ReviewAnalysis:
         """
         Analyze a single product review end-to-end.
@@ -64,6 +103,7 @@ class ReviewLensPipeline:
             verified_purchase: Optional verification flag.
             review_id: Optional unique identifier.
             check_duplicate: Whether to compare against previously seen reviews.
+            spam_detector: Optional request-isolated SpamDetector instance.
             
         Returns:
             ReviewAnalysis object.
@@ -80,7 +120,8 @@ class ReviewLensPipeline:
         sentiment.emotion_scores = emotion_scores
 
         # 3. Spam & Fake Review Detection
-        spam = self.spam_detector.analyze(
+        active_spam_detector = spam_detector or self.spam_detector
+        spam = active_spam_detector.analyze(
             text=full_raw_text,
             rating=rating,
             sentiment_compound=sentiment.compound,
@@ -130,16 +171,17 @@ class ReviewLensPipeline:
         Returns:
             BatchAnalysisResult with comprehensive metrics, topics, keywords, and SWOT.
         """
-        self.spam_detector.reset_session()
+        # Use thread-isolated SpamDetector instance for this batch call
+        batch_spam_detector = SpamDetector(config=self.spam_detector.config)
 
         # Normalize input to list of review inputs
         review_inputs: List[ReviewInput] = []
         if isinstance(data, pd.DataFrame):
             for idx, row in data.iterrows():
                 r_text = str(row[text_column]) if text_column in row and pd.notna(row[text_column]) else ""
-                r_rating = float(row[rating_column]) if rating_column and rating_column in row and pd.notna(row[rating_column]) else None
+                r_rating = _safe_parse_rating(row[rating_column]) if rating_column and rating_column in row else None
                 r_date = str(row[date_column]) if date_column and date_column in row and pd.notna(row[date_column]) else None
-                r_verified = bool(row[verified_column]) if verified_column and verified_column in row and pd.notna(row[verified_column]) else None
+                r_verified = _safe_parse_bool(row[verified_column]) if verified_column and verified_column in row else None
                 r_id = str(row[id_column]) if id_column and id_column in row and pd.notna(row[id_column]) else str(idx)
                 r_title = str(row[title_column]) if title_column and title_column in row and pd.notna(row[title_column]) else None
                 review_inputs.append(
@@ -158,13 +200,13 @@ class ReviewLensPipeline:
                             id=str(item.get(id_column or "id", idx)),
                             text=str(item.get(text_column, "")),
                             title=item.get(title_column or "title"),
-                            rating=float(item[rating_column]) if rating_column and item.get(rating_column) is not None else None,
+                            rating=_safe_parse_rating(item.get(rating_column)) if rating_column else None,
                             date=str(item.get(date_column or "date")) if date_column and item.get(date_column) else None,
-                            verified_purchase=item.get(verified_column or "verified_purchase")
+                            verified_purchase=_safe_parse_bool(item.get(verified_column or "verified_purchase"))
                         )
                     )
 
-        # 1. Process each individual review
+        # 1. Process each individual review with batch-isolated duplicate tracking
         analyzed_reviews: List[ReviewAnalysis] = []
         all_aspect_mentions: List[AspectMention] = []
 
@@ -176,7 +218,8 @@ class ReviewLensPipeline:
                 date=item.date,
                 verified_purchase=item.verified_purchase,
                 review_id=item.id,
-                check_duplicate=True
+                check_duplicate=True,
+                spam_detector=batch_spam_detector
             )
             analyzed_reviews.append(analysis)
             all_aspect_mentions.extend(analysis.aspects)
@@ -239,13 +282,18 @@ class ReviewLensPipeline:
         )
 
     def _aggregate_timeline(self, reviews: List[ReviewAnalysis]) -> Optional[List[Dict[str, Any]]]:
-        """Aggregate sentiment trends over time."""
+        """Aggregate sentiment trends over time with robust scraped date normalization."""
         date_reviews = [r for r in reviews if r.date]
         if len(date_reviews) < 3:
             return None
 
         try:
-            df = pd.DataFrame([{"date": r.date, "compound": r.sentiment.compound} for r in date_reviews])
+            records = []
+            for r in date_reviews:
+                norm_d = _normalize_date_str(r.date)
+                records.append({"date": norm_d, "compound": r.sentiment.compound})
+
+            df = pd.DataFrame(records)
             df["date"] = pd.to_datetime(df["date"], errors="coerce")
             df = df.dropna(subset=["date"]).sort_values("date")
             if len(df) < 3:
@@ -265,7 +313,7 @@ class ReviewLensPipeline:
                 }
                 for _, row in grouped.iterrows()
             ]
-        except Exception:
+        except (ValueError, TypeError, KeyError):
             return None
 
     @staticmethod

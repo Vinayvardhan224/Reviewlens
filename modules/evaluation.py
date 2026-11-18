@@ -152,3 +152,46 @@ def evaluate_spam_model() -> Dict[str, Any]:
         "false_positive_count": len(false_positives),
         "false_negative_count": len(false_negatives)
     }
+
+
+EVALUATION_METHODOLOGY_DISCLOSURE = """
+**Evaluation Methodology & Caveats:**
+- **Curated Test Set:** The interactive benchmark evaluates a 50-sample curated corpus (18 positive, 16 negative, 9 neutral, 7 spam).
+- **Caveats:** Sample size (n=50) serves for immediate regression verification and UI demonstration. Real-world generalization metrics require larger external datasets (e.g. Amazon reviews or SemEval ABSA).
+- **Baseline Comparison:** A supervised TF-IDF + Logistic Regression baseline model is evaluated alongside VADER using 5-fold cross-validation.
+"""
+
+
+def evaluate_baseline_comparison() -> Dict[str, Any]:
+    """
+    Evaluates a supervised TF-IDF + Logistic Regression baseline model on the benchmark corpus
+    using 5-fold Stratified Cross-Validation for comparison against VADER rule-based sentiment.
+    """
+    from sklearn.feature_extraction.text import TfidfVectorizer
+    from sklearn.linear_model import LogisticRegression
+    from sklearn.model_selection import StratifiedKFold, cross_val_score
+
+    texts = [t for t, l, _ in BENCHMARK_DATASET]
+    labels = [l for t, l, _ in BENCHMARK_DATASET]
+
+    vec = TfidfVectorizer(max_features=200, ngram_range=(1, 2))
+    X = vec.fit_transform(texts)
+    y = np.array(labels)
+
+    clf = LogisticRegression(max_iter=200, random_state=42)
+    skf = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
+
+    acc_scores = cross_val_score(clf, X, y, cv=skf, scoring="accuracy")
+    f1_scores = cross_val_score(clf, X, y, cv=skf, scoring="f1_macro")
+
+    vader_res = evaluate_sentiment_model()
+
+    return {
+        "baseline_model": "TF-IDF (1-2 ngrams) + Logistic Regression (5-Fold Stratified CV)",
+        "baseline_accuracy": round(float(np.mean(acc_scores)), 3),
+        "baseline_f1_macro": round(float(np.mean(f1_scores)), 3),
+        "vader_accuracy": vader_res["accuracy"],
+        "vader_f1_macro": vader_res["f1_macro"],
+        "sample_size": len(BENCHMARK_DATASET),
+        "methodology": EVALUATION_METHODOLOGY_DISCLOSURE
+    }

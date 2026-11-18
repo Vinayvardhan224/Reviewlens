@@ -1,6 +1,6 @@
 """
 ReviewLens: An NLP-Based Smart Product Review Analysis System.
-Author: Google DeepMind Pair Programming
+Author: Vinay Vardhan / ReviewLens Team
 """
 
 __version__ = "1.0.0"

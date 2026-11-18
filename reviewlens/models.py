@@ -24,6 +24,7 @@ class SpamResult(BaseModel):
     """Spam and fake review detection output."""
     is_spam: bool = False
     spam_score: float = Field(0.0, ge=0.0, le=1.0, description="Probability or heuristic spam index")
+    has_mismatch: bool = False
     reasons: List[str] = Field(default_factory=list)
 
 

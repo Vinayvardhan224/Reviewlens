@@ -105,10 +105,10 @@ class TestAuthModule(unittest.TestCase):
         self.assertFalse(res1["success"])
         self.assertIn("do not match", res1["message"])
 
-        # Password too short
-        res2 = register_user("Bob", "bob@example.com", "123", "123")
+        # Password too short (< 8 chars)
+        res2 = register_user("Bob", "bob@example.com", "1234567", "1234567")
         self.assertFalse(res2["success"])
-        self.assertIn("at least 6 characters", res2["message"])
+        self.assertIn("at least 8 characters", res2["message"])
 
         # Invalid email syntax
         res3 = register_user("Bob", "invalid-email-address", "Password123", "Password123")

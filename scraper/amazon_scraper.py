@@ -49,13 +49,13 @@ class AmazonReviewScraper:
                 return match.group(1).upper()
         return None
 
-    def _get_headers(self) -> Dict[str, str]:
+    def _get_headers(self, domain: str = "com") -> Dict[str, str]:
         return {
-            "User-Agent": random.choice(USER_AGENTS),
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
             "Accept-Language": "en-US,en;q=0.9",
-            "Accept-Encoding": "gzip, deflate, br",
+            "Accept-Encoding": "gzip, deflate",
             "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
-            "Referer": "https://www.amazon.com/",
+            "Referer": f"https://www.amazon.{domain}/",
             "Connection": "keep-alive"
         }
 
@@ -67,6 +67,10 @@ class AmazonReviewScraper:
     ) -> List[Dict[str, Any]]:
         """
         Attempt to scrape reviews for an Amazon ASIN across multiple review pages.
+        
+        Note: Modern Amazon review endpoints frequently require authenticated sessions or
+        challenge verification. In production or offline environments, use curated demo
+        datasets or officially exported review archives.
         
         Args:
             asin: 10-character Amazon Standard Identification Number.
@@ -82,7 +86,7 @@ class AmazonReviewScraper:
             url = f"https://www.amazon.{domain}/product-reviews/{asin}/ref=cm_cr_arp_d_paging_btm_next_{page}?pageNumber={page}&sortBy=recent"
             try:
                 time.sleep(random.uniform(*self.delay_range))
-                resp = self.session.get(url, headers=self._get_headers(), timeout=10)
+                resp = self.session.get(url, headers=self._get_headers(domain=domain), timeout=10)
 
                 # Check if Amazon blocked with CAPTCHA
                 if "Robot Check" in resp.text or "api-services-support@amazon.com" in resp.text or resp.status_code == 503:

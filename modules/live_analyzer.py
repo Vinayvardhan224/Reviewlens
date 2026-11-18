@@ -10,7 +10,7 @@ Provides interactive, explainable, real-time diagnostic evaluation of arbitrary 
 
 from typing import Dict, Any, List, Optional
 import html
-from modules.sentiment import analyze_text_sentiment
+from modules.sentiment import analyze_text_sentiment, detect_rating_anomaly
 from modules.preprocessing import split_into_aspect_clauses, detect_negations, tokenize
 from modules.aspect_analysis import extract_aspects_from_sentence
 from reviewlens.spam_detector.detector import SpamDetector
@@ -73,17 +73,12 @@ def analyze_custom_review(
     anomaly_flag = False
     anomaly_desc = "No rating provided for contradiction check."
     if rating is not None:
-        compound = sentiment["compound"]
-        # Star rating 4-5 with strong negative sentiment
-        if rating >= 4.0 and compound <= -0.2:
-            anomaly_flag = True
-            anomaly_desc = f"Contradiction flagged: High star rating ({rating}★) paired with strongly negative text sentiment (compound {compound:+.2f})."
-        # Star rating 1-2 with strong positive sentiment
-        elif rating <= 2.0 and compound >= 0.2:
-            anomaly_flag = True
-            anomaly_desc = f"Contradiction flagged: Low star rating ({rating}★) paired with strongly positive text sentiment (compound {compound:+.2f})."
+        anomaly_info = detect_rating_anomaly(rating, sentiment["compound"])
+        anomaly_flag = anomaly_info.get("is_anomaly", False)
+        if anomaly_flag:
+            anomaly_desc = f"Contradiction flagged: {anomaly_info.get('anomaly_type')} (Rating {rating}★ paired with compound score {sentiment['compound']:+.2f})."
         else:
-            anomaly_desc = f"Rating ({rating}★) aligns normally with computed text sentiment ({sentiment['label']}, compound {compound:+.2f})."
+            anomaly_desc = f"Rating ({rating}★) aligns normally with computed text sentiment ({sentiment['label']}, compound {sentiment['compound']:+.2f})."
 
     return {
         "status": "ok",

@@ -65,7 +65,7 @@ def render_original_dashboard():
                 "📱 Flagship Smartphone Reviews (50 Reviews)",
                 "🎧 Noise-Canceling Wireless Headphones (70 Reviews)",
                 "☕ Smart Coffee Maker IoT Feedback (40 Reviews)",
-                "📦 Real-world Amazon Echo Smart Speaker Corpus (30 Reviews)",
+                "📦 Amazon Echo Smart Speaker Corpus (Curated Demo, 30 Reviews)",
                 "📤 Upload Custom File (CSV/Excel/JSON)"
             ],
             index=0
@@ -77,7 +77,10 @@ def render_original_dashboard():
     elif "Headphones" in dataset_choice:
         df_reviews = pd.read_csv(data_dir / "sample_headphones_reviews.csv")
     elif "Amazon Echo" in dataset_choice:
-        df_reviews = pd.read_csv(data_dir / "real_world_amazon_echo_reviews.csv")
+        echo_path = data_dir / "sample_echo_reviews.csv"
+        if not echo_path.exists():
+            echo_path = data_dir / "real_world_amazon_echo_reviews.csv"
+        df_reviews = pd.read_csv(echo_path)
     elif "Coffee Maker" in dataset_choice:
         df_reviews = pd.read_csv(data_dir / "sample_coffee_maker_reviews.csv")
     else:

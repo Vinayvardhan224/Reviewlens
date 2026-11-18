@@ -6,49 +6,50 @@ Cleans raw product reviews while preserving critical sentiment markers and negat
 import re
 from bs4 import BeautifulSoup
 
-# Common English contraction mappings
-CONTRACTIONS = {
-    r"won\'t": "will not",
-    r"can\'t": "cannot",
-    r"n\'t": " not",
-    r"\'re": " are",
-    r"\'s": " is",
-    r"\'d": " would",
-    r"\'ll": " will",
-    r"\'t": " not",
-    r"\'ve": " have",
-    r"\'m": " am",
-}
+# Common English contraction mappings (ordered to avoid greedy substring collisions)
+# Handles won't/can't first, then pronoun+'s (preserving noun possessives), then general n't
+CONTRACTIONS = [
+    (r"\bwon\'t\b", "will not"),
+    (r"\bcan\'t\b", "cannot"),
+    (r"\bshan\'t\b", "shall not"),
+    (r"\b(it|that|there|what|he|she)\'s\b", r"\1 is"),
+    (r"n\'t\b", " not"),
+    (r"\'re\b", " are"),
+    (r"\'d\b", " would"),
+    (r"\'ll\b", " will"),
+    (r"\'ve\b", " have"),
+    (r"\'m\b", " am"),
+]
 
-# Key emojis mapped to sentiment-carrying words
+# Key emojis mapped to single sentiment-carrying words (prevents sentiment double-counting)
 EMOJI_SENTIMENT_MAP = {
     "❤️": " love ",
-    "😍": " love amazing ",
-    "😊": " happy good ",
-    "👍": " good thumbs up ",
-    "🔥": " great awesome ",
-    "⭐": " star good ",
-    "🌟": " excellent star ",
-    "💯": " perfect 100 ",
-    "👏": " bravo good ",
-    "👌": " perfect fine ",
-    "👎": " bad dislike ",
-    "😡": " angry terrible ",
-    "😠": " mad annoying ",
-    "🤬": " awful horrible ",
-    "💔": " broken disappointed ",
-    "🤮": " disgusting awful ",
-    "💩": " terrible crap ",
-    "🤦": " frustrating facepalm ",
-    "🙄": " annoyed eye roll ",
-    "😢": " sad disappointed ",
-    "😭": " crying terrible ",
+    "😍": " love ",
+    "😊": " happy ",
+    "👍": " good ",
+    "🔥": " great ",
+    "⭐": " good ",
+    "🌟": " excellent ",
+    "💯": " perfect ",
+    "👏": " good ",
+    "👌": " perfect ",
+    "👎": " dislike ",
+    "😡": " angry ",
+    "😠": " annoyed ",
+    "🤬": " terrible ",
+    "💔": " broken ",
+    "🤮": " disgusting ",
+    "💩": " terrible ",
+    "🤦": " frustrating ",
+    "🙄": " annoyed ",
+    "😢": " sad ",
+    "😭": " terrible ",
 }
 
 
 def expand_contractions(text: str) -> str:
-    """Expand standard English contractions into full words."""
-    for pattern, replacement in CONTRACTIONS.items():
+    """Expand standard English contractions into full words while preserving possessives."""
+    for pattern, replacement in CONTRACTIONS:
         text = re.sub(pattern, replacement, text, flags=re.IGNORECASE)
     return text
 

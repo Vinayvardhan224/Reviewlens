@@ -11,6 +11,7 @@ from typing import Dict, Any, Optional
 import os
 import json
 import re
+import time
 import hashlib
 import secrets
 import random
@@ -66,12 +67,19 @@ def _save_user_db(db: Dict[str, Any]) -> None:
 
 
 def hash_password(password: str, salt: str) -> str:
-    """Generates a salted SHA-256 password hash."""
-    return hashlib.sha256((salt + password).encode("utf-8")).hexdigest()
+    """
+    Generates a cryptographically strong PBKDF2-HMAC-SHA256 password hash (100,000 iterations).
+    """
+    return hashlib.pbkdf2_hmac(
+        "sha256",
+        password.encode("utf-8"),
+        salt.encode("utf-8"),
+        100_000
+    ).hex()
 
 
 def _seed_default_users() -> None:
-    """Seeds the user database with standard demo accounts."""
+    """Seeds the user database with standard demo accounts using strong PBKDF2 hashing."""
     USER_DB_PATH.parent.mkdir(parents=True, exist_ok=True)
     salt_demo = secrets.token_hex(16)
     salt_vinay = secrets.token_hex(16)
@@ -117,12 +125,20 @@ def get_current_user() -> Dict[str, Any]:
 
 def authenticate_user(email: str, password: str) -> Dict[str, Any]:
     """
-    Validates user credentials against hashed storage in data/users.json.
+    Validates user credentials against hashed storage with attempt throttling.
     Sets active authenticated session on success.
     """
     clean_email = email.strip().lower() if email else ""
     if not clean_email or not password:
         return {"success": False, "message": "Please enter both email and password."}
+
+    # Lockout check (5 failed attempts locks for 5 minutes)
+    rate_limits = st.session_state.setdefault("auth_rate_limits", {})
+    client_state = rate_limits.setdefault(clean_email, {"fails": 0, "locked_until": 0.0})
+    now = time.time()
+    if client_state["locked_until"] > now:
+        remaining = int(client_state["locked_until"] - now)
+        return {"success": False, "message": f"Account temporarily locked due to too many failed attempts. Try again in {remaining}s."}
 
     db = _load_user_db()
     user_record = db.get(clean_email)
@@ -130,8 +146,23 @@ def authenticate_user(email: str, password: str) -> Dict[str, Any]:
         return {"success": False, "message": "No account found with this email address. Please register or check spelling."}
 
     expected_hash = hash_password(password, user_record["salt"])
-    if expected_hash != user_record["password_hash"]:
+    legacy_hash = hashlib.sha256((user_record["salt"] + password).encode("utf-8")).hexdigest()
+
+    if user_record["password_hash"] not in (expected_hash, legacy_hash):
+        client_state["fails"] += 1
+        if client_state["fails"] >= 5:
+            client_state["locked_until"] = now + 300.0  # 5 min lockout
+            return {"success": False, "message": "Too many failed attempts. Account locked for 5 minutes."}
         return {"success": False, "message": "Incorrect password. Please try again or use Demo credentials."}
+
+    # Reset failed attempts on success
+    client_state["fails"] = 0
+    client_state["locked_until"] = 0.0
+
+    # Auto-upgrade legacy single-round SHA-256 hash to PBKDF2-HMAC-SHA256
+    if user_record["password_hash"] == legacy_hash:
+        user_record["password_hash"] = expected_hash
+        _save_user_db(db)
 
     # Authentication successful: create session profile
     display_name = user_record.get("name", clean_email.split("@")[0].title())
@@ -155,8 +186,8 @@ def authenticate_user(email: str, password: str) -> Dict[str, Any]:
 
 def register_user(name: str, email: str, password: str, confirm_password: str) -> Dict[str, Any]:
     """
-    Validates inputs and creates a new user account with salted password hashing.
-    Saves new account into data/users.json and logs user in immediately.
+    Validates inputs and creates a new user account with PBKDF2 password hashing.
+    Enforces minimum 8 character password policy.
     """
     clean_name = name.strip() if name else ""
     clean_email = email.strip().lower() if email else ""
@@ -168,8 +199,8 @@ def register_user(name: str, email: str, password: str, confirm_password: str) -
     if not re.match(email_regex, clean_email):
         return {"success": False, "message": "Please enter a valid email address (e.g. name@example.com)."}
 
-    if len(password) < 6:
-        return {"success": False, "message": "Password must be at least 6 characters long."}
+    if len(password) < 8:
+        return {"success": False, "message": "Password must be at least 8 characters long."}
 
     if password != confirm_password:
         return {"success": False, "message": "Passwords do not match. Please re-type your password."}
@@ -178,7 +209,7 @@ def register_user(name: str, email: str, password: str, confirm_password: str) -
     if clean_email in db:
         return {"success": False, "message": "An account with this email already exists. Please sign in instead."}
 
-    # Generate salt and password hash
+    # Generate salt and PBKDF2 password hash
     salt = secrets.token_hex(16)
     p_hash = hash_password(password, salt)
 
@@ -236,29 +267,44 @@ def login_with_google(email: str, name: Optional[str] = None) -> Dict[str, Any]:
 
 
 def send_phone_otp(country_code: str, phone_number: str) -> str:
-    """Generates and stores simulated 6-digit SMS OTP for phone verification."""
+    """Generates and stores cryptographically secure 6-digit SMS OTP for demo phone verification."""
     clean_phone = "".join(ch for ch in phone_number if ch.isdigit())
     full_phone = f"{country_code} {clean_phone}"
 
-    otp_code = str(random.randint(100000, 999999))
+    otp_code = str(secrets.randbelow(900000) + 100000)
     st.session_state["pending_phone_auth"] = {
         "full_phone": full_phone,
         "country_code": country_code,
         "phone_number": clean_phone,
         "otp": otp_code,
-        "attempts": 0
+        "created_at": time.time(),
+        "attempts": 0,
+        "max_attempts": 3
     }
     return otp_code
 
 
 def verify_phone_otp(entered_otp: str) -> bool:
-    """Verifies entered OTP against pending phone authentication state."""
+    """
+    Verifies entered OTP against pending phone authentication state.
+    Enforces expiration (5 mins) and attempt limiting (max 3 attempts).
+    Removes hardcoded backdoor bypass codes.
+    """
     pending = st.session_state.get("pending_phone_auth")
     if not pending:
         return False
 
+    now = time.time()
+    if now - pending.get("created_at", 0) > 300.0:  # 5 min expiry
+        st.session_state.pop("pending_phone_auth", None)
+        return False
+
+    if pending.get("attempts", 0) >= pending.get("max_attempts", 3):
+        st.session_state.pop("pending_phone_auth", None)
+        return False
+
     clean_entered = "".join(ch for ch in entered_otp if ch.isdigit())
-    if clean_entered == pending["otp"] or clean_entered in ["123456", "000000"]:
+    if clean_entered == pending["otp"]:
         full_phone = pending["full_phone"]
         display_name = f"Shopper ({pending['phone_number'][-4:]})"
 
@@ -279,6 +325,8 @@ def verify_phone_otp(entered_otp: str) -> bool:
         return True
     else:
         pending["attempts"] += 1
+        if pending["attempts"] >= pending.get("max_attempts", 3):
+            st.session_state.pop("pending_phone_auth", None)
         return False
 
 
@@ -602,8 +650,15 @@ def render_auth_interface(on_navigate_home=None) -> None:
                 </div>
                 """)
 
-                default_email = st.session_state.get("login_email_input", "demo@reviewlens.com")
-                default_pw = st.session_state.get("login_pw_input", "Password@123")
+                col_fill, col_blank = st.columns([1.6, 1])
+                with col_fill:
+                    if st.button("⚡ Fill Demo Account (demo@reviewlens.com)", key="btn_fill_demo_creds", use_container_width=True):
+                        st.session_state["login_email_input"] = "demo@reviewlens.com"
+                        st.session_state["login_pw_input"] = "Password@123"
+                        st.rerun()
+
+                default_email = st.session_state.get("login_email_input", "")
+                default_pw = st.session_state.get("login_pw_input", "")
 
                 login_email = st.text_input(
                     "Email Address",
@@ -716,7 +771,7 @@ def render_auth_interface(on_navigate_home=None) -> None:
                     digits = "".join(c for c in phone_input if c.isdigit())
                     if len(digits) >= 7:
                         gen_otp = send_phone_otp(code_prefix, phone_input)
-                        st.success(f"📲 SMS OTP Code sent to **{code_prefix} {phone_input}**: `{gen_otp}` (or use test code `123456`)")
+                        st.info(f"📲 **Demo SMS Sandbox:** Simulated SMS OTP code generated for **{code_prefix} {phone_input}**: `{gen_otp}` (valid for 5 mins, max 3 attempts)")
                     else:
                         st.error("Please enter a valid phone number (at least 7 digits).")
 
@@ -733,7 +788,7 @@ def render_auth_interface(on_navigate_home=None) -> None:
                                 st.session_state["pending_nav"] = "🏠 Home / Discovery"
                                 st.rerun()
                         else:
-                            st.error("⚠️ Invalid OTP code. Please enter the generated code or default code 123456.")
+                            st.error("⚠️ Invalid or expired OTP code. Please enter the generated 6-digit code.")
 
                 _render_html("<br>")
                 if st.button("← Return to Email Sign In", key="btn_phone_back_login", use_container_width=True):
@@ -830,7 +885,7 @@ def render_auth_interface(on_navigate_home=None) -> None:
 
                 if st.button("Send Reset Instructions →", key="btn_submit_forgot", type="primary", use_container_width=True):
                     if forgot_email and "@" in forgot_email:
-                        st.success(f"Password reset instructions dispatched to **{forgot_email}**. For immediate access, you can also use Demo Account: `demo@reviewlens.com` with `Password@123`.")
+                        st.info(f"ℹ️ **Demo Mode:** In production, a secure cryptographic token is dispatched to **{forgot_email}**. For immediate demo access, you can use the Demo Account: `demo@reviewlens.com` with `Password@123` or register a new account.")
                     else:
                         st.error("Please provide a valid registered email address.")
 
@@ -857,19 +912,22 @@ def render_auth_interface(on_navigate_home=None) -> None:
                         Sign in with Google
                     </h2>
                     <p style="font-size: 0.92rem; color: #B9B3D0; margin: 0;">
-                        Choose an account or sign up to continue to <b>ReviewLens</b>
+                        Choose an evaluator account or simulate sign up to continue to <b>ReviewLens</b>
                     </p>
+                </div>
+                <div style="background: rgba(113, 56, 245, 0.15); border: 1px solid rgba(155, 92, 255, 0.4); border-radius: 10px; padding: 0.75rem 0.9rem; font-size: 0.8rem; color: #E2E8F0; line-height: 1.5; margin-bottom: 1.2rem;">
+                    🛡️ <b>Demonstration Sandbox:</b> Real production deployments redirect through Google OAuth 2.0 PKCE. For live review and testing, select an evaluator profile below.
                 </div>
                 """)
 
                 _render_html("""
                 <div style="font-size: 0.8rem; font-weight: 700; color: #C4B5FD; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 0.6rem;">
-                    Choose an Account
+                    Choose an Evaluator Profile
                 </div>
                 """)
 
                 # Account Option 1: Vinay Vardhan
-                if st.button("👤 Continue as Vinay Vardhan (vinay.vardhan@gmail.com)", key="btn_google_acc_vinay", use_container_width=True):
+                if st.button("👤 Continue as Vinay Vardhan (vinay.vardhan@gmail.com) [Evaluator Profile]", key="btn_google_acc_vinay", use_container_width=True):
                     login_with_google("vinay.vardhan@gmail.com", name="Vinay Vardhan")
                     st.toast("Signed in with Google Identity as Vinay Vardhan!", icon="✅")
                     if on_navigate_home:
@@ -879,7 +937,7 @@ def render_auth_interface(on_navigate_home=None) -> None:
                         st.rerun()
 
                 # Account Option 2: Smart Shopper
-                if st.button("🛍️ Continue as Smart Shopper (shopper.reviewlens@gmail.com)", key="btn_google_acc_shopper", use_container_width=True):
+                if st.button("🛍️ Continue as Smart Shopper (shopper.reviewlens@gmail.com) [Evaluator Profile]", key="btn_google_acc_shopper", use_container_width=True):
                     login_with_google("shopper.reviewlens@gmail.com", name="Smart Shopper")
                     st.toast("Signed in with Google Identity as Smart Shopper!", icon="✅")
                     if on_navigate_home:
@@ -890,7 +948,7 @@ def render_auth_interface(on_navigate_home=None) -> None:
 
                 _render_html("""
                 <div style="text-align: center; margin: 1.1rem 0; color: #7E7A94; font-size: 0.82rem; position: relative;">
-                    <span style="background: #120E26; padding: 0 10px; position: relative; z-index: 1;">Or enter another Google account</span>
+                    <span style="background: #120E26; padding: 0 10px; position: relative; z-index: 1;">Or simulate with custom Google account</span>
                     <hr style="position: absolute; top: 50%; left: 0; right: 0; border: none; border-top: 1px solid rgba(255,255,255,0.12); margin: 0; z-index: 0;">
                 </div>
                 """)
@@ -906,12 +964,12 @@ def render_auth_interface(on_navigate_home=None) -> None:
                     key="google_oauth_intent_choice"
                 )
 
-                btn_label = "Sign In with Google Identity →" if "Sign In" in g_action_type else "Create Account & Sign In with Google →"
+                btn_label = "Simulate Google Sign In →" if "Sign In" in g_action_type else "Simulate Google Registration & Sign In →"
                 if st.button(btn_label, key="btn_google_custom_submit", type="primary", use_container_width=True):
                     if custom_g_email and "@" in custom_g_email:
                         login_with_google(custom_g_email, name=custom_g_name)
                         verb = "Welcome back!" if "Sign In" in g_action_type else "Account created successfully!"
-                        st.toast(f"{verb} Authenticated via Google Identity.", icon="🎉")
+                        st.toast(f"{verb} Authenticated via Google Identity Sandbox.", icon="🎉")
                         if on_navigate_home:
                             on_navigate_home()
                         else:

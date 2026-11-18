@@ -4,10 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ReviewLens — NLP Smart Product Review Analysis System</title>
-    <!-- Tailwind CSS CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Chart.js CDN -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Tailwind CSS CDN (pinned) -->
+    <script src="https://cdn.tailwindcss.com/3.4.1"></script>
+    <!-- Chart.js CDN (pinned) -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -66,7 +66,7 @@
                 <a href="http://localhost:8501" target="_blank" class="text-indigo-600 hover:text-indigo-700 font-semibold flex items-center gap-1">
                     Streamlit App ↗
                 </a>
-                <a href="http://localhost:8000/docs" target="_blank" class="px-3.5 py-1.5 rounded-lg bg-slate-900 text-white hover:bg-slate-800 transition shadow-sm text-xs">
+                <a href="/docs" target="_blank" class="px-3.5 py-1.5 rounded-lg bg-slate-900 text-white hover:bg-slate-800 transition shadow-sm text-xs">
                     Swagger API ↗
                 </a>
             </nav>
@@ -359,7 +359,7 @@
             </div>
             <div class="flex gap-6 font-medium">
                 <a href="http://localhost:8501" target="_blank" class="hover:text-white transition">Streamlit UI</a>
-                <a href="http://localhost:8000/docs" target="_blank" class="hover:text-white transition">FastAPI Swagger</a>
+                <a href="/docs" target="_blank" class="hover:text-white transition">FastAPI Swagger</a>
                 <a href="#analyzer" class="hover:text-white transition">Back to Top ↑</a>
             </div>
         </div>
@@ -514,7 +514,7 @@
 
             try {
                 // Try fetching live from local FastAPI service
-                const response = await fetch('http://localhost:8000/api/v1/analyze', {
+                const response = await fetch('/api/v1/analyze', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ text, rating })

@@ -8,7 +8,6 @@ from pathlib import Path
 from typing import List, Optional, Dict, Any
 from fastapi import FastAPI, HTTPException, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse, HTMLResponse
 from pydantic import BaseModel, Field
 
@@ -104,13 +103,19 @@ def analyze_review(request: SingleReviewRequest):
     return result
 
 
+MAX_BATCH_SIZE = 100
+
+
 @app.post("/api/v1/analyze-batch", response_model=BatchAnalysisResult)
 def analyze_batch(request: BatchReviewRequest):
     """
     Analyze a batch of reviews and generate executive KPIs, SWOT, and recommendations.
+    Enforces maximum batch request limit of 100 items for DoS protection.
     """
     if not request.reviews:
         raise HTTPException(status_code=400, detail="Batch reviews list cannot be empty.")
+    if len(request.reviews) > MAX_BATCH_SIZE:
+        raise HTTPException(status_code=400, detail=f"Batch size exceeds maximum limit of {MAX_BATCH_SIZE} reviews per request.")
 
     dicts = [r.model_dump() for r in request.reviews]
     result = pipeline.analyze_dataset(dicts)

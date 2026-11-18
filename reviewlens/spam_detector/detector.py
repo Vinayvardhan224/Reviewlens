@@ -73,16 +73,20 @@ class SpamDetector:
                 reasons.append(f"Contains promotional/spam phrase: '{phrase}'")
                 break
 
-        # 5. Rating vs Sentiment Inconsistency (Severe divergence)
+        has_mismatch = False
+
+        # 5. Rating vs Sentiment Inconsistency (Data quality flag & moderate suspicion)
         if rating is not None and sentiment_compound is not None:
-            # High rating (>=4.5) but deeply negative sentiment (<= -0.4)
-            if rating >= 4.5 and sentiment_compound <= -0.40:
-                spam_points += 0.55
-                reasons.append(f"Rating-sentiment mismatch (5-star rating with negative text score {sentiment_compound:.2f})")
-            # Low rating (<=1.5) but deeply positive sentiment (>= 0.6)
-            elif rating <= 1.5 and sentiment_compound >= 0.60:
-                spam_points += 0.55
-                reasons.append(f"Rating-sentiment mismatch (1-star rating with glowing positive text score {sentiment_compound:.2f})")
+            # High rating (>=4.0) but deeply negative sentiment (<=-0.30)
+            if rating >= 4.0 and sentiment_compound <= -0.30:
+                spam_points += 0.30
+                has_mismatch = True
+                reasons.append(f"Rating-sentiment mismatch ({rating}★ rating paired with negative text sentiment compound {sentiment_compound:.2f})")
+            # Low rating (<=2.0) but deeply positive sentiment (>=0.30)
+            elif rating <= 2.0 and sentiment_compound >= 0.30:
+                spam_points += 0.30
+                has_mismatch = True
+                reasons.append(f"Rating-sentiment mismatch ({rating}★ rating paired with positive text sentiment compound {sentiment_compound:.2f})")
 
         # 6. Repetitive character loops (e.g. "sooooo goooood" or "aaaaaaa")
         char_repetition = re.search(r"(.)\1{5,}", text)
@@ -106,6 +110,7 @@ class SpamDetector:
         return SpamResult(
             is_spam=is_spam,
             spam_score=normalized_score,
+            has_mismatch=has_mismatch,
             reasons=reasons
         )
 

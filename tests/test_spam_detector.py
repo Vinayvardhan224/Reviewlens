@@ -19,7 +19,8 @@ class TestSpamDetector(unittest.TestCase):
         # 5 star rating with deeply negative text
         text = "The product broke on day one, completely defective and horrible."
         res = self.detector.analyze(text, rating=5.0, sentiment_compound=-0.6)
-        self.assertTrue(res.is_spam)
+        self.assertTrue(res.has_mismatch)
+        self.assertFalse(res.is_spam)  # Decoupled: mismatch alone is a data quality signal, not an automatic spam verdict
         self.assertTrue(any("mismatch" in r.lower() for r in res.reasons))
 
     def test_clean_review(self):
