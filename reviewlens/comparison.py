@@ -160,3 +160,10 @@ class ProductComparator:
             executive_verdict=verdict,
             summary=verdict
         )
+
+
+# Export canonical module-level function for unified access
+try:
+    from modules.comparison import compare_two_products
+except ImportError:
+    pass

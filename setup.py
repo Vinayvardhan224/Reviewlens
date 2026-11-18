@@ -4,7 +4,7 @@ setup(
     name="reviewlens",
     version="1.0.0",
     description="ReviewLens: An NLP-Based Smart Product Review Analysis System",
-    author="ReviewLens Team",
+    author="Vinay Vardhan / ReviewLens Team",
     packages=find_packages(),
     python_requires=">=3.9",
     install_requires=[
@@ -20,6 +20,8 @@ setup(
         "pydantic>=2.0.0",
         "rich>=13.0.0",
         "beautifulsoup4>=4.12.0",
+        "requests>=2.32.0",
+        "openpyxl>=3.1.0",
     ],
     entry_points={
         "console_scripts": [

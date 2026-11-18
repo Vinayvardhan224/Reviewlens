@@ -355,7 +355,9 @@ CATEGORY_REVIEWS = {
         ("Display brightness outdoors under scorching direct sun is surprisingly clear. Solid camera versatility with the 3x optical telephoto lens.", 5.0, True),
         ("Battery drains rather quickly when using 5G navigation and recording 4K video. Slow charging makes topping up tedious.", 3.0, True),
         ("Amazing performance for the price. Phone stays relatively cool under regular loads and the screen is butter smooth.", 5.0, True),
-        ("The main camera optical image stabilization produces blur-free pictures of moving subjects. Great camera quality.", 5.0, True)
+        ("The main camera optical image stabilization produces blur-free pictures of moving subjects. Great camera quality.", 5.0, True),
+        ("Device overheats severely when charging and the battery drains completely in 4 hours. Customer support refused to replace it.", 1.0, True),
+        ("Very poor low light camera quality with heavy digital noise. The Exynos chip lags and stutters while running basic navigation apps.", 2.0, True)
     ],
     "apple-iphone-15-pro-max": [
         ("The 5x optical tetraprism camera is fantastic for capturing sharp distant subjects and concerts. Camera video recording in 4K ProRes is the best in the industry.", 5.0, True),
@@ -365,7 +367,9 @@ CATEGORY_REVIEWS = {
         ("Camera night mode portraits look stunning with accurate skin tones. Camera shutter lag is completely nonexistent.", 5.0, True),
         ("Display is crisp and bright outdoors. Battery endurance is stellar, easily surviving heavy travel days.", 5.0, True),
         ("Charging is quite slow at only 20W. You really notice how long it takes to charge compared to Android rivals.", 3.0, True),
-        ("Unmatched performance and video camera quality. The action button and Titanium design make it very comfortable to hold.", 5.0, True)
+        ("Unmatched performance and video camera quality. The action button and Titanium design make it very comfortable to hold.", 5.0, True),
+        ("Screen developed green line flickering issue after two weeks. Extremely overpriced for such poor hardware reliability.", 1.0, True),
+        ("Battery health dropped to 92% in three months and the titanium frame scratches very easily. Disappointing durability.", 2.0, True)
     ],
     "samsung-galaxy-s25-ultra": [
         ("Snapdragon 8 Elite delivers monster performance. Zero stutters or dropped frames in the most demanding games. Incredible performance power.", 5.0, True),
@@ -373,7 +377,9 @@ CATEGORY_REVIEWS = {
         ("Display with Gorilla Armor anti-reflective glass completely eliminates glare. The QHD+ Dynamic AMOLED display is hands-down the best screen on the market.", 5.0, True),
         ("Battery life is fantastic, consistently giving 8 to 9 hours of screen on time. 45W fast charging tops up the 5000 mAh battery to 65% in half an hour.", 5.0, True),
         ("Camera shutter is instantaneous and low-light nightography captures clean, noise-free shots without motion blur.", 5.0, True),
-        ("Huge display is bright and beautiful. Fast 45W charging is reliable, and battery easily powers through intensive workdays.", 5.0, True)
+        ("Huge display is bright and beautiful. Fast 45W charging is reliable, and battery easily powers through intensive workdays.", 5.0, True),
+        ("The device is too bulky and sharp-cornered to hold comfortably in pockets. Camera processing over-sharpens faces making portraits look artificial.", 2.0, True),
+        ("Bluetooth disconnects erratically from car infotainment. For this ultra-premium price tag, software glitches are unacceptable.", 2.0, True)
     ],
     "oneplus-12": [
         ("The 100W SUPERVOOC charging is mind-blowing! Charges the huge 5400 mAh battery from 10% to 100% in just 26 minutes. Best charging speed ever.", 5.0, True),
@@ -381,7 +387,9 @@ CATEGORY_REVIEWS = {
         ("The 2K ProXDR display is intensely bright and responsive. Curved screen edges look sleek though occasional accidental palm touches happen.", 4.0, True),
         ("Hasselblad camera system produces punchy colors and natural portrait bokeh. The 3x periscope camera zoom is surprisingly sharp.", 5.0, True),
         ("Battery endurance easily reaches nearly two full days. Combined with blazing 100W charging, you never have battery anxiety.", 5.0, True),
-        ("Camera photos in low light are decent, but not quite matching iPhone or Ultra camera consistency.", 4.0, True)
+        ("Camera photos in low light are decent, but not quite matching iPhone or Ultra camera consistency.", 4.0, True),
+        ("Severe camera lens fogging occurred inside the glass during cold weather. Service center blamed condensation and refused warranty.", 1.0, True),
+        ("Curved display causes constant accidental palm touches. Latest software update introduced annoying UI stutters and idle battery drain.", 2.0, True)
     ],
 
     # ---------------- LAPTOPS ----------------
@@ -391,7 +399,9 @@ CATEGORY_REVIEWS = {
         ("Magic keyboard typing experience is crisp with comfortable key travel. The 16GB RAM ensures zero swapping or memory bottleneck.", 5.0, True),
         ("The integrated 10-core GPU handles photo editing and light gaming nicely, but it is not a dedicated gaming GPU for triple-A titles.", 4.0, True),
         ("Stunning Liquid Retina display and unbelievable 16-hour battery life. Best processor and memory efficiency of any ultraportable.", 5.0, True),
-        ("Keyboard backlighting is clean and comfortable for late-night coding. 16GB RAM handles 40+ browser tabs and Docker without lag.", 5.0, True)
+        ("Keyboard backlighting is clean and comfortable for late-night coding. 16GB RAM handles 40+ browser tabs and Docker without lag.", 5.0, True),
+        ("Anodized midnight finish is an absolute fingerprint magnet and scratches around USB-C ports on day one. Terrible cosmetic durability.", 2.0, True),
+        ("Dual external display support requires closing laptop lid, making multi-monitor workflow clumsy. Base SSD write speeds feel downgraded.", 2.0, True)
     ],
     "asus-rog-zephyrus-g14": [
         ("The NVIDIA RTX 4070 GPU runs Cyberpunk 2077, Black Myth Wukong, and Forza Horizon at high framerates with ray tracing enabled.", 5.0, True),
@@ -399,14 +409,18 @@ CATEGORY_REVIEWS = {
         ("32GB high-speed RAM means seamless video editing and gaming without any memory slowdowns.", 5.0, True),
         ("The cooling system with dual fans and liquid metal keeps GPU temperatures under control, but cooling fan noise gets very loud in Turbo gaming mode.", 4.0, True),
         ("Keyboard has generous 1.7mm key travel and feels great for long typing and gaming sessions. RGB keyboard lighting looks sleek.", 5.0, True),
-        ("Under heavy GPU load, the cooling fans ramp up loudly like a jet engine. But gaming performance and the 3K OLED screen are spectacular.", 4.0, True)
+        ("Under heavy GPU load, the cooling fans ramp up loudly like a jet engine. But gaming performance and the 3K OLED screen are spectacular.", 4.0, True),
+        ("Excessive overheating reached 96C during gaming and caused repeated blue screen crashes. Fan noise is unbearable even with headphones.", 1.0, True),
+        ("Battery life barely lasts 2 hours off charger. Keyboard deck gets scalding hot to the touch while playing games.", 2.0, True)
     ],
     "dell-xps-13-plus": [
         ("The Intel Core i7 processor handles productivity spreadsheets and office software smoothly.", 4.0, True),
         ("Zero-lattice keyboard looks futuristic, but the flat keyboard layout leads to more typos than traditional tactile keyboards.", 3.0, True),
         ("Cooling fans kick in frequently and the bottom chassis gets hot during sustained CPU loads. Cooling could definitely be better.", 3.0, True),
         ("16GB RAM is fast for everyday tasks, though integrated Intel Iris Xe GPU struggles with modern 3D gaming.", 3.0, True),
-        ("OLED display is sharp and vibrant, but thermal cooling issues and capacitive function keys frustrate power users.", 3.0, True)
+        ("OLED display is sharp and vibrant, but thermal cooling issues and capacitive function keys frustrate power users.", 3.0, True),
+        ("Capacitive touch function row frequently stops responding and the seamless invisible glass trackpad clicks erratically. Terrible design.", 1.0, True),
+        ("Severe thermal throttling. Processor throttles down to base clock within 15 minutes of video rendering and the bottom chassis burns your lap.", 2.0, True)
     ],
 
     # ---------------- HEADPHONES ----------------
@@ -417,7 +431,9 @@ CATEGORY_REVIEWS = {
         ("Battery life lasts an incredible 30 hours with ANC enabled. Quick charging gives 3 hours of playback in just 3 minutes.", 5.0, True),
         ("Bluetooth connectivity is rock solid. The multipoint connection switches seamlessly between my laptop and smartphone without drops.", 5.0, True),
         ("Noise cancellation microphone clarity on phone calls in windy streets is remarkably clear and isolated.", 5.0, True),
-        ("Earcups feel comfortable, but the headband padding is slightly narrow. Still, sound quality and noise cancellation are unbeatable.", 4.0, True)
+        ("Earcups feel comfortable, but the headband padding is slightly narrow. Still, sound quality and noise cancellation are unbeatable.", 4.0, True),
+        ("Headband swivel hinge snapped while taking them off my head after 5 months of gentle desk use. Sony refused warranty repair.", 1.0, True),
+        ("Auto NC Optimizer constantly shifts noise cancellation levels on its own in quiet rooms, creating disorienting pressure changes in the ears.", 2.0, True)
     ],
     "bose-qc-ultra-headphones": [
         ("Noise cancellation is the best in the world. It blocks out low-frequency aircraft rumble even more effectively than the Sony XM5.", 5.0, True),
@@ -425,7 +441,9 @@ CATEGORY_REVIEWS = {
         ("Bose Immersive Audio delivers spacious spatial sound quality with natural instrument placement and crisp highs.", 5.0, True),
         ("Battery life provides 24 hours of listening. However, with Immersive Audio enabled, battery life drops to around 18 hours.", 4.0, True),
         ("Bluetooth 5.3 connectivity pairs quickly, though the Bose mobile app occasionally takes a few seconds to connect.", 4.0, True),
-        ("Exceptional comfort and class-leading noise cancellation. Sound quality has noticeably improved with tight, controlled bass.", 5.0, True)
+        ("Exceptional comfort and class-leading noise cancellation. Sound quality has noticeably improved with tight, controlled bass.", 5.0, True),
+        ("Persistent buzzing and crackling sound in left ear cup during phone calls. Exchanged twice under warranty and both pairs had the same defect.", 1.0, True),
+        ("Bluetooth connection stutters and drops every 15 minutes when connected to Windows laptop. App setup is buggy and frustrating.", 2.0, True)
     ],
     "apple-airpods-pro-2": [
         ("Noise cancellation on these compact earbuds is mind-blowing. Adaptive Audio seamlessly blends transparency when someone speaks to you.", 5.0, True),
@@ -433,7 +451,9 @@ CATEGORY_REVIEWS = {
         ("Earbuds are super comfortable with the silicone tips, staying securely in my ears during long running workouts without comfort irritation.", 5.0, True),
         ("Battery life gives a reliable 6 hours on the buds and up to 30 hours with the MagSafe case. USB-C charging is very convenient.", 5.0, True),
         ("Instantaneous connectivity and seamless automatic switching across iPhone, iPad, and Mac without any connection drops.", 5.0, True),
-        ("Outstanding noise cancellation and pocketable comfort. Microphone call quality in loud environments is clear.", 5.0, True)
+        ("Outstanding noise cancellation and pocketable comfort. Microphone call quality in loud environments is clear.", 5.0, True),
+        ("Right earbud started crackling loudly whenever ANC is enabled. Common hardware defect that Apple genius bar wanted $89 to replace.", 1.0, True),
+        ("Silicone tips cause ear canal itchiness and slip out during intense running workouts. Charging case loses battery overnight while idle.", 2.0, True)
     ],
 
     # ---------------- CAMERAS ----------------
@@ -444,7 +464,9 @@ CATEGORY_REVIEWS = {
         ("Video recording in 10-bit 4:2:2 with S-Cinetone produces cinematic color out of the box. Only downside is 4K 60p has a 1.5x crop factor.", 4.0, True),
         ("Massive Sony E-mount lens quality ecosystem allows using sharp G Master and Sigma prime lenses with stellar optical sharpness.", 5.0, True),
         ("Autofocus tracking in video recording mode never loses the subject. Exceptional image quality for commercial photography.", 5.0, True),
-        ("Low-light performance allows shooting nighttime cityscapes handheld thanks to the 5-axis in-body image stabilization.", 5.0, True)
+        ("Low-light performance allows shooting nighttime cityscapes handheld thanks to the 5-axis in-body image stabilization.", 5.0, True),
+        ("Camera overheated and shut down after only 22 minutes of recording 4K video indoors during an interview. Unusable for long video work.", 1.0, True),
+        ("Severe rolling shutter distortion when shooting fast sports with electronic shutter. Electronic viewfinder feels low resolution.", 2.0, True)
     ],
     "canon-eos-r6-mark-ii": [
         ("Dual Pixel autofocus II is wizardry! It detects aircraft, vehicles, animals, and human eyes across the entire frame with zero autofocus hunting.", 5.0, True),
@@ -452,7 +474,9 @@ CATEGORY_REVIEWS = {
         ("Uncropped 6K oversampled 4K 60p video recording is razor-sharp with no thermal overheating limits during typical video shoots.", 5.0, True),
         ("Low-light performance is sensational. Low-light focusing works down to -6.5 EV in near pitch-black darkness with clean high-ISO files.", 5.0, True),
         ("RF lens quality is top-tier with incredible corner-to-corner optical resolving power, though native RF lenses are quite expensive.", 4.0, True),
-        ("Blazing 40 fps electronic burst shooting captures fast sports action effortlessly. Outstanding autofocus and video recording.", 5.0, True)
+        ("Blazing 40 fps electronic burst shooting captures fast sports action effortlessly. Outstanding autofocus and video recording.", 5.0, True),
+        ("Micro-HDMI port is flimsy and snapped when connected to an external monitor. Native RF lenses are outrageously expensive with no third-party options.", 2.0, True),
+        ("Battery LP-E6NH drains rapidly when shooting high frame rate 40fps bursts. Dynamic range in deep shadows trails Sony sensors.", 2.0, True)
     ]
 }
 
@@ -461,15 +485,22 @@ rev_id_counter = 1
 
 for pid, rev_list in CATEGORY_REVIEWS.items():
     for text, rating, verified in rev_list:
+        title = text.split(".")[0].strip()[:65]
+        date_str = f"2024-0{min(9, max(1, (rev_id_counter % 9) + 1))}-{10 + (rev_id_counter % 18):02d}"
         REVIEWS.append({
             "review_id": f"REV-{pid[:6].upper()}-{rev_id_counter:04d}",
             "product_id": pid,
-            "review_text": text,
-            "review_rating": float(rating),
-            "review_date": f"2024-0{min(9, max(1, (rev_id_counter % 9) + 1))}-{10 + (rev_id_counter % 18):02d}",
+            "title": title,
+            "text": text,
+            "rating": float(rating),
+            "date": date_str,
             "verified_purchase": verified,
             "source": "prepared_dataset",
-            "data_type": "prepared_demo"
+            "data_type": "prepared_demo",
+            "provenance_label": "prepared_demo",
+            "review_text": text,
+            "review_rating": float(rating),
+            "review_date": date_str
         })
         rev_id_counter += 1
 

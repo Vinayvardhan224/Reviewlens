@@ -3,6 +3,7 @@ Sentiment Analysis Engine using enhanced VADER with domain-adapted product revie
 """
 
 from typing import Dict, Any, Optional
+import re
 import nltk
 from nltk.sentiment.vader import SentimentIntensityAnalyzer
 from reviewlens.config import SENTIMENT_THRESHOLDS, DOMAIN_SENTIMENT_LEXICON, RATING_MAPPING
@@ -24,7 +25,13 @@ class SentimentAnalyzer:
         if custom_lexicon:
             lexicon_to_add.update(custom_lexicon)
 
-        self.sia.lexicon.update(lexicon_to_add)
+        # Pre-compile mapping for multi-word phrases (e.g. "worth every penny" -> "worth_every_penny")
+        # because VADER only scores single-token lookups
+        self.multiword_map = {phrase: phrase.replace(" ", "_") for phrase in lexicon_to_add if " " in phrase}
+
+        for phrase, score in lexicon_to_add.items():
+            self.sia.lexicon[phrase] = score
+            self.sia.lexicon[phrase.replace(" ", "_")] = score
 
     def analyze(self, text: str) -> SentimentResult:
         """
@@ -47,7 +54,13 @@ class SentimentAnalyzer:
                 confidence=0.5
             )
 
-        scores = self.sia.polarity_scores(text)
+        # Pre-replace multi-word domain phrases so VADER matches domain lexicon terms
+        processed_text = text
+        for phrase, replacement in self.multiword_map.items():
+            pattern = r"(?i)\b" + re.escape(phrase) + r"\b"
+            processed_text = re.sub(pattern, replacement, processed_text)
+
+        scores = self.sia.polarity_scores(processed_text)
         compound = round(scores["compound"], 4)
         pos = round(scores["pos"], 4)
         neu = round(scores["neu"], 4)
@@ -61,7 +74,7 @@ class SentimentAnalyzer:
         else:
             label = "NEUTRAL"
 
-        # Compute predicted rating (1 to 5 stars)
+        # Compute predicted rating (1 to 5 stars) using RATING_MAPPING
         predicted_rating = self.map_compound_to_rating(compound)
 
         # Confidence metric derived from polarity strength and margin
@@ -81,10 +94,9 @@ class SentimentAnalyzer:
     @staticmethod
     def map_compound_to_rating(compound: float) -> float:
         """
-        Map a continuous compound score [-1.0, 1.0] to a 1.0 - 5.0 star rating.
-        Interpolates linearly within rating bins for smooth gradation.
+        Map a continuous compound score [-1.0, 1.0] to a 1.0 - 5.0 star rating using RATING_MAPPING.
         """
-        # Linear normalization: -1.0 maps to 1.0 stars, +1.0 maps to 5.0 stars
-        # stars = 1.0 + (compound + 1.0) / 2.0 * 4.0
-        stars = 1.0 + ((compound + 1.0) / 2.0) * 4.0
-        return round(max(1.0, min(5.0, stars)), 1)
+        for threshold, stars in RATING_MAPPING:
+            if compound <= threshold:
+                return float(stars)
+        return 5.0

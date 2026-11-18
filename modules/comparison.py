@@ -145,3 +145,10 @@ def compare_two_products(prod_a: Dict[str, Any], reviews_a_summary: Dict[str, An
         "spec_comparison": spec_comparison,
         "aspect_deltas": aspect_deltas
     }
+
+
+# Export core class for API & CLI harmonization
+try:
+    from reviewlens.comparison import ProductComparator, ProductComparisonReport, AspectComparison
+except ImportError:
+    pass

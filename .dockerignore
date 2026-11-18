@@ -13,3 +13,8 @@ venv/
 .coverage
 htmlcov/
 *.log
+data/users.json
+tests/
+.env
+.env.*
+README.md

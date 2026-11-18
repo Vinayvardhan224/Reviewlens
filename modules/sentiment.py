@@ -6,42 +6,15 @@ Net Sentiment Score (NSS) calculation, confidence thresholds, and rating anomaly
 
 from typing import Dict, Any, List, Optional
 import pandas as pd
-import nltk
-from nltk.sentiment.vader import SentimentIntensityAnalyzer
+from reviewlens.sentiment.vader_analyzer import SentimentAnalyzer
 
-# Ensure VADER lexicon is cached and domain-adapted
-try:
-    _vader = SentimentIntensityAnalyzer()
-except (LookupError, AttributeError):
-    try:
-        nltk.download("vader_lexicon", quiet=True)
-        _vader = SentimentIntensityAnalyzer()
-    except Exception as e:
-        raise RuntimeError(
-            "VADER lexicon not found and automatic download failed. "
-            "Please run 'python setup_nltk.py' or 'python -m nltk.downloader vader_lexicon' "
-            "to set up required lexical resources."
-        ) from e
-
-# Domain-specific sentiment modifiers for electronics / product reviews
-DOMAIN_LEXICON = {
-    "durable": 2.2, "crisp": 1.9, "punchy": 1.7, "ergonomic": 2.0,
-    "sleek": 1.8, "seamless": 2.1, "premium": 2.4, "sturdy": 2.0,
-    "intuitive": 2.0, "responsive": 2.1, "bargain": 2.0,
-    "worth every penny": 3.2, "long-lasting": 2.3, "flawless": 2.8,
-    "overpriced": -2.3, "flimsy": -2.4, "laggy": -2.3, "lags": -2.0,
-    "bloatware": -2.2, "unresponsive": -2.4, "bricked": -3.5,
-    "drain": -2.0, "drains": -2.0, "draining": -2.0, "defective": -2.8,
-    "subpar": -2.1, "mediocre": -1.5, "overheats": -2.5, "overheating": -2.6,
-    "gimmick": -2.0, "waste of money": -3.4, "uncomfortable": -2.4,
-    "stutter": -1.8, "stutters": -1.8, "buggy": -2.2
-}
-_vader.lexicon.update(DOMAIN_LEXICON)
+# Unified core sentiment engine instance shared across ReviewLens
+_core_analyzer = SentimentAnalyzer()
 
 
 def analyze_text_sentiment(text: str) -> Dict[str, Any]:
     """
-    Compute sentiment polarity scores for a given text.
+    Compute sentiment polarity scores for a given text using the unified ReviewLens sentiment engine.
     Returns:
         compound: float (-1.0 to 1.0)
         pos: float (0.0 to 1.0)
@@ -52,22 +25,13 @@ def analyze_text_sentiment(text: str) -> Dict[str, Any]:
     if not text or not isinstance(text, str):
         return {"compound": 0.0, "pos": 0.0, "neu": 1.0, "neg": 0.0, "label": "NEUTRAL"}
 
-    scores = _vader.polarity_scores(text)
-    compound = scores["compound"]
-
-    if compound >= 0.05:
-        label = "POSITIVE"
-    elif compound <= -0.05:
-        label = "NEGATIVE"
-    else:
-        label = "NEUTRAL"
-
+    res = _core_analyzer.analyze(text)
     return {
-        "compound": round(compound, 4),
-        "pos": round(scores["pos"], 4),
-        "neu": round(scores["neu"], 4),
-        "neg": round(scores["neg"], 4),
-        "label": label
+        "compound": res.compound,
+        "pos": res.pos,
+        "neu": res.neu,
+        "neg": res.neg,
+        "label": res.label
     }
 
 

@@ -1,4 +1,4 @@
-# Multi-stage production Dockerfile for ReviewLens
+# Production Dockerfile for ReviewLens
 FROM python:3.12-slim
 
 # Set working directory and environment variables
@@ -27,11 +27,13 @@ RUN python -c "import nltk; \
     nltk.download('stopwords', quiet=True); \
     nltk.download('wordnet', quiet=True)"
 
-# Pre-download spaCy English model if not already bundled
-RUN python -m spacy download en_core_web_sm || true
-
 # Copy project files
 COPY . .
+
+# Create non-root system user for security
+RUN useradd -m -u 1000 appuser && \
+    chown -R appuser:appuser /app
+USER appuser
 
 # Expose ports for Streamlit (8501) and FastAPI (8000)
 EXPOSE 8501
@@ -41,4 +43,4 @@ EXPOSE 8000
 HEALTHCHECK CMD curl --fail http://localhost:8501/_stcore/health || exit 1
 
 # Default command launches the Streamlit Interactive Dashboard
-CMD ["streamlit", "run", "app.py", "--server.port=8501", "--server.address=0.0.0.0", "--server.enableCORS=false", "--server.enableXsrfProtection=false"]
+CMD ["streamlit", "run", "app.py", "--server.port=8501", "--server.address=0.0.0.0"]
