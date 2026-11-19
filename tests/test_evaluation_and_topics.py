@@ -87,6 +87,20 @@ class TestEvaluationAndTopics(unittest.TestCase):
         self.assertIsNotNone(fig_dual)
         self.assertEqual(len(fig_dual.data), 2)
 
+    def test_sst2_public_benchmark(self):
+        """Verify empirical evaluation on the official Stanford SST-2 dataset (n=872)."""
+        from modules.evaluation import evaluate_sst2_public_benchmark
+        res = evaluate_sst2_public_benchmark()
+        self.assertEqual(res["status"], "ok")
+        self.assertEqual(res["sample_size"], 872)
+        self.assertEqual(res["positive_count"], 444)
+        self.assertEqual(res["negative_count"], 428)
+        self.assertGreater(res["vader_accuracy_all"], 0.50)
+        self.assertGreater(res["vader_accuracy_binary"], 0.60)
+        self.assertGreater(res["baseline_accuracy"], 0.60)
+        self.assertGreater(res["baseline_f1_macro"], 0.60)
+        self.assertIn("data_provenance", res)
+
 
 if __name__ == "__main__":
     unittest.main()
