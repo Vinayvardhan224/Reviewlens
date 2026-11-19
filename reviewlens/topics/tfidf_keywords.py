@@ -13,20 +13,17 @@ class KeywordExtractor:
 
     def __init__(self, max_features: int = 50, ngram_range: tuple = (1, 2)):
         # Extend stopwords with common generic e-commerce words
-        domain_stopwords = list(FILTERED_STOPWORDS) + [
+        self.stop_words = list(FILTERED_STOPWORDS) + [
             "product", "item", "bought", "buy", "amazon", "use", "using", "purchased",
             "one", "get", "got", "really", "would", "also", "even", "much"
         ]
-        self.vectorizer = TfidfVectorizer(
-            max_features=max_features,
-            ngram_range=ngram_range,
-            stop_words=domain_stopwords,
-            min_df=2,
-        )
+        self.max_features = max_features
+        self.ngram_range = ngram_range
 
     def extract_top_keywords(self, texts: List[str], top_n: int = 15) -> List[Dict[str, Any]]:
         """
         Extract the most salient key phrases from a list of texts using TF-IDF.
+        Thread-safe: instantiates a local vectorizer per invocation to avoid shared mutable state.
         """
         valid_texts = [t for t in texts if t and len(t.strip()) > 5]
         if len(valid_texts) < 2:
@@ -34,8 +31,14 @@ class KeywordExtractor:
             return self._fallback_frequency(valid_texts, top_n)
 
         try:
-            tfidf_matrix = self.vectorizer.fit_transform(valid_texts)
-            feature_names = self.vectorizer.get_feature_names_out()
+            vectorizer = TfidfVectorizer(
+                max_features=self.max_features,
+                ngram_range=self.ngram_range,
+                stop_words=self.stop_words,
+                min_df=2,
+            )
+            tfidf_matrix = vectorizer.fit_transform(valid_texts)
+            feature_names = vectorizer.get_feature_names_out()
             scores = tfidf_matrix.sum(axis=0).A1
 
             top_indices = scores.argsort()[::-1][:top_n]

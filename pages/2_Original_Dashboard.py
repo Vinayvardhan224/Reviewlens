@@ -14,11 +14,14 @@ if str(PROJECT_ROOT) not in sys.path:
 from reviewlens.dashboard import render_original_dashboard
 from modules.auth import get_current_user, render_auth_interface
 
-st.set_page_config(
-    page_title="ReviewLens | Original Analytics Dashboard",
-    page_icon="📊",
-    layout="wide"
-)
+try:
+    st.set_page_config(
+        page_title="ReviewLens | Original Analytics Dashboard",
+        page_icon="📊",
+        layout="wide"
+    )
+except Exception:
+    pass
 
 current_user = get_current_user()
 if not current_user.get("authenticated"):

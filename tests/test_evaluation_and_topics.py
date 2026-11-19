@@ -33,6 +33,23 @@ class TestEvaluationAndTopics(unittest.TestCase):
         self.assertIsInstance(res["false_positives"], list)
         self.assertIsInstance(res["false_negatives"], list)
 
+    def test_benchmark_dataset_file_loading(self):
+        """Verify dynamic loading from benchmark_sentiment.csv and baseline comparison."""
+        from modules.evaluation import load_benchmark_dataset, evaluate_baseline_comparison, evaluate_curated_reviews_corpus
+        data = load_benchmark_dataset()
+        self.assertEqual(len(data), 50)
+        self.assertEqual(len(data[0]), 3)
+        res = evaluate_baseline_comparison()
+        self.assertIn("baseline_accuracy", res)
+        self.assertIn("vader_accuracy", res)
+        self.assertGreaterEqual(res["sample_size"], 50)
+        
+        # Test reviews.csv corpus evaluation
+        reviews_res = evaluate_curated_reviews_corpus()
+        self.assertEqual(reviews_res["status"], "ok")
+        self.assertEqual(reviews_res["sample_size"], 77)
+        self.assertGreater(reviews_res["agreement_rate"], 0.6)
+
     def test_topic_modeling_lda(self):
         sample_texts = [
             "The battery life is exceptional and easily lasts through 2 full days of intensive screen time.",

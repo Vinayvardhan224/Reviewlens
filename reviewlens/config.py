@@ -26,6 +26,11 @@ DEFAULT_ASPECT_TAXONOMY: Dict[str, List[str]] = {
         "battery", "battery life", "charge", "charging", "charger", "power", 
         "cord", "drain", "draining", "recharge", "standby", "runtime", "mah"
     ],
+    "Camera & Optics": [
+        "camera", "cameras", "photo", "photos", "picture", "pictures", "lens",
+        "portrait", "zoom", "telephoto", "video", "videos", "4k", "8k", "selfie",
+        "sensor", "autofocus", "ois", "bokeh", "megapixels", "mp", "optics"
+    ],
     "Sound & Audio": [
         "sound", "sound quality", "audio", "bass", "treble", "volume", 
         "clarity", "noise", "noise cancellation", "anc", "mic", "microphone",

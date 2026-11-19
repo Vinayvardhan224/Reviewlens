@@ -490,17 +490,12 @@ for pid, rev_list in CATEGORY_REVIEWS.items():
         REVIEWS.append({
             "review_id": f"REV-{pid[:6].upper()}-{rev_id_counter:04d}",
             "product_id": pid,
-            "title": title,
-            "text": text,
+            "review_text": text,
             "rating": float(rating),
             "date": date_str,
             "verified_purchase": verified,
             "source": "prepared_dataset",
-            "data_type": "prepared_demo",
-            "provenance_label": "prepared_demo",
-            "review_text": text,
-            "review_rating": float(rating),
-            "review_date": date_str
+            "data_type": "prepared_demo"
         })
         rev_id_counter += 1
 

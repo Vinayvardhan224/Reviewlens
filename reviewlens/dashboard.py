@@ -62,10 +62,10 @@ def render_original_dashboard():
         dataset_choice = st.selectbox(
             "Select Review Dataset to Analyze:",
             [
-                "📱 Flagship Smartphone Reviews (50 Reviews)",
-                "🎧 Noise-Canceling Wireless Headphones (70 Reviews)",
-                "☕ Smart Coffee Maker IoT Feedback (40 Reviews)",
-                "📦 Amazon Echo Smart Speaker Corpus (Curated Demo, 30 Reviews)",
+                "📱 Flagship Smartphone Reviews (10 Reviews)",
+                "🎧 Noise-Canceling Wireless Headphones (15 Reviews)",
+                "☕ Smart Coffee Maker IoT Feedback (8 Reviews)",
+                "📦 Amazon Echo Smart Speaker Corpus (Curated Demo, 12 Reviews)",
                 "📤 Upload Custom File (CSV/Excel/JSON)"
             ],
             index=0

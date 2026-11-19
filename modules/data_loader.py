@@ -42,6 +42,12 @@ def get_all_products(validate: bool = True) -> pd.DataFrame:
     if df.empty:
         return df
 
+    # Map product_url and amazon_url aliases
+    if "product_url" in df.columns and "amazon_url" not in df.columns:
+        df["amazon_url"] = df["product_url"]
+    elif "amazon_url" in df.columns and "product_url" not in df.columns:
+        df["product_url"] = df["amazon_url"]
+
     if validate:
         val = validate_products_df(df)
         if not val.is_valid:
@@ -70,6 +76,17 @@ def get_all_reviews(validate: bool = True, products_df: Optional[pd.DataFrame] =
     if df.empty:
         return df
 
+    # Map canonical and legacy columns transparently
+    if "rating" in df.columns and "review_rating" not in df.columns:
+        df["review_rating"] = df["rating"]
+    elif "review_rating" in df.columns and "rating" not in df.columns:
+        df["rating"] = df["review_rating"]
+
+    if "review_text" in df.columns and "text" not in df.columns:
+        df["text"] = df["review_text"]
+    elif "text" in df.columns and "review_text" not in df.columns:
+        df["review_text"] = df["text"]
+
     if validate:
         p_ref = products_df if products_df is not None else load_products_raw()
         val = validate_reviews_df(df, products_df=p_ref)
@@ -77,11 +94,13 @@ def get_all_reviews(validate: bool = True, products_df: Optional[pd.DataFrame] =
             raise ValueError(f"Review dataset validation failed: {'; '.join(val.errors)}")
 
     # Enforce numeric review rating without silent default imputation
-    if "review_rating" in df.columns:
-        converted_rev_rating = pd.to_numeric(df["review_rating"], errors="coerce")
+    rating_col = "review_rating" if "review_rating" in df.columns else "rating"
+    if rating_col in df.columns:
+        converted_rev_rating = pd.to_numeric(df[rating_col], errors="coerce")
         if converted_rev_rating.isna().any():
-            raise ValueError("Found non-numeric or missing review_rating values in reviews dataset.")
+            raise ValueError(f"Found non-numeric or missing {rating_col} values in reviews dataset.")
         df["review_rating_num"] = converted_rev_rating
+        df["rating_num"] = converted_rev_rating
 
     return df
 

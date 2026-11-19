@@ -28,8 +28,8 @@ class TestLiveReviewAnalyzer(unittest.TestCase):
         self.assertGreaterEqual(res["sentiment"]["compound"], 0.2)
         self.assertFalse(res["anomaly"]["is_anomaly"])
         self.assertFalse(res["spam_analysis"]["is_spam"])
-        self.assertIn("Battery", res["aspects_found"])
-        self.assertIn("Camera", res["aspects_found"])
+        self.assertTrue(any("Battery" in a for a in res["aspects_found"]))
+        self.assertTrue(any("Camera" in a for a in res["aspects_found"]))
 
     def test_mixed_review_clauses(self):
         text = "The display is stunning, but the battery drains ridiculously fast."

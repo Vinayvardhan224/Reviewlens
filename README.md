@@ -57,9 +57,18 @@ Developed by **Vinay Vardhan / ReviewLens Team**.
    - Strategic SWOT matrix synthesis (Strengths, Weaknesses, Opportunities, Threats).
 
 7. **Production Security & Authentication**:
-   - Hardened credential authentication with PBKDF2-HMAC-SHA256 (100,000 iterations).
-   - Enforced 8-character password policy, account lockout protection after consecutive failed attempts, and secure OTP generation.
-   - Transparent sandbox demo disclosures for Google OAuth and SMS simulation.
+   - Hardened credential authentication with PBKDF2-HMAC-SHA256 (600,000 iterations meeting OWASP standards).
+   - Automatic on-the-fly hash migration from legacy algorithms on authenticated login.
+   - Real Google OAuth PKCE authorization integration (requires `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET`; cleanly disabled with setup guidance when unconfigured; no fake or simulated accounts).
+   - Genuine SMS OTP verification (requires Twilio configuration; zero plaintext on-screen OTP exposure).
+   - No pre-seeded default demo accounts or hardcoded credentials in production storage.
+   - Enforced password complexity (min 8 chars, uppercase, lowercase, number, special character) and progressive lockout protection.
+
+8. **API Protection & Rate Limiting**:
+   - Sliding-window rate limiter protecting API endpoints against DoS (60 req/min per client).
+   - Enforced request payload size protection (15 MB maximum payload).
+   - Batch request size cap (maximum 100 reviews per batch).
+   - API Key authentication via `X-API-Key` or `Authorization: Bearer <key>` headers.
 
 ---
 
@@ -113,22 +122,31 @@ reviewlens/
 │   ├── filters.py              # Department, brand, price slider, and sort controls
 │   └── charts.py               # Plotly aspect charts, radars, and TF-IDF visualizations
 │
-├── data/                       # Verified Corpora & Data Storage
-│   ├── products.csv            # Catalogue dataset (12 electronics products)
-│   ├── reviews.csv             # 101 verified reviews balanced across 1 to 5 stars
-│   └── sample_echo_reviews.csv # Curated Amazon Echo corpus (30 reviews)
+├── data/                       # Curated Datasets & Storage
+│   ├── products.csv            # Catalogue dataset (12 electronics products, data_type: prepared_demo)
+│   ├── reviews.csv             # 77 curated demo reviews across 12 products (data_type: prepared_demo)
+│   ├── sample_echo_reviews.csv # Curated Amazon Echo corpus (12 reviews, data_type: prepared_demo)
+│   ├── benchmark_sentiment.csv # 50 genuine ground-truth labelled reviews (data_type: labelled_benchmark)
+│   └── users.json              # Local credential store (empty on fresh clone, no seeded demo accounts)
 │
-└── tests/                      # Automated Test Suite (69 unit tests)
-    ├── test_cleaner.py         # Text preprocessing & contraction expansion tests
-    ├── test_vader_analyzer.py  # VADER scoring, domain lexicon & rating mapping tests
-    ├── test_spam_detector.py   # Spam heuristics & rating mismatch tests
-    ├── test_aspect_extractor.py# Aspect taxonomy & classification tests
-    ├── test_pipeline.py        # End-to-end pipeline & batch safety tests
-    ├── test_data_validation.py # Dataset schema & range validation tests
-    ├── test_sentiment.py       # Polarity, NSS, and contradiction tests
+└── tests/                      # Automated Regression Test Suite (81 unit tests)
+    ├── test_absa.py            # Aspect taxonomy & categorization tests
+    ├── test_api.py             # FastAPI auth, rate limiting, and payload size tests
     ├── test_aspects.py         # Aspect extraction & sentiment aggregation tests
-    ├── test_recommendations.py # Recommendation algorithm tests
-    └── test_auth.py            # Password hashing, PBKDF2 migration & lockout tests
+    ├── test_audit_fixes.py     # End-to-end audit regression checks
+    ├── test_auth.py            # PBKDF2 600k, hash migration, lockout & OAuth/SMS tests
+    ├── test_cleaner.py         # Text preprocessing & contraction expansion tests
+    ├── test_comparison.py      # Product comparison & delta calculator tests
+    ├── test_cross_interface_consistency.py # Pipeline vs Live Analyzer consistency tests
+    ├── test_data_validation.py # Strict CSV schema, non-numeric price/rating & injection tests
+    ├── test_evaluation_and_topics.py # Benchmark evaluation & topic modeling tests
+    ├── test_navigation_flow.py # Application navigation state machine tests
+    ├── test_new_features.py    # Live diagnostic, preference matching & timeline drift tests
+    ├── test_pipeline.py        # End-to-end ReviewLensPipeline integration tests
+    ├── test_recommendations.py # Mathematical recommendation scoring tests
+    ├── test_scraper.py         # Data scraping fallback & sanitation tests
+    ├── test_sentiment.py       # VADER polarity & Net Sentiment Score tests
+    └── test_spam_detector.py   # Multi-signal spam heuristics & thread safety tests
 ```
 
 ---
@@ -155,7 +173,7 @@ python setup_nltk.py
 ```bash
 streamlit run app.py
 ```
-Open your browser at `http://localhost:8501`. Both the **Smart Shopping & Product Intelligence Platform** and the **Original Analytics Dashboard** are fully accessible.
+Open your browser at `http://localhost:8501`. ReviewLens defaults directly to **Review Intelligence & Analysis Hub** for a primary NLP research experience, with the Storefront Catalogue accessible in secondary navigation.
 
 #### FastAPI REST Microservice
 ```bash
@@ -164,6 +182,8 @@ uvicorn api:app --host 0.0.0.0 --port 8000 --reload
 - Interactive Swagger UI: `http://localhost:8000/docs`
 - Modern Frontend UI: `http://localhost:8000/`
 - Health check: `http://localhost:8000/api/v1/health`
+- Supported Aspects: `http://localhost:8000/api/v1/aspects`
+- Analyze Review (protected): `POST /api/v1/analyze` (Rate limited: 60 req/min)
 
 #### Terminal CLI Utility
 ```bash
@@ -178,7 +198,7 @@ python cli.py batch --input data/reviews.csv --output results.json
 
 ## 🧪 Automated Testing
 
-ReviewLens includes a comprehensive test suite of **69 automated unit tests** covering data validation, preprocessing, sentiment analysis, aspect extraction, spam detection, recommendation math, and authentication security.
+ReviewLens includes a comprehensive test suite of **81 automated unit tests** across 17 test modules covering data validation, preprocessing, sentiment analysis, aspect extraction, spam detection, recommendation math, API security, and PBKDF2 authentication.
 
 Run all tests:
 ```bash
@@ -187,7 +207,7 @@ python -m unittest discover tests
 
 Expected output:
 ```
-Ran 69 tests in 2.2s
+Ran 81 tests in ~8.0s
 
 OK
 ```
@@ -213,11 +233,12 @@ docker compose up -d
 
 ## 📊 Evaluation & Benchmarking Methodology
 
-In accordance with transparent research practices, ReviewLens evaluates its rule-based VADER + domain lexicon engine against supervised baseline models (`modules/evaluation.py`):
+In accordance with transparent research practices, ReviewLens strictly distinguishes demonstration datasets from ground-truth evaluation corpora (`modules/evaluation.py`):
 
-1. **Supervised Baseline**: TF-IDF (1-2 ngrams, 5,000 features) + Logistic Regression evaluated via **5-Fold Stratified Cross-Validation**.
-2. **Lexicon Grounding**: VADER compound thresholds ($> +0.05$ positive, $< -0.05$ negative) supplemented by an explicit domain-specific lexicon covering hardware, battery, audio, and display terminology.
-3. **Data Provenance**: Product catalogue specifications and reviews are curated demonstration datasets (`data_type='prepared_demo'`) specifically balanced across 1-star to 5-star ratings (totaling 101 reviews across 12 products) to ensure realistic negative sentiment extraction, aspect dispute identification, and unbiased evaluation.
+1. **Demonstration Datasets**: The product catalogue (`data/products.csv`, 12 items) and customer review dataset (`data/reviews.csv`, exactly 77 reviews) are curated synthetic/demonstration corpora tagged with `data_type='prepared_demo'`. They illustrate diverse hardware feedback, aspect disputes, and rating anomalies across consumer electronics.
+2. **Gold-Standard Evaluation Benchmark**: Quantitative model performance is evaluated against `data/benchmark_sentiment.csv`, consisting of 50 ground-truth labelled review sentences (18 positive, 16 negative, 9 neutral, 7 spam injection controls) tagged with `data_type='labelled_benchmark'`.
+3. **Dynamic Evaluation Metrics**: All evaluation scores (Accuracy, Precision, Recall, Macro F1, and Confusion Matrices) are computed dynamically via scikit-learn without hardcoded or fabricated numbers.
+4. **Supervised Baseline Comparison**: A supervised TF-IDF + Logistic Regression baseline model is evaluated on the benchmark corpus using **5-Fold Stratified Cross-Validation** for rigorous comparison against rule-based VADER.
 
 ---
 
