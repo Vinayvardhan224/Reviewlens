@@ -154,8 +154,8 @@ class TestFastAPISecurityAndEndpoints(unittest.TestCase):
 
         self.assertIn("old-stale-ip", _client_requests)
 
-        # Trigger rate limit check for another client
-        check_rate_limit("active-new-ip")
+        # Trigger rate limit check for another client with cleanup enabled
+        check_rate_limit("active-new-ip", force_cleanup=True)
 
         # Stale client must have been pruned from memory
         self.assertNotIn("old-stale-ip", _client_requests)

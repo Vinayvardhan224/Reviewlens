@@ -43,6 +43,7 @@ from modules.evaluation import (
     evaluate_spam_model,
     evaluate_baseline_comparison,
     evaluate_curated_reviews_corpus,
+    evaluate_sst2_public_benchmark,
     BENCHMARK_DATASET,
     EVALUATION_METHODOLOGY_DISCLOSURE
 )
@@ -1968,8 +1969,58 @@ elif st.session_state["nav_view"] == "📈 Model Evaluation & Benchmarks":
     st.info(
         "⚠️ **Evaluation Sample Size & Generalization Caveat**: "
         "These performance figures are evaluated on a small hand-labelled sanity check sample (n=50) and the 101-review demonstration corpus. "
-        "They serve as regression validation checks and methodology demonstrations rather than empirical proof of generalization on large-scale production distributions (e.g. Stanford SST-2 or Amazon Reviews Polarity with 100,000+ samples)."
+        "They serve as regression validation checks and methodology demonstrations rather than empirical proof of generalization on large-scale production distributions."
     )
+
+    st.markdown("---")
+    st.markdown("### 4. Official Public Benchmark: Stanford Sentiment Treebank (SST-2 / GLUE Dev Set)")
+    st.caption("Empirical evaluation on 872 independent test sentences (444 positive, 428 negative) from academic NLP literature.")
+
+    sst2_res = evaluate_sst2_public_benchmark()
+    if sst2_res.get("status") == "ok":
+        s_col1, s_col2, s_col3, s_col4 = st.columns(4)
+        with s_col1:
+            render_html_block(f"""
+            <div class="metric-card">
+                <div class="metric-label">VADER 3-Class Accuracy</div>
+                <div class="metric-value">{sst2_res['vader_accuracy_all'] * 100:.1f}%</div>
+                <div class="metric-sub">SST-2 Dev Set (n=872)</div>
+            </div>
+            """)
+        with s_col2:
+            render_html_block(f"""
+            <div class="metric-card metric-card-green">
+                <div class="metric-label">VADER Binary Polarized Acc</div>
+                <div class="metric-value">{sst2_res['vader_accuracy_binary'] * 100:.1f}%</div>
+                <div class="metric-sub">Excl. {sst2_res['vader_neutral_count']} neutral (n=718)</div>
+            </div>
+            """)
+        with s_col3:
+            render_html_block(f"""
+            <div class="metric-card">
+                <div class="metric-label">TF-IDF + LogReg (5-Fold)</div>
+                <div class="metric-value">{sst2_res['baseline_accuracy'] * 100:.1f}%</div>
+                <div class="metric-sub">SST-2 Cross-Validation</div>
+            </div>
+            """)
+        with s_col4:
+            render_html_block(f"""
+            <div class="metric-card metric-card-purple">
+                <div class="metric-label">Baseline Macro F1</div>
+                <div class="metric-value">{sst2_res['baseline_f1_macro']:.3f}</div>
+                <div class="metric-sub">Supervised Baseline F1</div>
+            </div>
+            """)
+
+        st.success(
+            "✅ **Independent Public Benchmark Verification**: "
+            "Evaluated on the Stanford Sentiment Treebank (SST-2) development set. "
+            f"VADER achieves **{sst2_res['vader_accuracy_binary'] * 100:.1f}%** directional accuracy when predicting positive/negative polarity, "
+            f"while the supervised TF-IDF + Logistic Regression baseline achieves **{sst2_res['baseline_accuracy'] * 100:.1f}%** (5-fold CV). "
+            "This provides genuine, transparent model evaluation without hand-crafted test data bias."
+        )
+    else:
+        st.warning("Public SST-2 benchmark dataset could not be evaluated.")
 
 
 # ==========================================

@@ -13,6 +13,7 @@ from modules.sentiment import analyze_text_sentiment
 from reviewlens.spam_detector.detector import SpamDetector
 
 BENCHMARK_CSV_PATH = Path(__file__).resolve().parent.parent / "data" / "benchmark_sentiment.csv"
+SST2_CSV_PATH = Path(__file__).resolve().parent.parent / "data" / "public_sst2_benchmark.csv"
 
 # Fallback curated benchmark test set (50 reviews with ground-truth sentiment and spam labels)
 BENCHMARK_DATASET = [
@@ -267,3 +268,72 @@ def evaluate_baseline_comparison() -> Dict[str, Any]:
         "sample_size": len(dataset),
         "methodology": EVALUATION_METHODOLOGY_DISCLOSURE
     }
+
+
+def evaluate_sst2_public_benchmark() -> Dict[str, Any]:
+    """
+    Evaluates ReviewLens sentiment models on the official Stanford Sentiment Treebank
+    (SST-2 / GLUE development set, n=872 samples).
+    Provides genuine empirical accuracy against an independent, public NLP benchmark.
+    """
+    if not SST2_CSV_PATH.exists():
+        return {
+            "status": "not_found",
+            "message": "SST-2 benchmark file data/public_sst2_benchmark.csv not found.",
+            "sample_size": 0
+        }
+
+    try:
+        df = pd.read_csv(SST2_CSV_PATH)
+        y_true = df["ground_truth_sentiment"].tolist()
+        texts = df["text"].tolist()
+
+        y_pred_all = []
+        for t in texts:
+            y_pred_all.append(analyze_text_sentiment(t)["label"])
+
+        acc_all = round(float(accuracy_score(y_true, y_pred_all)), 4)
+
+        # Binary directional evaluation (excluding neutral predictions)
+        binary_pairs = [(t, p) for t, p in zip(y_true, y_pred_all) if p in ("POSITIVE", "NEGATIVE")]
+        acc_binary = round(float(accuracy_score([t for t, p in binary_pairs], [p for t, p in binary_pairs])), 4) if binary_pairs else 0.0
+
+        p_macro, r_macro, f1_macro, _ = precision_recall_fscore_support(
+            y_true, y_pred_all, average="macro", labels=["POSITIVE", "NEGATIVE"], zero_division=0
+        )
+
+        # Supervised baseline on SST-2 via 5-fold Stratified CV
+        from sklearn.feature_extraction.text import TfidfVectorizer
+        from sklearn.linear_model import LogisticRegression
+        from sklearn.model_selection import StratifiedKFold, cross_val_score
+
+        vec = TfidfVectorizer(max_features=500, ngram_range=(1, 2))
+        X = vec.fit_transform(texts)
+        y_arr = np.array(y_true)
+        clf = LogisticRegression(max_iter=300, random_state=42)
+        skf = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
+        baseline_acc_scores = cross_val_score(clf, X, y_arr, cv=skf, scoring="accuracy")
+        baseline_f1_scores = cross_val_score(clf, X, y_arr, cv=skf, scoring="f1_macro")
+
+        return {
+            "status": "ok",
+            "benchmark_name": "Stanford Sentiment Treebank (SST-2 / GLUE Dev Set)",
+            "sample_size": len(df),
+            "positive_count": sum(1 for y in y_true if y == "POSITIVE"),
+            "negative_count": sum(1 for y in y_true if y == "NEGATIVE"),
+            "vader_accuracy_all": acc_all,
+            "vader_accuracy_binary": acc_binary,
+            "vader_neutral_count": sum(1 for p in y_pred_all if p == "NEUTRAL"),
+            "vader_precision_macro": round(float(p_macro), 3),
+            "vader_recall_macro": round(float(r_macro), 3),
+            "vader_f1_macro": round(float(f1_macro), 3),
+            "baseline_accuracy": round(float(np.mean(baseline_acc_scores)), 4),
+            "baseline_f1_macro": round(float(np.mean(baseline_f1_scores)), 4),
+            "data_provenance": "Official Stanford Sentiment Treebank (SST-2 / GLUE development set). Genuine public NLP research benchmark."
+        }
+    except Exception as e:
+        return {
+            "status": "error",
+            "message": str(e),
+            "sample_size": 0
+        }

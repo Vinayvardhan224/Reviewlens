@@ -87,19 +87,26 @@ async def request_size_limiter(request: Request, call_next):
 RATE_LIMIT_PER_MINUTE = int(os.getenv("REVIEWLENS_RATE_LIMIT", "60"))
 _rate_limit_lock = threading.Lock()
 _client_requests: Dict[str, Deque[float]] = defaultdict(deque)
+_last_cleanup_time: float = 0.0
+CLEANUP_INTERVAL_SECONDS: float = 60.0
 
-def check_rate_limit(client_id: str) -> bool:
+def check_rate_limit(client_id: str, force_cleanup: bool = False) -> bool:
     """
-    Sliding-window rate limiter keyed on client IP address.
-    Prunes expired timestamps and removes inactive client entries to bound memory usage.
+    High-performance sliding-window rate limiter keyed on client IP address.
+    Per-request operations are O(1) amortized queue trims on the calling client only.
+    Periodic sweep of stale/inactive client entries runs at most once every 60 seconds
+    to bound memory usage without degrading request latency under heavy traffic.
     """
+    global _last_cleanup_time
     now = time.time()
     window = 60.0
     with _rate_limit_lock:
-        # Prune inactive client keys to prevent unbounded memory growth
-        stale_clients = [cid for cid, times in _client_requests.items() if not times or times[-1] < now - window]
-        for cid in stale_clients:
-            del _client_requests[cid]
+        # Periodic cleanup of inactive client keys (throttled to once per minute or when forced)
+        if force_cleanup or (now - _last_cleanup_time >= CLEANUP_INTERVAL_SECONDS):
+            stale_clients = [cid for cid, times in _client_requests.items() if not times or times[-1] < now - window]
+            for cid in stale_clients:
+                del _client_requests[cid]
+            _last_cleanup_time = now
 
         req_times = _client_requests[client_id]
         while req_times and req_times[0] < now - window:
