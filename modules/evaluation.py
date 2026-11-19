@@ -1,7 +1,7 @@
 """
 ReviewLens Model Evaluation & Benchmark Module.
-Evaluates VADER sentiment classification and Spam Detection against a manually labelled
-gold-standard test set, reporting Accuracy, Precision, Recall, F1-score, and Confusion Matrices.
+Evaluates VADER sentiment classification and Spam Detection against a small hand-labelled
+sanity-check test set, reporting Accuracy, Precision, Recall, F1-score, and Confusion Matrices.
 """
 
 from typing import Dict, Any, List
@@ -78,7 +78,7 @@ BENCHMARK_DATASET = [
 
 def load_benchmark_dataset() -> List[tuple]:
     """
-    Loads genuine labelled benchmark dataset from data/benchmark_sentiment.csv.
+    Loads small hand-labelled benchmark dataset from data/benchmark_sentiment.csv.
     Falls back to curated dataset if file is absent or fails to load.
     """
     if BENCHMARK_CSV_PATH.exists():
@@ -97,7 +97,7 @@ def load_benchmark_dataset() -> List[tuple]:
 
 def evaluate_sentiment_model() -> Dict[str, Any]:
     """
-    Evaluates VADER sentiment against the manually labelled ground-truth dataset.
+    Evaluates VADER sentiment against the small hand-labelled benchmark dataset.
     Returns accuracy, precision, recall, F1, and a 3x3 confusion matrix.
     """
     dataset = load_benchmark_dataset()
@@ -182,15 +182,15 @@ REVIEWS_CSV_PATH = Path(__file__).resolve().parent.parent / "data" / "reviews.cs
 
 EVALUATION_METHODOLOGY_DISCLOSURE = """
 **Evaluation Methodology & Caveats:**
-- **Curated Benchmark Corpus:** The evaluation suite benchmarks VADER against a curated ground-truth corpus (n=50) loaded from `data/benchmark_sentiment.csv`, with 18 positive, 16 negative, 9 neutral, and 7 spam cases.
-- **Small Sample Disclaimer:** These evaluation results are computed on a curated sample of 50 benchmark reviews and 77 catalogue reviews. They serve as regression validation checks and a demonstration of the evaluation methodology rather than empirical proof of generalization on large-scale production distributions (e.g. Stanford SST-2 or Amazon Reviews Polarity with 100,000+ samples).
-- **Supervised Baseline:** A TF-IDF (1-2 ngrams, 200 features) + Logistic Regression baseline is evaluated via 5-Fold Stratified Cross-Validation on the benchmark corpus for comparison against rule-based VADER.
+- **Small Hand-Labelled Sanity Check Corpus:** The evaluation suite benchmarks VADER against a small hand-labelled sanity check corpus (n=50) in `data/benchmark_sentiment.csv`, with 23 positive, 17 negative, and 10 neutral sentences (including 7 containing spam indicators).
+- **Small Sample Disclaimer:** These evaluation results are computed on a small hand-crafted sample of 50 benchmark sentences and 101 catalogue demonstration reviews. They serve as regression validation checks and a demonstration of the evaluation methodology rather than empirical proof of generalization on large-scale production distributions (e.g. Stanford SST-2 or Amazon Reviews Polarity with 100,000+ samples).
+- **Supervised Baseline:** A TF-IDF (1-2 ngrams, 200 features) + Logistic Regression baseline is evaluated via 5-Fold Stratified Cross-Validation on the 50-sentence benchmark corpus as an illustrative comparative exercise against rule-based VADER.
 """
 
 
 def evaluate_curated_reviews_corpus() -> Dict[str, Any]:
     """
-    Evaluates rule-based VADER sentiment against star ratings in the 77-review dataset (data/reviews.csv).
+    Evaluates rule-based VADER sentiment against star ratings in the 101-review dataset (data/reviews.csv).
     Ratings >= 4.0 are mapped to POSITIVE, <= 2.0 to NEGATIVE, and 3.0 to NEUTRAL.
     Returns accuracy, agreement count, and total samples.
     """
@@ -227,7 +227,7 @@ def evaluate_curated_reviews_corpus() -> Dict[str, Any]:
             "positive_count": sum(1 for y in y_true if y == "POSITIVE"),
             "neutral_count": sum(1 for y in y_true if y == "NEUTRAL"),
             "negative_count": sum(1 for y in y_true if y == "NEGATIVE"),
-            "disclaimer": "Evaluated on curated demonstration reviews (n=77). User star ratings used as proxy ground truth."
+            "disclaimer": "Evaluated on curated demonstration reviews (n=101 across 12 products). User star ratings used as proxy ground truth."
         }
     except Exception as e:
         return {"status": "error", "message": str(e), "sample_size": 0, "agreement_rate": 0.0}

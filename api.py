@@ -11,6 +11,7 @@ import threading
 import time
 import os
 import io
+import secrets
 
 from fastapi import FastAPI, HTTPException, UploadFile, File, Request, Security, Depends
 from fastapi.middleware.cors import CORSMiddleware
@@ -62,18 +63,46 @@ async def request_size_limiter(request: Request, call_next):
                 )
         except ValueError:
             pass
+    elif request.method in ("POST", "PUT", "PATCH"):
+        # Handle chunked transfer-encoding or missing content-length header
+        body_parts = []
+        bytes_received = 0
+        async for chunk in request.stream():
+            bytes_received += len(chunk)
+            if bytes_received > MAX_CONTENT_LENGTH:
+                return JSONResponse(
+                    status_code=413,
+                    content={"detail": f"Payload too large. Maximum allowed size is {MAX_CONTENT_LENGTH} bytes."}
+                )
+            body_parts.append(chunk)
+
+        full_body = b"".join(body_parts)
+        async def receive():
+            return {"type": "http.request", "body": full_body, "more_body": False}
+        request._receive = receive
+
     return await call_next(request)
 
-# Rate limiting: 60 requests/minute per client IP or API key
+# Rate limiting: 60 requests/minute per client IP
 RATE_LIMIT_PER_MINUTE = int(os.getenv("REVIEWLENS_RATE_LIMIT", "60"))
 _rate_limit_lock = threading.Lock()
 _client_requests: Dict[str, Deque[float]] = defaultdict(deque)
 
 def check_rate_limit(client_id: str) -> bool:
+    """
+    Sliding-window rate limiter keyed on client IP address.
+    Prunes expired timestamps and removes inactive client entries to bound memory usage.
+    """
     now = time.time()
+    window = 60.0
     with _rate_limit_lock:
+        # Prune inactive client keys to prevent unbounded memory growth
+        stale_clients = [cid for cid, times in _client_requests.items() if not times or times[-1] < now - window]
+        for cid in stale_clients:
+            del _client_requests[cid]
+
         req_times = _client_requests[client_id]
-        while req_times and req_times[0] < now - 60.0:
+        while req_times and req_times[0] < now - window:
             req_times.popleft()
         if len(req_times) >= RATE_LIMIT_PER_MINUTE:
             return False
@@ -86,31 +115,42 @@ CONFIGURED_API_KEY = os.getenv("REVIEWLENS_API_KEY", "")
 REQUIRE_API_KEY = os.getenv("REVIEWLENS_REQUIRE_API_KEY", "false").lower() in ("true", "1", "yes")
 
 async def verify_api_access(request: Request, api_key: Optional[str] = Security(API_KEY_HEADER)):
-    """Verifies client rate limit and validates API key when authentication is enforced."""
-    client_ip = request.client.host if request.client else "unknown"
-    client_ident = api_key or client_ip
+    """
+    Validates API key (timing-attack resistant via secrets.compare_digest) and enforces
+    sliding-window IP-based rate limiting. Rejects requests if key requirement is misconfigured.
+    """
+    configured_key = (os.getenv("REVIEWLENS_API_KEY", CONFIGURED_API_KEY) or "").strip()
+    require_key = (os.getenv("REVIEWLENS_REQUIRE_API_KEY", "false").lower() in ("true", "1", "yes")) or REQUIRE_API_KEY
 
-    if not check_rate_limit(client_ident):
+    # 1. API Key Validation
+    if require_key or configured_key:
+        if require_key and not configured_key:
+            # If server is configured to require an API key but no key was set, reject all requests
+            raise HTTPException(
+                status_code=500,
+                detail="Server configuration error: REVIEWLENS_REQUIRE_API_KEY is enabled, but no valid REVIEWLENS_API_KEY is configured."
+            )
+
+        auth_header = request.headers.get("Authorization", "")
+        bearer_token = auth_header.replace("Bearer ", "").strip() if auth_header.startswith("Bearer ") else ""
+        provided_key = (api_key or bearer_token or "").strip()
+
+        if not provided_key or not secrets.compare_digest(provided_key, configured_key):
+            raise HTTPException(
+                status_code=401,
+                detail="Invalid or missing API Key. Provide a valid 'X-API-Key' or 'Authorization: Bearer <key>' header.",
+                headers={"WWW-Authenticate": "ApiKey"}
+            )
+
+    # 2. Rate Limiting keyed on verified client IP (unverified/random keys cannot bypass)
+    client_ip = request.client.host if request.client else "unknown"
+    if not check_rate_limit(client_ip):
         raise HTTPException(
             status_code=429,
             detail="Rate limit exceeded. Maximum 60 requests per minute allowed.",
             headers={"Retry-After": "60"}
         )
 
-    configured_key = os.getenv("REVIEWLENS_API_KEY", CONFIGURED_API_KEY)
-    require_key = os.getenv("REVIEWLENS_REQUIRE_API_KEY", "false").lower() in ("true", "1", "yes") or REQUIRE_API_KEY
-
-    if require_key or configured_key:
-        auth_header = request.headers.get("Authorization", "")
-        bearer_token = auth_header.replace("Bearer ", "").strip() if auth_header.startswith("Bearer ") else ""
-        provided_key = api_key or bearer_token
-
-        if not provided_key or (configured_key and provided_key != configured_key):
-            raise HTTPException(
-                status_code=401,
-                detail="Invalid or missing API Key. Provide a valid 'X-API-Key' or 'Authorization: Bearer <key>' header.",
-                headers={"WWW-Authenticate": "ApiKey"}
-            )
     return True
 
 pipeline = ReviewLensPipeline()
