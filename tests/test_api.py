@@ -113,5 +113,54 @@ class TestFastAPISecurityAndEndpoints(unittest.TestCase):
         self.assertEqual(resp_blocked.headers.get("Retry-After"), "60")
 
 
+    def test_require_key_with_empty_server_key_rejects_all(self):
+        """When REVIEWLENS_REQUIRE_API_KEY=true but server key is empty, all requests must be rejected."""
+        os.environ["REVIEWLENS_REQUIRE_API_KEY"] = "true"
+        os.environ["REVIEWLENS_API_KEY"] = ""
+        payload = {"text": "Test review text.", "rating": 5.0}
+
+        # Any non-empty key must be rejected with 500 (misconfiguration)
+        resp = self.client.post("/api/v1/analyze", json=payload, headers={"X-API-Key": "some-random-key"})
+        self.assertEqual(resp.status_code, 500)
+        self.assertIn("Server configuration error", resp.json()["detail"])
+
+    def test_rate_limiting_not_bypassable_with_random_keys(self):
+        """Rate limit is keyed on client IP, so rotating random API keys cannot bypass the limit."""
+        payload = {"text": "Short review test.", "rating": 4.0}
+
+        # Send 60 requests from the same client with different random API keys
+        for i in range(60):
+            headers = {"X-API-Key": f"random-key-{i}"}
+            resp = self.client.post("/api/v1/analyze", json=payload, headers=headers)
+            self.assertEqual(resp.status_code, 200)
+
+        # 61st request with yet another key must be blocked by IP rate limit
+        resp_blocked = self.client.post(
+            "/api/v1/analyze",
+            json=payload,
+            headers={"X-API-Key": "yet-another-random-key"}
+        )
+        self.assertEqual(resp_blocked.status_code, 429)
+        self.assertIn("Rate limit exceeded", resp_blocked.json()["detail"])
+
+    def test_rate_limiter_stale_client_cleanup(self):
+        """Inactive client entries must be pruned to prevent unbounded memory growth."""
+        from api import check_rate_limit, _client_requests, _rate_limit_lock
+        import time
+
+        with _rate_limit_lock:
+            # Insert a client request older than 60 seconds
+            _client_requests["old-stale-ip"].append(time.time() - 120.0)
+
+        self.assertIn("old-stale-ip", _client_requests)
+
+        # Trigger rate limit check for another client
+        check_rate_limit("active-new-ip")
+
+        # Stale client must have been pruned from memory
+        self.assertNotIn("old-stale-ip", _client_requests)
+        self.assertIn("active-new-ip", _client_requests)
+
+
 if __name__ == "__main__":
     unittest.main()

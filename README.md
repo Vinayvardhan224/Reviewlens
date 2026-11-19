@@ -124,12 +124,12 @@ reviewlens/
 │
 ├── data/                       # Curated Datasets & Storage
 │   ├── products.csv            # Catalogue dataset (12 electronics products, data_type: prepared_demo)
-│   ├── reviews.csv             # 77 curated demo reviews across 12 products (data_type: prepared_demo)
+│   ├── reviews.csv             # 101 curated demo reviews across 12 products (data_type: prepared_demo)
 │   ├── sample_echo_reviews.csv # Curated Amazon Echo corpus (12 reviews, data_type: prepared_demo)
-│   ├── benchmark_sentiment.csv # 50 genuine ground-truth labelled reviews (data_type: labelled_benchmark)
+│   ├── benchmark_sentiment.csv # 50 hand-labelled sanity check reviews (data_type: labelled_benchmark)
 │   └── users.json              # Local credential store (empty on fresh clone, no seeded demo accounts)
 │
-└── tests/                      # Automated Regression Test Suite (81 unit tests)
+└── tests/                      # Automated Regression Test Suite (85 unit tests)
     ├── test_absa.py            # Aspect taxonomy & categorization tests
     ├── test_api.py             # FastAPI auth, rate limiting, and payload size tests
     ├── test_aspects.py         # Aspect extraction & sentiment aggregation tests
@@ -198,7 +198,7 @@ python cli.py batch --input data/reviews.csv --output results.json
 
 ## 🧪 Automated Testing
 
-ReviewLens includes a comprehensive test suite of **81 automated unit tests** across 17 test modules covering data validation, preprocessing, sentiment analysis, aspect extraction, spam detection, recommendation math, API security, and PBKDF2 authentication.
+ReviewLens includes a comprehensive test suite of **85 automated unit tests** across 17 test modules covering data validation, preprocessing, sentiment analysis, aspect extraction, spam detection, recommendation math, API security, and PBKDF2 authentication.
 
 Run all tests:
 ```bash
@@ -207,7 +207,7 @@ python -m unittest discover tests
 
 Expected output:
 ```
-Ran 81 tests in ~8.0s
+Ran 85 tests in ~16.0s
 
 OK
 ```
@@ -235,10 +235,10 @@ docker compose up -d
 
 In accordance with transparent research practices, ReviewLens strictly distinguishes demonstration datasets from ground-truth evaluation corpora (`modules/evaluation.py`):
 
-1. **Demonstration Datasets**: The product catalogue (`data/products.csv`, 12 items) and customer review dataset (`data/reviews.csv`, exactly 77 reviews) are curated synthetic/demonstration corpora tagged with `data_type='prepared_demo'`. They illustrate diverse hardware feedback, aspect disputes, and rating anomalies across consumer electronics.
-2. **Gold-Standard Evaluation Benchmark**: Quantitative model performance is evaluated against `data/benchmark_sentiment.csv`, consisting of 50 ground-truth labelled review sentences (18 positive, 16 negative, 9 neutral, 7 spam injection controls) tagged with `data_type='labelled_benchmark'`.
+1. **Demonstration Datasets**: The product catalogue (`data/products.csv`, 12 items) and customer review dataset (`data/reviews.csv`, exactly 101 reviews across 12 products: 24 negative [1-2 stars], 8 neutral [3 stars], and 69 positive [4-5 stars]) are curated demonstration corpora tagged with `data_type='prepared_demo'`. They illustrate diverse hardware feedback, aspect disputes, and rating anomalies across consumer electronics.
+2. **Small Hand-Labelled Sanity Check Benchmark**: Quantitative model performance is evaluated against `data/benchmark_sentiment.csv`, consisting of 50 hand-labelled review sentences (23 positive, 17 negative, and 10 neutral, with 7 containing spam heuristic markers) tagged with `data_type='labelled_benchmark'`. This is a small local regression check to verify pipeline behavior, not a proof of broad statistical generalization.
 3. **Dynamic Evaluation Metrics**: All evaluation scores (Accuracy, Precision, Recall, Macro F1, and Confusion Matrices) are computed dynamically via scikit-learn without hardcoded or fabricated numbers.
-4. **Supervised Baseline Comparison**: A supervised TF-IDF + Logistic Regression baseline model is evaluated on the benchmark corpus using **5-Fold Stratified Cross-Validation** for rigorous comparison against rule-based VADER.
+4. **Supervised Baseline Comparison**: A supervised TF-IDF + Logistic Regression baseline model is evaluated on the 50-sentence benchmark corpus using **5-Fold Stratified Cross-Validation** as an illustrative comparison against rule-based VADER. Small-sample disclaimers are prominently displayed in the UI and documentation.
 
 ---
 

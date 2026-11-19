@@ -47,7 +47,7 @@ class TestEvaluationAndTopics(unittest.TestCase):
         # Test reviews.csv corpus evaluation
         reviews_res = evaluate_curated_reviews_corpus()
         self.assertEqual(reviews_res["status"], "ok")
-        self.assertEqual(reviews_res["sample_size"], 77)
+        self.assertEqual(reviews_res["sample_size"], 101)
         self.assertGreater(reviews_res["agreement_rate"], 0.6)
 
     def test_topic_modeling_lda(self):

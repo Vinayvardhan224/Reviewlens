@@ -122,7 +122,10 @@ st.markdown("""
 
     /* Hide Streamlit Native Multipage Sidebar Nav List */
     div[data-testid="stSidebarNav"],
-    ul[data-testid="stSidebarNavItems"] {
+    ul[data-testid="stSidebarNavItems"],
+    div[data-testid="stSidebarNavSeparator"],
+    [data-testid="stSidebarNav"] *,
+    nav[data-testid="stSidebarNav"] {
         display: none !important;
     }
 
@@ -1958,15 +1961,14 @@ elif st.session_state["nav_view"] == "📈 Model Evaluation & Benchmarks":
         <div class="metric-card metric-card-green">
             <div class="metric-label">Catalogue Reviews Agreement</div>
             <div class="metric-value">{curated_alignment.get('agreement_rate', 0.0) * 100:.1f}%</div>
-            <div class="metric-sub">Rating vs VADER (n=77)</div>
+            <div class="metric-sub">Rating vs VADER (n=101)</div>
         </div>
         """)
 
     st.info(
         "⚠️ **Evaluation Sample Size & Generalization Caveat**: "
-        "These performance figures are evaluated on a curated benchmark sample (n=50) and the 77-review demonstration corpus. "
-        "They serve as regression validation and methodology demonstrations. In production applications, models should be evaluated "
-        "on large-scale external datasets (e.g., Stanford SST-2 or Amazon Reviews Polarity with 100,000+ samples)."
+        "These performance figures are evaluated on a small hand-labelled sanity check sample (n=50) and the 101-review demonstration corpus. "
+        "They serve as regression validation checks and methodology demonstrations rather than empirical proof of generalization on large-scale production distributions (e.g. Stanford SST-2 or Amazon Reviews Polarity with 100,000+ samples)."
     )
 
 

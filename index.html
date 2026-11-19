@@ -63,7 +63,7 @@
                 <a href="#absa" class="hover:text-blue-600 transition">Aspect Engine</a>
                 <a href="#amazon-scanner" class="hover:text-blue-600 transition">Amazon Scanner</a>
                 <a href="#swot" class="hover:text-blue-600 transition">SWOT & Insights</a>
-                <a href="http://localhost:8501" target="_blank" class="streamlit-link text-indigo-600 hover:text-indigo-700 font-semibold flex items-center gap-1">
+                <a href="#" onclick="window.open(window.location.protocol + '//' + (window.location.hostname || 'localhost') + ':8501', '_blank'); return false;" class="streamlit-link text-indigo-600 hover:text-indigo-700 font-semibold flex items-center gap-1">
                     Streamlit App ↗
                 </a>
                 <a href="/docs" target="_blank" class="px-3.5 py-1.5 rounded-lg bg-slate-900 text-white hover:bg-slate-800 transition shadow-sm text-xs">
@@ -358,7 +358,7 @@
                 <span class="text-slate-500 font-normal">| NLP-Based Smart Product Review Analysis System</span>
             </div>
             <div class="flex gap-6 font-medium">
-                <a href="http://localhost:8501" target="_blank" class="streamlit-link hover:text-white transition">Streamlit UI</a>
+                <a href="#" onclick="window.open(window.location.protocol + '//' + (window.location.hostname || 'localhost') + ':8501', '_blank'); return false;" class="streamlit-link hover:text-white transition">Streamlit UI</a>
                 <a href="/docs" target="_blank" class="hover:text-white transition">FastAPI Swagger</a>
                 <a href="#analyzer" class="hover:text-white transition">Back to Top ↑</a>
             </div>
@@ -370,8 +370,9 @@
         // Adapt Streamlit links to current hostname dynamically
         (function() {
             try {
+                const proto = window.location.protocol || "http:";
                 const targetHost = window.location.hostname || "localhost";
-                const targetUrl = `http://${targetHost}:8501`;
+                const targetUrl = `${proto}//${targetHost}:8501`;
                 document.querySelectorAll(".streamlit-link").forEach(function(link) {
                     link.href = targetUrl;
                 });
