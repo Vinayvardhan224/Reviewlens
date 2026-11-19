@@ -20,6 +20,11 @@ PROJECT_ROOT = Path(__file__).resolve().parent
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
+# Invalidate stale in-memory modules on hot-reload to prevent Streamlit Cloud cache desync
+for _mod_key in list(sys.modules.keys()):
+    if _mod_key.startswith("modules.") or _mod_key.startswith("reviewlens.") or _mod_key.startswith("components."):
+        sys.modules.pop(_mod_key, None)
+
 from modules.data_loader import (
     get_all_products,
     get_all_reviews,
@@ -38,15 +43,30 @@ from modules.review_summary import generate_executive_summary, generate_markdown
 from modules.comparison import compare_two_products
 from modules.recommendation import generate_category_recommendations, rank_products_by_preferences, RECOMMENDATION_METHODOLOGY_DISCLOSURE
 from modules.topic_modeling import extract_topic_clusters, extract_topic_clusters_result
-from modules.evaluation import (
-    evaluate_sentiment_model,
-    evaluate_spam_model,
-    evaluate_baseline_comparison,
-    evaluate_curated_reviews_corpus,
-    evaluate_sst2_public_benchmark,
-    BENCHMARK_DATASET,
-    EVALUATION_METHODOLOGY_DISCLOSURE
-)
+
+try:
+    from modules.evaluation import (
+        evaluate_sentiment_model,
+        evaluate_spam_model,
+        evaluate_baseline_comparison,
+        evaluate_curated_reviews_corpus,
+        evaluate_sst2_public_benchmark,
+        BENCHMARK_DATASET,
+        EVALUATION_METHODOLOGY_DISCLOSURE
+    )
+except ImportError:
+    import importlib
+    import modules.evaluation
+    importlib.reload(modules.evaluation)
+    from modules.evaluation import (
+        evaluate_sentiment_model,
+        evaluate_spam_model,
+        evaluate_baseline_comparison,
+        evaluate_curated_reviews_corpus,
+        evaluate_sst2_public_benchmark,
+        BENCHMARK_DATASET,
+        EVALUATION_METHODOLOGY_DISCLOSURE
+    )
 from modules.live_analyzer import analyze_custom_review
 from modules.auth import get_current_user, render_auth_interface, logout_user
 from components.header import render_header
