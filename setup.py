@@ -6,7 +6,7 @@ setup(
     description="ReviewLens: An NLP-Based Smart Product Review Analysis System",
     author="Vinay Vardhan / ReviewLens Team",
     packages=find_packages(),
-    python_requires=">=3.9",
+    python_requires=">=3.10",
     install_requires=[
         "nltk>=3.8.1",
         "scikit-learn>=1.3.0",

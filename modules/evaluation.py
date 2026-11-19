@@ -5,13 +5,16 @@ gold-standard test set, reporting Accuracy, Precision, Recall, F1-score, and Con
 """
 
 from typing import Dict, Any, List
+from pathlib import Path
 import pandas as pd
 import numpy as np
 from sklearn.metrics import accuracy_score, precision_recall_fscore_support, confusion_matrix
 from modules.sentiment import analyze_text_sentiment
 from reviewlens.spam_detector.detector import SpamDetector
 
-# Manually labelled benchmark test set (50 reviews with ground-truth sentiment and spam labels)
+BENCHMARK_CSV_PATH = Path(__file__).resolve().parent.parent / "data" / "benchmark_sentiment.csv"
+
+# Fallback curated benchmark test set (50 reviews with ground-truth sentiment and spam labels)
 BENCHMARK_DATASET = [
     # Positive reviews
     ("The battery life on this laptop easily lasts 15 hours and the M3 chip is blazing fast.", "POSITIVE", False),
@@ -62,15 +65,34 @@ BENCHMARK_DATASET = [
     ("The package dimensions are 15 by 10 by 3 centimeters.", "NEUTRAL", False),
     ("The box contains the laptop, a 70W USB-C power adapter, and a 2m braided charging cable.", "NEUTRAL", False),
 
-    # Spam / Fake reviews
-    ("BUY NOW FREE GIFT ON WHATSAPP FIVE STARS CLICK HERE FOR 100 PERCENT CASH BACK BONUS!!!!", "POSITIVE", True),
-    ("VISIT WWW.FREE-COUPONS-DEAL.COM GET FREE IPHONE 15 NOW DISCOUNT CODE WHATSAPP!!", "POSITIVE", True),
-    ("BEST BEST BEST BEST BEST BEST BEST BEST BEST SOOOOO GOOOOOD AAAAAAA", "POSITIVE", True),
-    ("I love this product it is amazing. I love this product it is amazing.", "POSITIVE", True),
-    ("CHECK MY TELEGRAM @FREEGIFTS FOR FREE REPLACEMENT AND 500 RUPEES CASHBACK GUARANTEED!!!", "POSITIVE", True),
-    ("FIVE STARS FIVE STARS CALL 9876543210 FOR FREE ACCESSORY GIFT BUNDLE DISCOUNT", "POSITIVE", True),
-    ("CLAIM 5000 RUPEES DISCOUNT COUPON CODE NOW ON OUR TELEGRAM LINK IN BIO 100 PERCENT REAL", "POSITIVE", True)
+    # Spam / Fake reviews (naturalistic evaluation cases: incentivized reviews, promotional links, character loops, shouting)
+    ("The merchant offered a free gift card if I posted a positive rating for this listing.", "POSITIVE", True),
+    ("You can find a 30% discount code for this model online at promo-savings-hub.com today.", "POSITIVE", True),
+    ("This phone is sooooo good and fast, battery lasts foreverrrrr!", "POSITIVE", True),
+    ("DO NOT PURCHASE THIS ITEM AS IT ARRIVED DAMAGED AND CUSTOMER SERVICE WAS UNRESPONSIVE!", "NEGATIVE", True),
+    ("Contact seller on WhatsApp at +1-800-555-0199 for free replacement parts.", "NEUTRAL", True),
+    ("The seller sent an email promising a cash back reward for a five star rating.", "POSITIVE", True),
+    ("FIVE STARS FOR FREE ACCESSORIES VISIT OUR STORE PAGE FOR SPECIAL BONUS DEALS!!!!", "POSITIVE", True)
 ]
+
+
+def load_benchmark_dataset() -> List[tuple]:
+    """
+    Loads genuine labelled benchmark dataset from data/benchmark_sentiment.csv.
+    Falls back to curated dataset if file is absent or fails to load.
+    """
+    if BENCHMARK_CSV_PATH.exists():
+        try:
+            df = pd.read_csv(BENCHMARK_CSV_PATH)
+            records = []
+            for _, row in df.iterrows():
+                is_spam = str(row["is_spam"]).strip().lower() in ("true", "1", "yes")
+                records.append((str(row["text"]), str(row["ground_truth_sentiment"]).strip().upper(), is_spam))
+            if len(records) > 0:
+                return records
+        except Exception:
+            pass
+    return BENCHMARK_DATASET
 
 
 def evaluate_sentiment_model() -> Dict[str, Any]:
@@ -78,10 +100,11 @@ def evaluate_sentiment_model() -> Dict[str, Any]:
     Evaluates VADER sentiment against the manually labelled ground-truth dataset.
     Returns accuracy, precision, recall, F1, and a 3x3 confusion matrix.
     """
+    dataset = load_benchmark_dataset()
     y_true = []
     y_pred = []
 
-    for text, true_label, _ in BENCHMARK_DATASET:
+    for text, true_label, _ in dataset:
         y_true.append(true_label)
         res = analyze_text_sentiment(text)
         y_pred.append(res["label"])
@@ -104,7 +127,7 @@ def evaluate_sentiment_model() -> Dict[str, Any]:
         }
 
     return {
-        "total_test_samples": len(BENCHMARK_DATASET),
+        "total_test_samples": len(dataset),
         "accuracy": acc,
         "precision_macro": round(float(p_macro), 3),
         "recall_macro": round(float(r_macro), 3),
@@ -121,12 +144,13 @@ def evaluate_spam_model() -> Dict[str, Any]:
     precision, recall, false positives, and false negatives.
     """
     detector = SpamDetector()
+    dataset = load_benchmark_dataset()
     y_true = []
     y_pred = []
     false_positives = []
     false_negatives = []
 
-    for text, sent_label, is_spam_true in BENCHMARK_DATASET:
+    for text, sent_label, is_spam_true in dataset:
         y_true.append(1 if is_spam_true else 0)
         sent_res = analyze_text_sentiment(text)
         spam_res = detector.analyze(text, sentiment_compound=sent_res["compound"])
@@ -142,7 +166,7 @@ def evaluate_spam_model() -> Dict[str, Any]:
     p, r, f1, _ = precision_recall_fscore_support(y_true, y_pred, average="binary", zero_division=0)
 
     return {
-        "total_test_samples": len(BENCHMARK_DATASET),
+        "total_test_samples": len(dataset),
         "accuracy": acc,
         "precision": round(float(p), 3),
         "recall": round(float(r), 3),
@@ -154,12 +178,59 @@ def evaluate_spam_model() -> Dict[str, Any]:
     }
 
 
+REVIEWS_CSV_PATH = Path(__file__).resolve().parent.parent / "data" / "reviews.csv"
+
 EVALUATION_METHODOLOGY_DISCLOSURE = """
 **Evaluation Methodology & Caveats:**
-- **Curated Test Set:** The interactive benchmark evaluates a 50-sample curated corpus (18 positive, 16 negative, 9 neutral, 7 spam).
-- **Caveats:** Sample size (n=50) serves for immediate regression verification and UI demonstration. Real-world generalization metrics require larger external datasets (e.g. Amazon reviews or SemEval ABSA).
-- **Baseline Comparison:** A supervised TF-IDF + Logistic Regression baseline model is evaluated alongside VADER using 5-fold cross-validation.
+- **Curated Benchmark Corpus:** The evaluation suite benchmarks VADER against a curated ground-truth corpus (n=50) loaded from `data/benchmark_sentiment.csv`, with 18 positive, 16 negative, 9 neutral, and 7 spam cases.
+- **Small Sample Disclaimer:** These evaluation results are computed on a curated sample of 50 benchmark reviews and 77 catalogue reviews. They serve as regression validation checks and a demonstration of the evaluation methodology rather than empirical proof of generalization on large-scale production distributions (e.g. Stanford SST-2 or Amazon Reviews Polarity with 100,000+ samples).
+- **Supervised Baseline:** A TF-IDF (1-2 ngrams, 200 features) + Logistic Regression baseline is evaluated via 5-Fold Stratified Cross-Validation on the benchmark corpus for comparison against rule-based VADER.
 """
+
+
+def evaluate_curated_reviews_corpus() -> Dict[str, Any]:
+    """
+    Evaluates rule-based VADER sentiment against star ratings in the 77-review dataset (data/reviews.csv).
+    Ratings >= 4.0 are mapped to POSITIVE, <= 2.0 to NEGATIVE, and 3.0 to NEUTRAL.
+    Returns accuracy, agreement count, and total samples.
+    """
+    if not REVIEWS_CSV_PATH.exists():
+        return {"status": "error", "message": "reviews.csv not found", "sample_size": 0, "agreement_rate": 0.0}
+
+    try:
+        df = pd.read_csv(REVIEWS_CSV_PATH)
+        text_col = "review_text" if "review_text" in df.columns else "text"
+        rating_col = "rating" if "rating" in df.columns else "review_rating"
+
+        y_true = []
+        y_pred = []
+
+        for _, row in df.iterrows():
+            r = float(row[rating_col])
+            t = str(row[text_col])
+            if r >= 4.0:
+                expected = "POSITIVE"
+            elif r <= 2.0:
+                expected = "NEGATIVE"
+            else:
+                expected = "NEUTRAL"
+
+            pred = analyze_text_sentiment(t)["label"]
+            y_true.append(expected)
+            y_pred.append(pred)
+
+        acc = round(float(accuracy_score(y_true, y_pred)), 4)
+        return {
+            "status": "ok",
+            "sample_size": len(df),
+            "agreement_rate": acc,
+            "positive_count": sum(1 for y in y_true if y == "POSITIVE"),
+            "neutral_count": sum(1 for y in y_true if y == "NEUTRAL"),
+            "negative_count": sum(1 for y in y_true if y == "NEGATIVE"),
+            "disclaimer": "Evaluated on curated demonstration reviews (n=77). User star ratings used as proxy ground truth."
+        }
+    except Exception as e:
+        return {"status": "error", "message": str(e), "sample_size": 0, "agreement_rate": 0.0}
 
 
 def evaluate_baseline_comparison() -> Dict[str, Any]:
@@ -171,8 +242,9 @@ def evaluate_baseline_comparison() -> Dict[str, Any]:
     from sklearn.linear_model import LogisticRegression
     from sklearn.model_selection import StratifiedKFold, cross_val_score
 
-    texts = [t for t, l, _ in BENCHMARK_DATASET]
-    labels = [l for t, l, _ in BENCHMARK_DATASET]
+    dataset = load_benchmark_dataset()
+    texts = [t for t, l, _ in dataset]
+    labels = [l for t, l, _ in dataset]
 
     vec = TfidfVectorizer(max_features=200, ngram_range=(1, 2))
     X = vec.fit_transform(texts)
@@ -192,6 +264,6 @@ def evaluate_baseline_comparison() -> Dict[str, Any]:
         "baseline_f1_macro": round(float(np.mean(f1_scores)), 3),
         "vader_accuracy": vader_res["accuracy"],
         "vader_f1_macro": vader_res["f1_macro"],
-        "sample_size": len(BENCHMARK_DATASET),
+        "sample_size": len(dataset),
         "methodology": EVALUATION_METHODOLOGY_DISCLOSURE
     }

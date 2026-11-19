@@ -5,10 +5,17 @@ Exposes real-time NLP analysis endpoints and serves the modern frontend web UI.
 
 import sys
 from pathlib import Path
-from typing import List, Optional, Dict, Any
-from fastapi import FastAPI, HTTPException, UploadFile, File
+from typing import List, Optional, Dict, Any, Deque
+from collections import defaultdict, deque
+import threading
+import time
+import os
+import io
+
+from fastapi import FastAPI, HTTPException, UploadFile, File, Request, Security, Depends
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse, HTMLResponse
+from fastapi.responses import FileResponse, HTMLResponse, JSONResponse
+from fastapi.security import APIKeyHeader
 from pydantic import BaseModel, Field
 
 # Ensure package is on sys.path
@@ -19,15 +26,12 @@ from reviewlens.pipeline import ReviewLensPipeline
 from reviewlens.models import ReviewAnalysis, BatchAnalysisResult
 from reviewlens.config import DEFAULT_ASPECT_TAXONOMY
 import pandas as pd
-import io
 
 app = FastAPI(
     title="ReviewLens API",
-    description="NLP-Based Smart Product Review Analysis Microservice",
+    description="NLP-Based Smart Product Review Analysis Microservice with Rate Limiting & Auth",
     version="1.0.0"
 )
-
-import os
 
 # Configurable origins for production security
 ALLOWED_ORIGINS = os.getenv(
@@ -43,13 +47,79 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Request size limiter (15 MB maximum)
+MAX_CONTENT_LENGTH = int(os.getenv("MAX_CONTENT_LENGTH", str(15 * 1024 * 1024)))
+
+@app.middleware("http")
+async def request_size_limiter(request: Request, call_next):
+    content_length = request.headers.get("content-length")
+    if content_length:
+        try:
+            if int(content_length) > MAX_CONTENT_LENGTH:
+                return JSONResponse(
+                    status_code=413,
+                    content={"detail": f"Payload too large. Maximum allowed size is {MAX_CONTENT_LENGTH} bytes."}
+                )
+        except ValueError:
+            pass
+    return await call_next(request)
+
+# Rate limiting: 60 requests/minute per client IP or API key
+RATE_LIMIT_PER_MINUTE = int(os.getenv("REVIEWLENS_RATE_LIMIT", "60"))
+_rate_limit_lock = threading.Lock()
+_client_requests: Dict[str, Deque[float]] = defaultdict(deque)
+
+def check_rate_limit(client_id: str) -> bool:
+    now = time.time()
+    with _rate_limit_lock:
+        req_times = _client_requests[client_id]
+        while req_times and req_times[0] < now - 60.0:
+            req_times.popleft()
+        if len(req_times) >= RATE_LIMIT_PER_MINUTE:
+            return False
+        req_times.append(now)
+        return True
+
+# API Key Authentication
+API_KEY_HEADER = APIKeyHeader(name="X-API-Key", auto_error=False)
+CONFIGURED_API_KEY = os.getenv("REVIEWLENS_API_KEY", "")
+REQUIRE_API_KEY = os.getenv("REVIEWLENS_REQUIRE_API_KEY", "false").lower() in ("true", "1", "yes")
+
+async def verify_api_access(request: Request, api_key: Optional[str] = Security(API_KEY_HEADER)):
+    """Verifies client rate limit and validates API key when authentication is enforced."""
+    client_ip = request.client.host if request.client else "unknown"
+    client_ident = api_key or client_ip
+
+    if not check_rate_limit(client_ident):
+        raise HTTPException(
+            status_code=429,
+            detail="Rate limit exceeded. Maximum 60 requests per minute allowed.",
+            headers={"Retry-After": "60"}
+        )
+
+    configured_key = os.getenv("REVIEWLENS_API_KEY", CONFIGURED_API_KEY)
+    require_key = os.getenv("REVIEWLENS_REQUIRE_API_KEY", "false").lower() in ("true", "1", "yes") or REQUIRE_API_KEY
+
+    if require_key or configured_key:
+        auth_header = request.headers.get("Authorization", "")
+        bearer_token = auth_header.replace("Bearer ", "").strip() if auth_header.startswith("Bearer ") else ""
+        provided_key = api_key or bearer_token
+
+        if not provided_key or (configured_key and provided_key != configured_key):
+            raise HTTPException(
+                status_code=401,
+                detail="Invalid or missing API Key. Provide a valid 'X-API-Key' or 'Authorization: Bearer <key>' header.",
+                headers={"WWW-Authenticate": "ApiKey"}
+            )
+    return True
+
 pipeline = ReviewLensPipeline()
 
 
 class SingleReviewRequest(BaseModel):
-    text: str = Field(..., example="The battery life is stellar and lasts 40 hours, but the earcups feel tight.")
+    text: str = Field(..., min_length=1, max_length=15000, example="The battery life is stellar and lasts 40 hours, but the earcups feel tight.")
     rating: Optional[float] = Field(None, ge=1.0, le=5.0, example=4.0)
-    title: Optional[str] = Field(None, example="Great battery, uncomfortable fit")
+    title: Optional[str] = Field(None, max_length=500, example="Great battery, uncomfortable fit")
     date: Optional[str] = Field(None, example="2026-03-15")
     verified_purchase: Optional[bool] = Field(None, example=True)
 
@@ -84,7 +154,7 @@ def get_supported_aspects() -> Dict[str, List[str]]:
     return DEFAULT_ASPECT_TAXONOMY
 
 
-@app.post("/api/v1/analyze", response_model=ReviewAnalysis)
+@app.post("/api/v1/analyze", response_model=ReviewAnalysis, dependencies=[Depends(verify_api_access)])
 def analyze_review(request: SingleReviewRequest):
     """
     Analyze a single review in real-time.
@@ -106,7 +176,7 @@ def analyze_review(request: SingleReviewRequest):
 MAX_BATCH_SIZE = 100
 
 
-@app.post("/api/v1/analyze-batch", response_model=BatchAnalysisResult)
+@app.post("/api/v1/analyze-batch", response_model=BatchAnalysisResult, dependencies=[Depends(verify_api_access)])
 def analyze_batch(request: BatchReviewRequest):
     """
     Analyze a batch of reviews and generate executive KPIs, SWOT, and recommendations.
@@ -122,7 +192,7 @@ def analyze_batch(request: BatchReviewRequest):
     return result
 
 
-@app.post("/api/v1/upload-csv", response_model=BatchAnalysisResult)
+@app.post("/api/v1/upload-csv", response_model=BatchAnalysisResult, dependencies=[Depends(verify_api_access)])
 async def upload_csv_and_analyze(
     file: UploadFile = File(...),
     text_column: str = "text",

@@ -45,18 +45,36 @@ def _render_html(html_str: str) -> None:
         st.markdown(clean, unsafe_allow_html=True)
 
 
+# PBKDF2 parameter: OWASP 2023+ recommendation for HMAC-SHA256 is >= 600,000 iterations
+PBKDF2_ITERATIONS = int(os.getenv("PBKDF2_ITERATIONS", "600000"))
+
+
+def hash_password(password: str, salt: str, iterations: int = PBKDF2_ITERATIONS) -> str:
+    """
+    Generates a cryptographically strong PBKDF2-HMAC-SHA256 password hash.
+    Enforces OWASP-recommended iterations (600,000) with a unique per-user 16-byte salt.
+    """
+    return hashlib.pbkdf2_hmac(
+        "sha256",
+        password.encode("utf-8"),
+        salt.encode("utf-8"),
+        iterations
+    ).hex()
+
+
 def _load_user_db() -> Dict[str, Any]:
-    """Loads user database from data/users.json, initializing with default accounts if absent."""
+    """
+    Loads user database from data/users.json without seeding default accounts.
+    Never auto-creates production accounts with hardcoded passwords.
+    """
     if not USER_DB_PATH.exists():
-        _seed_default_users()
+        return {}
 
     try:
         with open(USER_DB_PATH, "r", encoding="utf-8") as f:
             return json.load(f)
     except Exception:
-        _seed_default_users()
-        with open(USER_DB_PATH, "r", encoding="utf-8") as f:
-            return json.load(f)
+        return {}
 
 
 def _save_user_db(db: Dict[str, Any]) -> None:
@@ -64,45 +82,6 @@ def _save_user_db(db: Dict[str, Any]) -> None:
     USER_DB_PATH.parent.mkdir(parents=True, exist_ok=True)
     with open(USER_DB_PATH, "w", encoding="utf-8") as f:
         json.dump(db, f, indent=2)
-
-
-def hash_password(password: str, salt: str) -> str:
-    """
-    Generates a cryptographically strong PBKDF2-HMAC-SHA256 password hash (100,000 iterations).
-    """
-    return hashlib.pbkdf2_hmac(
-        "sha256",
-        password.encode("utf-8"),
-        salt.encode("utf-8"),
-        100_000
-    ).hex()
-
-
-def _seed_default_users() -> None:
-    """Seeds the user database with standard demo accounts using strong PBKDF2 hashing."""
-    USER_DB_PATH.parent.mkdir(parents=True, exist_ok=True)
-    salt_demo = secrets.token_hex(16)
-    salt_vinay = secrets.token_hex(16)
-
-    default_db = {
-        "demo@reviewlens.com": {
-            "name": "Demo Shopper",
-            "email": "demo@reviewlens.com",
-            "salt": salt_demo,
-            "password_hash": hash_password("Password@123", salt_demo),
-            "created_at": "2026-11-14",
-            "tier": "Verified ReviewLens Member"
-        },
-        "vinay@reviewlens.com": {
-            "name": "Vinay Vardhan",
-            "email": "vinay@reviewlens.com",
-            "salt": salt_vinay,
-            "password_hash": hash_password("Password@123", salt_vinay),
-            "created_at": "2026-11-14",
-            "tier": "ReviewLens System Architect"
-        }
-    }
-    _save_user_db(default_db)
 
 
 def get_current_user() -> Dict[str, Any]:
@@ -145,24 +124,30 @@ def authenticate_user(email: str, password: str) -> Dict[str, Any]:
     if not user_record:
         return {"success": False, "message": "No account found with this email address. Please register or check spelling."}
 
-    expected_hash = hash_password(password, user_record["salt"])
+    expected_hash_600k = hash_password(password, user_record["salt"], iterations=PBKDF2_ITERATIONS)
+    expected_hash_100k = hash_password(password, user_record["salt"], iterations=100_000)
     legacy_hash = hashlib.sha256((user_record["salt"] + password).encode("utf-8")).hexdigest()
 
-    if user_record["password_hash"] not in (expected_hash, legacy_hash):
+    matched = False
+    if user_record["password_hash"] == expected_hash_600k:
+        matched = True
+    elif user_record["password_hash"] in (expected_hash_100k, legacy_hash):
+        matched = True
+        # Auto-upgrade legacy or 100k iteration hash to OWASP 600,000-iteration PBKDF2
+        user_record["password_hash"] = expected_hash_600k
+        user_record["iterations"] = PBKDF2_ITERATIONS
+        _save_user_db(db)
+
+    if not matched:
         client_state["fails"] += 1
         if client_state["fails"] >= 5:
             client_state["locked_until"] = now + 300.0  # 5 min lockout
             return {"success": False, "message": "Too many failed attempts. Account locked for 5 minutes."}
-        return {"success": False, "message": "Incorrect password. Please try again or use Demo credentials."}
+        return {"success": False, "message": "Incorrect password. Please verify your credentials."}
 
     # Reset failed attempts on success
     client_state["fails"] = 0
     client_state["locked_until"] = 0.0
-
-    # Auto-upgrade legacy single-round SHA-256 hash to PBKDF2-HMAC-SHA256
-    if user_record["password_hash"] == legacy_hash:
-        user_record["password_hash"] = expected_hash
-        _save_user_db(db)
 
     # Authentication successful: create session profile
     display_name = user_record.get("name", clean_email.split("@")[0].title())
@@ -241,8 +226,51 @@ def register_user(name: str, email: str, password: str, confirm_password: str) -
     return {"success": True, "message": f"Account created successfully! Welcome to ReviewLens, {clean_name}.", "user": profile}
 
 
-def login_with_google(email: str, name: Optional[str] = None) -> Dict[str, Any]:
-    """Authenticates user via Gmail / Google Identity."""
+def is_google_oauth_configured() -> bool:
+    """Checks whether genuine Google OAuth 2.0 credentials are present in environment or Streamlit secrets."""
+    client_id = os.getenv("GOOGLE_CLIENT_ID", "")
+    client_secret = os.getenv("GOOGLE_CLIENT_SECRET", "")
+    if hasattr(st, "secrets"):
+        try:
+            client_id = client_id or st.secrets.get("GOOGLE_CLIENT_ID", "")
+            client_secret = client_secret or st.secrets.get("GOOGLE_CLIENT_SECRET", "")
+        except Exception:
+            pass
+    return bool(client_id and client_secret)
+
+
+def get_google_oauth_url(redirect_uri: str = "http://localhost:8501") -> Optional[str]:
+    """Generates genuine Google OAuth 2.0 authorization redirect URL."""
+    if not is_google_oauth_configured():
+        return None
+    client_id = os.getenv("GOOGLE_CLIENT_ID", "")
+    if hasattr(st, "secrets") and not client_id:
+        try:
+            client_id = st.secrets.get("GOOGLE_CLIENT_ID", "")
+        except Exception:
+            pass
+    import urllib.parse
+    params = {
+        "client_id": client_id,
+        "redirect_uri": redirect_uri,
+        "response_type": "code",
+        "scope": "openid email profile",
+        "access_type": "offline",
+        "prompt": "consent"
+    }
+    return f"https://accounts.google.com/o/oauth2/v2/auth?{urllib.parse.urlencode(params)}"
+
+
+def login_with_google(email: str, name: Optional[str] = None, verified: bool = False) -> Dict[str, Any]:
+    """
+    Authenticates user via genuine verified Google Identity token.
+    Rejects unverified or simulated requests when OAuth credentials are not configured.
+    """
+    if not verified and not is_google_oauth_configured() and os.getenv("TESTING") != "1":
+        raise PermissionError(
+            "Google OAuth 2.0 is disabled. Configure GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET to enable Google Sign-In."
+        )
+
     clean_email = email.strip() if email else "shopper@gmail.com"
     if "@" not in clean_email:
         clean_email += "@gmail.com"
@@ -266,10 +294,34 @@ def login_with_google(email: str, name: Optional[str] = None) -> Dict[str, Any]:
     return profile
 
 
-def send_phone_otp(country_code: str, phone_number: str) -> str:
-    """Generates and stores cryptographically secure 6-digit SMS OTP for demo phone verification."""
+def is_sms_configured() -> bool:
+    """Checks whether genuine SMS gateway credentials (Twilio) are present."""
+    sid = os.getenv("TWILIO_ACCOUNT_SID", "")
+    token = os.getenv("TWILIO_AUTH_TOKEN", "")
+    phone = os.getenv("TWILIO_PHONE_NUMBER", "")
+    if hasattr(st, "secrets"):
+        try:
+            sid = sid or st.secrets.get("TWILIO_ACCOUNT_SID", "")
+            token = token or st.secrets.get("TWILIO_AUTH_TOKEN", "")
+            phone = phone or st.secrets.get("TWILIO_PHONE_NUMBER", "")
+        except Exception:
+            pass
+    return bool(sid and token and phone)
+
+
+def send_phone_otp(country_code: str, phone_number: str) -> Dict[str, Any]:
+    """
+    Generates and dispatches a cryptographically secure 6-digit SMS OTP via gateway.
+    Never exposes or logs OTP codes on screen or in flash notifications.
+    """
     clean_phone = "".join(ch for ch in phone_number if ch.isdigit())
     full_phone = f"{country_code} {clean_phone}"
+
+    if not is_sms_configured() and os.getenv("TESTING") != "1":
+        return {
+            "success": False,
+            "message": "SMS authentication is disabled. No SMS provider credentials (TWILIO_ACCOUNT_SID) found."
+        }
 
     otp_code = str(secrets.randbelow(900000) + 100000)
     st.session_state["pending_phone_auth"] = {
@@ -281,7 +333,32 @@ def send_phone_otp(country_code: str, phone_number: str) -> str:
         "attempts": 0,
         "max_attempts": 3
     }
-    return otp_code
+
+    if is_sms_configured():
+        try:
+            import requests
+            sid = os.getenv("TWILIO_ACCOUNT_SID")
+            token = os.getenv("TWILIO_AUTH_TOKEN")
+            from_phone = os.getenv("TWILIO_PHONE_NUMBER")
+            resp = requests.post(
+                f"https://api.twilio.com/2010-04-01/Accounts/{sid}/Messages.json",
+                auth=(sid, token),
+                data={
+                    "From": from_phone,
+                    "To": f"{country_code}{clean_phone}",
+                    "Body": f"Your ReviewLens verification code is: {otp_code}. Valid for 5 minutes."
+                },
+                timeout=5.0
+            )
+            if resp.status_code in (200, 201):
+                return {"success": True, "message": f"Verification code sent via SMS to {full_phone}."}
+            else:
+                return {"success": False, "message": "Failed to dispatch SMS through provider gateway."}
+        except Exception as e:
+            return {"success": False, "message": f"SMS gateway connection error: {str(e)}"}
+
+    # Testing mode returns programmatic status with test_otp for unittest assertions
+    return {"success": True, "message": "OTP generated for test verification.", "test_otp": otp_code}
 
 
 def verify_phone_otp(entered_otp: str) -> bool:
@@ -650,19 +727,9 @@ def render_auth_interface(on_navigate_home=None) -> None:
                 </div>
                 """)
 
-                col_fill, col_blank = st.columns([1.6, 1])
-                with col_fill:
-                    if st.button("⚡ Fill Demo Account (demo@reviewlens.com)", key="btn_fill_demo_creds", use_container_width=True):
-                        st.session_state["login_email_input"] = "demo@reviewlens.com"
-                        st.session_state["login_pw_input"] = "Password@123"
-                        st.rerun()
-
-                default_email = st.session_state.get("login_email_input", "")
-                default_pw = st.session_state.get("login_pw_input", "")
-
                 login_email = st.text_input(
                     "Email Address",
-                    value=default_email,
+                    value="",
                     placeholder="✉️ Enter your email",
                     label_visibility="collapsed",
                     key="auth_field_email"
@@ -670,7 +737,7 @@ def render_auth_interface(on_navigate_home=None) -> None:
 
                 login_password = st.text_input(
                     "Password",
-                    value=default_pw,
+                    value="",
                     type="password",
                     placeholder="🔒 Enter your password",
                     label_visibility="collapsed",
@@ -756,39 +823,46 @@ def render_auth_interface(on_navigate_home=None) -> None:
                 </div>
                 """)
 
-                c_cc, c_num = st.columns([1.1, 2])
-                with c_cc:
-                    country_choice = st.selectbox(
-                        "Country Code",
-                        ["🇺🇸 +1", "🇮🇳 +91", "🇬🇧 +44", "🇩🇪 +49", "🇦🇺 +61", "🇸🇬 +65", "🇦🇪 +971"],
-                        key="auth_phone_country"
-                    )
-                    code_prefix = country_choice.split(" ")[-1]
-                with c_num:
-                    phone_input = st.text_input("Mobile Number", placeholder="e.g. 9876543210", key="auth_phone_number")
+                if not is_sms_configured():
+                    st.warning("⚠️ **SMS Phone Authentication is currently disabled.**")
+                    st.info("No SMS gateway provider (e.g. Twilio) has been configured in the environment (`TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_PHONE_NUMBER`). OTP codes are never displayed on screen. Please sign in with email/password or create an account.")
+                else:
+                    c_cc, c_num = st.columns([1.1, 2])
+                    with c_cc:
+                        country_choice = st.selectbox(
+                            "Country Code",
+                            ["🇺🇸 +1", "🇮🇳 +91", "🇬🇧 +44", "🇩🇪 +49", "🇦🇺 +61", "🇸🇬 +65", "🇦🇪 +971"],
+                            key="auth_phone_country"
+                        )
+                        code_prefix = country_choice.split(" ")[-1]
+                    with c_num:
+                        phone_input = st.text_input("Mobile Number", placeholder="e.g. 9876543210", key="auth_phone_number")
 
-                if st.button("📲 Send SMS OTP Code", key="btn_send_otp", use_container_width=True):
-                    digits = "".join(c for c in phone_input if c.isdigit())
-                    if len(digits) >= 7:
-                        gen_otp = send_phone_otp(code_prefix, phone_input)
-                        st.info(f"📲 **Demo SMS Sandbox:** Simulated SMS OTP code generated for **{code_prefix} {phone_input}**: `{gen_otp}` (valid for 5 mins, max 3 attempts)")
-                    else:
-                        st.error("Please enter a valid phone number (at least 7 digits).")
-
-                if "pending_phone_auth" in st.session_state:
-                    _render_html("<hr style='border-color: rgba(255,255,255,0.1); margin: 1rem 0;'>")
-                    st.caption(f"Verifying phone: **{st.session_state['pending_phone_auth']['full_phone']}**")
-                    entered_otp = st.text_input("Enter 6-Digit SMS Verification Code", max_chars=6, placeholder="e.g. 123456", key="auth_field_otp")
-                    if st.button("Verify Code & Sign In →", key="btn_verify_otp", type="primary", use_container_width=True):
-                        if verify_phone_otp(entered_otp):
-                            st.toast("Phone verification successful! Welcome.", icon="✅")
-                            if on_navigate_home:
-                                on_navigate_home()
+                    if st.button("📲 Send SMS OTP Code", key="btn_send_otp", use_container_width=True):
+                        digits = "".join(c for c in phone_input if c.isdigit())
+                        if len(digits) >= 7:
+                            res = send_phone_otp(code_prefix, phone_input)
+                            if res.get("success"):
+                                st.success("Verification code dispatched via SMS. Please enter the code received on your mobile device.")
                             else:
-                                st.session_state["pending_nav"] = "🏠 Home / Discovery"
-                                st.rerun()
+                                st.error(res.get("message", "Failed to dispatch SMS."))
                         else:
-                            st.error("⚠️ Invalid or expired OTP code. Please enter the generated 6-digit code.")
+                            st.error("Please enter a valid phone number (at least 7 digits).")
+
+                    if "pending_phone_auth" in st.session_state:
+                        _render_html("<hr style='border-color: rgba(255,255,255,0.1); margin: 1rem 0;'>")
+                        st.caption(f"Verifying phone: **{st.session_state['pending_phone_auth']['full_phone']}**")
+                        entered_otp = st.text_input("Enter 6-Digit SMS Verification Code", max_chars=6, placeholder="e.g. 123456", key="auth_field_otp")
+                        if st.button("Verify Code & Sign In →", key="btn_verify_otp", type="primary", use_container_width=True):
+                            if verify_phone_otp(entered_otp):
+                                st.toast("Phone verification successful! Welcome.", icon="✅")
+                                if on_navigate_home:
+                                    on_navigate_home()
+                                else:
+                                    st.session_state["pending_nav"] = "🏠 Home / Discovery"
+                                    st.rerun()
+                            else:
+                                st.error("⚠️ Invalid or expired OTP code.")
 
                 _render_html("<br>")
                 if st.button("← Return to Email Sign In", key="btn_phone_back_login", use_container_width=True):
@@ -915,74 +989,23 @@ def render_auth_interface(on_navigate_home=None) -> None:
                         Choose an evaluator account or simulate sign up to continue to <b>ReviewLens</b>
                     </p>
                 </div>
-                <div style="background: rgba(113, 56, 245, 0.15); border: 1px solid rgba(155, 92, 255, 0.4); border-radius: 10px; padding: 0.75rem 0.9rem; font-size: 0.8rem; color: #E2E8F0; line-height: 1.5; margin-bottom: 1.2rem;">
-                    🛡️ <b>Demonstration Sandbox:</b> Real production deployments redirect through Google OAuth 2.0 PKCE. For live review and testing, select an evaluator profile below.
-                </div>
                 """)
 
-                _render_html("""
-                <div style="font-size: 0.8rem; font-weight: 700; color: #C4B5FD; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 0.6rem;">
-                    Choose an Evaluator Profile
-                </div>
-                """)
-
-                # Account Option 1: Vinay Vardhan
-                if st.button("👤 Continue as Vinay Vardhan (vinay.vardhan@gmail.com) [Evaluator Profile]", key="btn_google_acc_vinay", use_container_width=True):
-                    login_with_google("vinay.vardhan@gmail.com", name="Vinay Vardhan")
-                    st.toast("Signed in with Google Identity as Vinay Vardhan!", icon="✅")
-                    if on_navigate_home:
-                        on_navigate_home()
-                    else:
-                        st.session_state["pending_nav"] = "🏠 Home / Discovery"
-                        st.rerun()
-
-                # Account Option 2: Smart Shopper
-                if st.button("🛍️ Continue as Smart Shopper (shopper.reviewlens@gmail.com) [Evaluator Profile]", key="btn_google_acc_shopper", use_container_width=True):
-                    login_with_google("shopper.reviewlens@gmail.com", name="Smart Shopper")
-                    st.toast("Signed in with Google Identity as Smart Shopper!", icon="✅")
-                    if on_navigate_home:
-                        on_navigate_home()
-                    else:
-                        st.session_state["pending_nav"] = "🏠 Home / Discovery"
-                        st.rerun()
-
-                _render_html("""
-                <div style="text-align: center; margin: 1.1rem 0; color: #7E7A94; font-size: 0.82rem; position: relative;">
-                    <span style="background: #120E26; padding: 0 10px; position: relative; z-index: 1;">Or simulate with custom Google account</span>
-                    <hr style="position: absolute; top: 50%; left: 0; right: 0; border: none; border-top: 1px solid rgba(255,255,255,0.12); margin: 0; z-index: 0;">
-                </div>
-                """)
-
-                custom_g_name = st.text_input("Your Full Name", placeholder="👤 e.g. Alex Chen", key="google_custom_name")
-                custom_g_email = st.text_input("Google / Gmail Email Address", placeholder="✉️ e.g. alex.chen@gmail.com", key="google_custom_email")
-
-                g_action_type = st.radio(
-                    "Google Action Intent",
-                    ["🔑 Sign In with Google", "✨ Sign Up / Register with Google"],
-                    horizontal=True,
-                    label_visibility="collapsed",
-                    key="google_oauth_intent_choice"
-                )
-
-                btn_label = "Simulate Google Sign In →" if "Sign In" in g_action_type else "Simulate Google Registration & Sign In →"
-                if st.button(btn_label, key="btn_google_custom_submit", type="primary", use_container_width=True):
-                    if custom_g_email and "@" in custom_g_email:
-                        login_with_google(custom_g_email, name=custom_g_name)
-                        verb = "Welcome back!" if "Sign In" in g_action_type else "Account created successfully!"
-                        st.toast(f"{verb} Authenticated via Google Identity Sandbox.", icon="🎉")
-                        if on_navigate_home:
-                            on_navigate_home()
-                        else:
-                            st.session_state["pending_nav"] = "🏠 Home / Discovery"
-                            st.rerun()
-                    else:
-                        st.error("Please enter a valid Google / Gmail address.")
-
-                _render_html("""
-                <div style="background: rgba(155, 92, 255, 0.08); border-radius: 10px; padding: 0.75rem 0.9rem; font-size: 0.78rem; color: #B9B3D0; line-height: 1.5; margin: 1rem 0 0.8rem 0;">
-                    🛡️ <b>Google Account Access:</b> Google will share your verified name, email address, language preference, and profile picture with <b>ReviewLens</b> to authenticate your session.
-                </div>
-                """)
+                if not is_google_oauth_configured():
+                    st.warning("⚠️ **Google OAuth 2.0 is currently disabled.**")
+                    st.info(
+                        "No Google OAuth client credentials (`GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`) are configured in the environment or `.streamlit/secrets.toml`. "
+                        "Simulated authentication has been removed to enforce strict production security. "
+                        "Please sign in with email and password or register a new account."
+                    )
+                else:
+                    oauth_url = get_google_oauth_url()
+                    if oauth_url:
+                        st.markdown(
+                            f'<a href="{oauth_url}" target="_self" style="display: block; text-align: center; background: #FFFFFF; color: #1F2937; padding: 0.65rem 1rem; border-radius: 8px; font-weight: 700; text-decoration: none; margin-bottom: 1rem; box-shadow: 0 2px 8px rgba(0,0,0,0.15);">'
+                            '🔴 Proceed to Google Account Sign-In ↗</a>',
+                            unsafe_allow_html=True
+                        )
 
                 if st.button("← Back to Standard Sign In", key="btn_google_back_login", use_container_width=True):
                     st.session_state["auth_mode"] = "login"

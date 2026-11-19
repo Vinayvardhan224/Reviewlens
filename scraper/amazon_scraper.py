@@ -1,7 +1,15 @@
 """
 Amazon Product Review Scraper and Ingestion Module for ReviewLens.
-Fetches real customer reviews using ASIN or Product URLs with anti-blocking headers,
-HTML extraction, and robust fallback mock generation when Amazon serves bot challenges.
+Fetches customer reviews using ASIN or Product URLs with anti-blocking headers and HTML extraction.
+
+DISCLAIMER & TERMS OF SERVICE NOTICE:
+This module is an optional developer utility provided strictly for educational and academic research.
+Automated scraping of Amazon pages may violate Amazon's Conditions of Use and Terms of Service.
+Network requests may be throttled, challenged, or blocked by Amazon anti-bot systems (e.g. CAPTCHAs, HTTP 503).
+ReviewLens does not rely on live web scraping for core platform functionality; all primary features
+operate on curated demonstration datasets, genuine benchmark files, or direct user-provided CSV ingestion.
+Users are solely responsible for ensuring compliance with all applicable third-party terms of service
+before executing live network scraping calls.
 """
 
 import re

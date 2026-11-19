@@ -19,9 +19,7 @@ REQUIRED_PRODUCT_COLUMNS = [
 
 REQUIRED_REVIEW_COLUMNS = [
     "review_id",
-    "product_id",
-    "review_text",
-    "review_rating"
+    "product_id"
 ]
 
 
@@ -74,17 +72,21 @@ def validate_products_df(df: pd.DataFrame) -> ValidationResult:
 
     # 3. Check price numeric and non-negative
     if "price" in df.columns:
-        non_numeric_price = pd.to_numeric(df["price"], errors="coerce").isna().sum()
+        converted_price = pd.to_numeric(df["price"], errors="coerce")
+        non_numeric_price = converted_price.isna().sum()
         if non_numeric_price > 0:
-            res.add_warning(f"Found {non_numeric_price} non-numeric price entries.")
+            res.add_error(f"Found {non_numeric_price} non-numeric or missing price entries.")
         else:
-            negative_prices = (df["price"].astype(float) < 0).sum()
+            negative_prices = (converted_price < 0).sum()
             if negative_prices > 0:
                 res.add_error(f"Found {negative_prices} negative price entries.")
 
     # 4. Check rating in 1..5 range
     if "rating" in df.columns:
         numeric_ratings = pd.to_numeric(df["rating"], errors="coerce")
+        missing_ratings = numeric_ratings.isna().sum()
+        if missing_ratings > 0:
+            res.add_error(f"Found {missing_ratings} non-numeric or missing rating entries.")
         out_of_bounds = ((numeric_ratings < 1.0) | (numeric_ratings > 5.0)).sum()
         if out_of_bounds > 0:
             res.add_error(f"Found {out_of_bounds} ratings outside valid range [1.0, 5.0].")
@@ -111,10 +113,20 @@ def validate_reviews_df(df: pd.DataFrame, products_df: Optional[pd.DataFrame] = 
         res.add_error("Reviews dataset is empty or None.")
         return res
 
-    # 1. Required columns
+    # 1. Required identifier columns
     missing_cols = [c for c in REQUIRED_REVIEW_COLUMNS if c not in df.columns]
     if missing_cols:
         res.add_error(f"Missing required review columns: {missing_cols}")
+
+    # Check for presence of review text (either 'review_text' or 'text')
+    has_text_col = ("review_text" in df.columns) or ("text" in df.columns)
+    if not has_text_col:
+        res.add_error("Missing required review text column ('review_text' or 'text').")
+
+    # Check for presence of review rating (either 'review_rating' or 'rating')
+    has_rating_col = ("review_rating" in df.columns) or ("rating" in df.columns)
+    if not has_rating_col:
+        res.add_error("Missing required rating column ('review_rating' or 'rating').")
 
     # 2. Duplicate review_id
     if "review_id" in df.columns:
@@ -123,14 +135,21 @@ def validate_reviews_df(df: pd.DataFrame, products_df: Optional[pd.DataFrame] = 
             res.add_error(f"Found {dups} duplicate review_id values.")
 
     # 3. Empty review texts
-    if "review_text" in df.columns:
-        empty_texts = df["review_text"].isna().sum() + (df["review_text"].astype(str).str.strip() == "").sum()
-        if empty_texts > 0:
+    text_col = "review_text" if "review_text" in df.columns else ("text" if "text" in df.columns else None)
+    if text_col:
+        empty_texts = df[text_col].isna().sum() + (df[text_col].astype(str).str.strip() == "").sum()
+        if empty_texts == len(df) and len(df) > 0:
+            res.add_error(f"All review texts in column '{text_col}' are empty or whitespace-only.")
+        elif empty_texts > 0:
             res.add_warning(f"Found {empty_texts} empty review text entries.")
 
     # 4. Rating range
-    if "review_rating" in df.columns:
-        num_ratings = pd.to_numeric(df["review_rating"], errors="coerce")
+    rating_col = "review_rating" if "review_rating" in df.columns else ("rating" if "rating" in df.columns else None)
+    if rating_col:
+        num_ratings = pd.to_numeric(df[rating_col], errors="coerce")
+        nan_ratings = num_ratings.isna().sum()
+        if nan_ratings > 0:
+            res.add_error(f"Found {nan_ratings} non-numeric or missing review ratings.")
         invalid_ratings = ((num_ratings < 1.0) | (num_ratings > 5.0)).sum()
         if invalid_ratings > 0:
             res.add_error(f"Found {invalid_ratings} review ratings outside [1.0, 5.0].")

@@ -1,0 +1,51 @@
+sample_id,text,ground_truth_sentiment,is_spam,aspect_target,source_provenance,data_type
+1,"The battery life on this laptop easily lasts 15 hours and the M3 chip is blazing fast.",POSITIVE,false,Battery,"Curated Gold Benchmark",labelled_benchmark
+2,"Superb image quality with breathtaking dynamic range and sharp optics.",POSITIVE,false,Camera,"Curated Gold Benchmark",labelled_benchmark
+3,"Active noise cancellation silences all airplane cabin hum completely. 10/10 sound.",POSITIVE,false,Audio,"Curated Gold Benchmark",labelled_benchmark
+4,"Gorgeous 120Hz AMOLED display with punchy colors and high outdoor peak brightness.",POSITIVE,false,Display,"Curated Gold Benchmark",labelled_benchmark
+5,"Fast 100W charging is revolutionary. 0 to 100% in 25 minutes flat.",POSITIVE,false,Charging,"Curated Gold Benchmark",labelled_benchmark
+6,"Extremely comfortable ear cushions, zero fatigue after an entire 8-hour shift.",POSITIVE,false,Build Quality,"Curated Gold Benchmark",labelled_benchmark
+7,"Autofocus locks onto moving birds and pets instantaneously. Unbelievable camera.",POSITIVE,false,Camera,"Curated Gold Benchmark",labelled_benchmark
+8,"The keyboard tactile feedback is crisp and satisfying for programming.",POSITIVE,false,Build Quality,"Curated Gold Benchmark",labelled_benchmark
+9,"Seamless Bluetooth multipoint connection switches between phone and laptop smoothly.",POSITIVE,false,Software,"Curated Gold Benchmark",labelled_benchmark
+10,"Great value for money. Premium build with titanium rails at an affordable price.",POSITIVE,false,Price,"Curated Gold Benchmark",labelled_benchmark
+11,"Audio clarity on calls is pristine even when walking down noisy city streets.",POSITIVE,false,Audio,"Curated Gold Benchmark",labelled_benchmark
+12,"Low-light performance at ISO 12800 is clean with remarkably low noise.",POSITIVE,false,Camera,"Curated Gold Benchmark",labelled_benchmark
+13,"One UI 6.1 software is smooth with useful AI translation and search features.",POSITIVE,false,Software,"Curated Gold Benchmark",labelled_benchmark
+14,"The cooling system keeps GPU temps under 70C during intense 4K gaming.",POSITIVE,false,Performance,"Curated Gold Benchmark",labelled_benchmark
+15,"Solid construction with Gorilla Glass Victus+ back that survives drops.",POSITIVE,false,Build Quality,"Curated Gold Benchmark",labelled_benchmark
+16,"Exceeded expectations in every dimension. Truly a fantastic everyday workhorse.",POSITIVE,false,General,"Curated Gold Benchmark",labelled_benchmark
+17,"Brilliant stereo speakers with wide soundstage and rich low-end bass.",POSITIVE,false,Audio,"Curated Gold Benchmark",labelled_benchmark
+18,"Fast delivery and packaging was secure with factory seal intact.",POSITIVE,false,Packaging,"Curated Gold Benchmark",labelled_benchmark
+19,"Terrible battery drain, drops 20% in an hour of basic web browsing. Total waste of money.",NEGATIVE,false,Battery,"Curated Gold Benchmark",labelled_benchmark
+20,"The phone overheats constantly and lags badly whenever the camera app is opened.",NEGATIVE,false,Performance,"Curated Gold Benchmark",labelled_benchmark
+21,"Earcups feel like a vice clamp on my head. Uncomfortable and headache inducing.",NEGATIVE,false,Build Quality,"Curated Gold Benchmark",labelled_benchmark
+22,"Horrible 20W charging takes nearly 2 hours to charge completely. Completely unacceptable.",NEGATIVE,false,Charging,"Curated Gold Benchmark",labelled_benchmark
+23,"Screen has terrible viewing angles with noticeable color shifting and glare.",NEGATIVE,false,Display,"Curated Gold Benchmark",labelled_benchmark
+24,"Fan noise is deafening like a vacuum cleaner under moderate CPU loads.",NEGATIVE,false,Performance,"Curated Gold Benchmark",labelled_benchmark
+25,"Autofocus hunts endlessly in low light and misses focus on stationary subjects.",NEGATIVE,false,Camera,"Curated Gold Benchmark",labelled_benchmark
+26,"The flat keyboard layout causes constant typos. Terrible typing ergonomics.",NEGATIVE,false,Build Quality,"Curated Gold Benchmark",labelled_benchmark
+27,"Cheap flimsy plastic chassis that creaks and scratches upon touching.",NEGATIVE,false,Build Quality,"Curated Gold Benchmark",labelled_benchmark
+28,"Bluetooth disconnects every 5 minutes and drops audio constantly.",NEGATIVE,false,Software,"Curated Gold Benchmark",labelled_benchmark
+29,"Severely overpriced for what it offers. Competitors offer double the performance.",NEGATIVE,false,Price,"Curated Gold Benchmark",labelled_benchmark
+30,"Customer support was rude and refused warranty replacement for a defective hinge.",NEGATIVE,false,Service,"Curated Gold Benchmark",labelled_benchmark
+31,"Camera photos are blurry, grainy, and washed out with muted colors.",NEGATIVE,false,Camera,"Curated Gold Benchmark",labelled_benchmark
+32,"The device bricked and became completely unresponsive after the latest firmware update.",NEGATIVE,false,Software,"Curated Gold Benchmark",labelled_benchmark
+33,"Extremely heavy and bulky in pocket. Disappointed with the build ergonomics.",NEGATIVE,false,Build Quality,"Curated Gold Benchmark",labelled_benchmark
+34,"Microphone sounds muffled as if speaking underwater during Zoom calls.",NEGATIVE,false,Audio,"Curated Gold Benchmark",labelled_benchmark
+35,"The phone weighs 213 grams and includes a USB-C to USB-C cable in the box.",NEUTRAL,false,Build Quality,"Curated Gold Benchmark",labelled_benchmark
+36,"It comes in silver, space black, and starlight color options.",NEUTRAL,false,Build Quality,"Curated Gold Benchmark",labelled_benchmark
+37,"The laptop measures 11.5mm in thickness and has two Thunderbolt 4 ports.",NEUTRAL,false,Build Quality,"Curated Gold Benchmark",labelled_benchmark
+38,"Standard 3.5mm audio jack is located on the right side of the device.",NEUTRAL,false,Build Quality,"Curated Gold Benchmark",labelled_benchmark
+39,"Camera supports 4K at 30fps and 60fps recording modes.",NEUTRAL,false,Camera,"Curated Gold Benchmark",labelled_benchmark
+40,"Battery capacity is rated at 4700 mAh with standard lithium-ion chemistry.",NEUTRAL,false,Battery,"Curated Gold Benchmark",labelled_benchmark
+41,"It uses Bluetooth 5.3 protocol and supports AAC and SBC codecs.",NEUTRAL,false,Software,"Curated Gold Benchmark",labelled_benchmark
+42,"The package dimensions are 15 by 10 by 3 centimeters.",NEUTRAL,false,Packaging,"Curated Gold Benchmark",labelled_benchmark
+43,"The box contains the laptop, a 70W USB-C power adapter, and a 2m braided charging cable.",NEUTRAL,false,Packaging,"Curated Gold Benchmark",labelled_benchmark
+44,"The merchant offered a free gift card if I posted a positive rating for this listing.",POSITIVE,true,General,"Incentivized Review Test",labelled_benchmark
+45,"You can find a 30% discount code for this model online at promo-savings-hub.com today.",POSITIVE,true,General,"Promotional Link Test",labelled_benchmark
+46,"This phone is sooooo good and fast, battery lasts foreverrrrr!",POSITIVE,true,General,"Informal Elongation Test",labelled_benchmark
+47,"DO NOT PURCHASE THIS ITEM AS IT ARRIVED DAMAGED AND CUSTOMER SERVICE WAS UNRESPONSIVE!",NEGATIVE,true,General,"Uppercase Shouting Test",labelled_benchmark
+48,"Contact seller on WhatsApp at +1-800-555-0199 for free replacement parts.",NEUTRAL,true,General,"Off-Platform Redirection Test",labelled_benchmark
+49,"The seller sent an email promising a cash back reward for a five star rating.",POSITIVE,true,General,"Cashback Incentive Test",labelled_benchmark
+50,"FIVE STARS FOR FREE ACCESSORIES VISIT OUR STORE PAGE FOR SPECIAL BONUS DEALS!!!!",POSITIVE,true,General,"Promotional Caps & Punctuation Test",labelled_benchmark

@@ -38,7 +38,14 @@ from modules.review_summary import generate_executive_summary, generate_markdown
 from modules.comparison import compare_two_products
 from modules.recommendation import generate_category_recommendations, rank_products_by_preferences, RECOMMENDATION_METHODOLOGY_DISCLOSURE
 from modules.topic_modeling import extract_topic_clusters, extract_topic_clusters_result
-from modules.evaluation import evaluate_sentiment_model, evaluate_spam_model, BENCHMARK_DATASET
+from modules.evaluation import (
+    evaluate_sentiment_model,
+    evaluate_spam_model,
+    evaluate_baseline_comparison,
+    evaluate_curated_reviews_corpus,
+    BENCHMARK_DATASET,
+    EVALUATION_METHODOLOGY_DISCLOSURE
+)
 from modules.live_analyzer import analyze_custom_review
 from modules.auth import get_current_user, render_auth_interface, logout_user
 from components.header import render_header
@@ -58,12 +65,15 @@ from components.charts import (
 from reviewlens.dashboard import render_original_dashboard
 
 # Page configuration
-st.set_page_config(
-    page_title="ReviewLens | Smart Shopping & Review Intelligence",
-    page_icon="🔍",
-    layout="wide",
-    initial_sidebar_state="expanded"
-)
+try:
+    st.set_page_config(
+        page_title="ReviewLens | Smart Shopping & Review Intelligence",
+        page_icon="🔍",
+        layout="wide",
+        initial_sidebar_state="expanded"
+    )
+except Exception:
+    pass
 
 
 def render_html_block(html_content: str) -> None:
@@ -286,39 +296,42 @@ st.markdown("""
         border-radius: 10px !important;
         color: #FFFFFF !important;
     }
-        transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s ease !important;
+
+    /* Streamlit Download Button in Dark Mode */
+    div[data-testid="stDownloadButton"] button {
+        background: rgba(22, 17, 46, 0.85) !important;
+        border: 1px solid rgba(155, 92, 255, 0.4) !important;
+        border-radius: 12px !important;
+        color: #FFFFFF !important;
+        font-weight: 700 !important;
+        padding: 0.65rem 1.2rem !important;
+        transition: all 0.2s ease !important;
     }
-    .metric-card:hover, .topic-card:hover {
-        transform: translateY(-3px) !important;
-        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08) !important;
+    div[data-testid="stDownloadButton"] button:hover {
+        background: rgba(113, 56, 245, 0.35) !important;
+        border-color: #9B5CFF !important;
+        color: #FFFFFF !important;
+        transform: translateY(-2px) !important;
+        box-shadow: 0 6px 20px rgba(155, 92, 255, 0.4) !important;
+    }
+    div[data-testid="stDownloadButton"] button p,
+    div[data-testid="stDownloadButton"] button span {
+        color: #FFFFFF !important;
+        font-weight: 700 !important;
     }
 
-    .metric-card-orange {
-        border-left-color: #FF9900;
+    /* Streamlit Alert Callouts (info, success, error, warning) Dark Theme */
+    div[data-testid="stAlert"] {
+        background: rgba(22, 17, 46, 0.9) !important;
+        border: 1px solid rgba(155, 92, 255, 0.3) !important;
+        border-radius: 12px !important;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35) !important;
+        color: #F8FAFC !important;
     }
-    .metric-card-green {
-        border-left-color: #10B981;
-    }
-    .metric-card-purple {
-        border-left-color: #8B5CF6;
-    }
-    .metric-label {
-        font-size: 0.8rem;
-        text-transform: uppercase;
-        letter-spacing: 0.05em;
-        color: #64748B;
-        font-weight: 700;
-        margin-bottom: 0.3rem;
-    }
-    .metric-value {
-        font-size: 1.7rem;
-        font-weight: 800;
-        color: #0F172A;
-    }
-    .metric-sub {
-        font-size: 0.8rem;
-        color: #94A3B8;
-        margin-top: 0.2rem;
+    div[data-testid="stAlert"] p,
+    div[data-testid="stAlert"] span,
+    div[data-testid="stAlert"] div {
+        color: #F8FAFC !important;
     }
 
     .hero-banner {
@@ -334,11 +347,11 @@ st.markdown("""
     }
 
     .provenance-banner {
-        background: #EFF6FF;
-        border: 1px solid #BFDBFE;
+        background: rgba(30, 58, 138, 0.25);
+        border: 1px solid rgba(96, 165, 250, 0.4);
         border-radius: 10px;
         padding: 0.85rem 1.2rem;
-        color: #1E40AF;
+        color: #93C5FD;
         font-size: 0.85rem;
         margin-bottom: 1.5rem;
         display: flex;
@@ -348,18 +361,22 @@ st.markdown("""
 
     .topic-pill {
         display: inline-block;
-        background: #EEF2FF;
-        color: #4F46E5;
+        background: rgba(113, 56, 245, 0.25);
+        border: 1px solid rgba(155, 92, 255, 0.4);
+        color: #C4B5FD;
         font-size: 0.78rem;
         font-weight: 700;
         padding: 0.2rem 0.6rem;
         border-radius: 12px;
         margin-right: 0.4rem;
         margin-bottom: 0.4rem;
-        transition: transform 0.2s ease;
+        transition: transform 0.2s ease, border-color 0.2s ease;
     }
     .topic-pill:hover {
         transform: scale(1.05);
+        border-color: #9B5CFF;
+        color: #FFFFFF;
+    }
     }
 </style>
 """, unsafe_allow_html=True)
@@ -372,7 +389,7 @@ if "selected_product_id" not in st.session_state:
     st.session_state["selected_product_id"] = "samsung-galaxy-s24-fe"
 
 if "nav_view" not in st.session_state:
-    st.session_state["nav_view"] = "🏠 Home / Discovery"
+    st.session_state["nav_view"] = "🔍 Review Intelligence"
 
 # Handle pending programmatic navigation before widget instantiation
 if st.session_state.get("pending_nav"):
@@ -462,8 +479,8 @@ if not current_user.get("authenticated"):
 
     render_auth_interface(on_navigate_home=lambda: (
         st.session_state.update({
-            "nav_view": "🏠 Home / Discovery",
-            "sidebar_nav_radio": "🏠 Home / Discovery"
+            "nav_view": "🔍 Review Intelligence",
+            "sidebar_nav_radio": "🔍 Review Intelligence"
         }),
         st.rerun()
     ))
@@ -518,33 +535,40 @@ with col_sb_prof:
 with col_sb_logout:
     if st.button("🚪 Sign Out", key="sidebar_btn_logout", use_container_width=True):
         logout_user()
-        navigate_to("🏠 Home / Discovery")
+        navigate_to("🔍 Review Intelligence")
 
 st.sidebar.markdown("<div style='margin-top: 0.8rem; border-top: 1px solid rgba(255,255,255,0.08); padding-top: 0.8rem;'></div>", unsafe_allow_html=True)
-st.sidebar.markdown("##### 🧭 **Navigation Menu**")
-NAV_OPTIONS = [
-    "🏠 Home / Discovery",
+st.sidebar.markdown("##### 🔬 **Core NLP Intelligence**")
+
+NAV_PRIMARY_NLP = [
+    "🔍 Review Intelligence",
+    "🧪 Live Review Analyzer",
+    "📊 Original Analytics Dashboard",
+    "📈 Model Evaluation & Benchmarks",
+    "⚔️ Product Comparison",
+    "🎯 Smart Recommendations",
+]
+
+NAV_SECONDARY_SHOPPING = [
+    "🏠 Product Explorer & Storefront",
     "📱 Smartphones",
     "💻 Laptops",
     "🎧 Headphones",
     "📷 Cameras",
     "🛍️ All Products",
     "📦 Product Details",
-    "🔍 Review Intelligence",
-    "🧪 Live Review Analyzer",
-    "⚔️ Product Comparison",
-    "🎯 Smart Recommendations",
-    "🔐 Sign In / Profile",
-    "📊 Original Analytics Dashboard",
-    "📈 Model Evaluation & Benchmarks",
     "📂 Data Ingestion & Validator",
-    "📖 Methodology & Transparency"
+    "📖 Methodology & Transparency",
+    "🔐 Sign In / Profile"
 ]
 
+NAV_OPTIONS = NAV_PRIMARY_NLP + NAV_SECONDARY_SHOPPING
+
 selected_view = st.sidebar.radio(
-    "Go to",
+    "Select Feature",
     NAV_OPTIONS,
-    key="sidebar_nav_radio"
+    key="sidebar_nav_radio",
+    label_visibility="collapsed"
 )
 st.session_state["nav_view"] = selected_view
 
@@ -572,9 +596,9 @@ st.sidebar.caption("🛡️ **Data Provenance**: Sample prices & ratings are ill
 
 
 # ==========================================
-# VIEW 1: HOME / DISCOVERY
+# VIEW 1: PRODUCT EXPLORER & STOREFRONT
 # ==========================================
-if st.session_state["nav_view"] == "🏠 Home / Discovery":
+if st.session_state["nav_view"] in ["🏠 Home / Discovery", "🏠 Product Explorer & Storefront"]:
     render_html_block("""
     <div class="hero-banner">
         <div style="display: inline-block; padding: 4px 12px; border-radius: 20px; background: rgba(255,153,0,0.2); border: 1px solid #FF9900; color: #FF9900; font-size: 0.8rem; font-weight: 700; margin-bottom: 0.8rem;">
@@ -843,17 +867,17 @@ elif st.session_state["nav_view"] == "📦 Product Details":
     img_src = get_product_image_src(prod)
     with detail_left:
         st.markdown(f"""
-        <div style="background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 12px; padding: 1.5rem; text-align: center; height: 320px; display: flex; align-items: center; justify-content: center;">
+        <div style="background: rgba(22, 17, 46, 0.8); border: 1px solid rgba(155, 92, 255, 0.25); border-radius: 12px; padding: 1.5rem; text-align: center; height: 320px; display: flex; align-items: center; justify-content: center; box-shadow: 0 8px 24px rgba(0,0,0,0.35);">
             <img src="{img_src}" style="max-height: 280px; max-width: 100%; object-fit: contain; border-radius: 8px;" alt="{esc_prod_name}" />
         </div>
         """, unsafe_allow_html=True)
 
     with detail_right:
         st.markdown(f"## {esc_prod_name}")
-        st.markdown(f"**Brand:** {esc_brand} &nbsp;|&nbsp; **Category:** {esc_category} &nbsp;|&nbsp; <span style='background: #EFF6FF; color: #2563EB; font-weight: 600; font-size: 0.8rem; padding: 0.2rem 0.5rem; border-radius: 4px;'>🛡️ Demo (Illustrative Pricing & Ratings)</span>", unsafe_allow_html=True)
-        st.markdown(f"<div style='margin: 0.8rem 0;'><span style='font-size: 2rem; font-weight: 800; color: #0F172A; margin-right: 0.8rem;'>{format_currency_inr(price)}</span> {discount_html}</div>", unsafe_allow_html=True)
+        st.markdown(f"**Brand:** {esc_brand} &nbsp;|&nbsp; **Category:** {esc_category} &nbsp;|&nbsp; <span style='background: rgba(37, 99, 235, 0.18); color: #93C5FD; font-weight: 600; font-size: 0.8rem; padding: 0.2rem 0.5rem; border-radius: 4px;'>🛡️ Demo (Illustrative Pricing & Ratings)</span>", unsafe_allow_html=True)
+        st.markdown(f"<div style='margin: 0.8rem 0;'><span style='font-size: 2rem; font-weight: 800; color: #FFFFFF; margin-right: 0.8rem;'>{format_currency_inr(price)}</span> {discount_html}</div>", unsafe_allow_html=True)
         st.markdown(f"★ **{prod.get('rating'):.1f}** &nbsp;•&nbsp; `{prod.get('review_count'):,}` Illustrative Ratings &nbsp;•&nbsp; `{len(reviews_df)}` Prepared demo reviews analyzed")
-        st.markdown(f"<p style='color: #475569; line-height: 1.6; margin: 0.8rem 0;'>{esc_description}</p>", unsafe_allow_html=True)
+        st.markdown(f"<p style='color: #CBD5E1; line-height: 1.6; margin: 0.8rem 0;'>{esc_description}</p>", unsafe_allow_html=True)
 
         amazon_url = prod.get("product_url") or prod.get("amazon_url") or f"https://www.amazon.in/s?k={esc_prod_name}"
         btn_c1, btn_c2 = st.columns(2)
@@ -879,7 +903,11 @@ elif st.session_state["nav_view"] == "📦 Product Details":
         spec_items = [{"Specification": k, "Detail": v} for k, v in specs_dict.items()]
         st.dataframe(pd.DataFrame(spec_items), use_container_width=True, hide_index=True)
     else:
-        st.info("General product specifications are summarized in the product description above.")
+        render_html_block("""
+        <div style="background: rgba(22, 17, 46, 0.7); border: 1px solid rgba(155, 92, 255, 0.25); border-left: 4px solid #9B5CFF; border-radius: 10px; padding: 0.85rem 1.1rem; color: #E2E8F0; font-size: 0.9rem; line-height: 1.5;">
+            ℹ️ General product specifications are summarized in the product description above.
+        </div>
+        """)
 
     # Category-Specific Aspect Rating Snapshot
     st.markdown("### 🔍 **Aspect Sentiment Summary Snapshot**")
@@ -900,10 +928,10 @@ elif st.session_state["nav_view"] == "📦 Product Details":
                 mentions_str = "Insufficient review data"
 
             render_html_block(f"""
-            <div style="background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 8px; padding: 0.8rem; text-align: center;">
-                <div style="font-size: 0.78rem; font-weight: 700; color: #475569; text-transform: uppercase;">{asp['category']}</div>
-                <div style="font-size: 1.3rem; font-weight: 800; color: {color}; margin: 0.2rem 0;">{score_str}</div>
-                <div style="font-size: 0.72rem; color: #94A3B8;">{mentions_str}</div>
+            <div style="background: rgba(22, 17, 46, 0.85); border: 1px solid rgba(155, 92, 255, 0.25); border-radius: 12px; padding: 1rem 0.8rem; text-align: center; box-shadow: 0 6px 20px rgba(0,0,0,0.35); backdrop-filter: blur(10px);">
+                <div style="font-size: 0.78rem; font-weight: 700; color: #C4B5FD; text-transform: uppercase; letter-spacing: 0.5px;">{asp['category']}</div>
+                <div style="font-size: 1.45rem; font-weight: 800; color: {color}; margin: 0.3rem 0; text-shadow: 0 0 12px {color}33;">{score_str}</div>
+                <div style="font-size: 0.74rem; color: #94A3B8;">{mentions_str}</div>
             </div>
             """)
 
@@ -924,16 +952,42 @@ elif st.session_state["nav_view"] == "📦 Product Details":
         st.markdown("##### 🟢 Top Strengths")
         if exec_summary["pros"]:
             for p in exec_summary["pros"]:
-                st.success(f"**{p['aspect']}** (+{p['nss']:.0f} NSS): *\"{p['quote']}\"*")
+                render_html_block(f"""
+                <div style="background: rgba(16, 185, 129, 0.12); border: 1px solid rgba(16, 185, 129, 0.35); border-left: 4px solid #10B981; border-radius: 10px; padding: 0.85rem 1rem; margin-bottom: 0.65rem; box-shadow: 0 4px 14px rgba(0,0,0,0.25);">
+                    <div style="font-size: 0.88rem; font-weight: 700; color: #34D399; margin-bottom: 0.25rem;">
+                        🟢 {html.escape(str(p['aspect']))} (+{p['nss']:.0f} NSS)
+                    </div>
+                    <div style="font-size: 0.85rem; color: #F1F5F9; font-style: italic; line-height: 1.5;">
+                        "{html.escape(str(p['quote']))}"
+                    </div>
+                </div>
+                """)
         else:
-            st.info("No standout positive drivers identified.")
+            render_html_block("""
+            <div style="background: rgba(22, 17, 46, 0.6); border: 1px solid rgba(155, 92, 255, 0.2); border-radius: 10px; padding: 0.85rem 1rem; color: #94A3B8;">
+                No standout positive drivers identified.
+            </div>
+            """)
     with c_col:
         st.markdown("##### 🔴 Key Trade-offs / Pain Points")
         if exec_summary["cons"]:
             for c in exec_summary["cons"]:
-                st.error(f"**{c['aspect']}** ({c['nss']:+.0f} NSS): *\"{c['quote']}\"*")
+                render_html_block(f"""
+                <div style="background: rgba(239, 68, 68, 0.12); border: 1px solid rgba(239, 68, 68, 0.35); border-left: 4px solid #EF4444; border-radius: 10px; padding: 0.85rem 1rem; margin-bottom: 0.65rem; box-shadow: 0 4px 14px rgba(0,0,0,0.25);">
+                    <div style="font-size: 0.88rem; font-weight: 700; color: #F87171; margin-bottom: 0.25rem;">
+                        🔴 {html.escape(str(c['aspect']))} ({c['nss']:+.0f} NSS)
+                    </div>
+                    <div style="font-size: 0.85rem; color: #F1F5F9; font-style: italic; line-height: 1.5;">
+                        "{html.escape(str(c['quote']))}"
+                    </div>
+                </div>
+                """)
         else:
-            st.success("No dominant customer pain points flagged in this review corpus.")
+            render_html_block("""
+            <div style="background: rgba(16, 185, 129, 0.12); border: 1px solid rgba(16, 185, 129, 0.35); border-left: 4px solid #10B981; border-radius: 10px; padding: 0.85rem 1rem; color: #34D399;">
+                No dominant customer pain points flagged in this review corpus.
+            </div>
+            """)
 
     st.markdown("<br>", unsafe_allow_html=True)
     cta_col1, cta_col2 = st.columns([2, 1])
@@ -987,21 +1041,21 @@ elif st.session_state["nav_view"] == "🔍 Review Intelligence":
     p_brand_esc = html.escape(str(prod.get('brand', '')))
 
     render_html_block(f"""
-    <div style="background: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 14px; padding: 1.3rem; margin-bottom: 1.5rem; display: flex; flex-wrap: wrap; gap: 1.5rem; align-items: center; box-shadow: 0 4px 12px rgba(0,0,0,0.03);">
-        <div style="width: 110px; height: 110px; background: #F8FAFC; border-radius: 10px; display: flex; align-items: center; justify-content: center; overflow: hidden; border: 1px solid #E2E8F0;">
+    <div style="background: rgba(22, 17, 46, 0.85); border: 1px solid rgba(155, 92, 255, 0.3); border-radius: 14px; padding: 1.3rem; margin-bottom: 1.5rem; display: flex; flex-wrap: wrap; gap: 1.5rem; align-items: center; box-shadow: 0 8px 24px rgba(0,0,0,0.4);">
+        <div style="width: 110px; height: 110px; background: rgba(12, 9, 28, 0.75); border-radius: 10px; display: flex; align-items: center; justify-content: center; overflow: hidden; border: 1px solid rgba(155, 92, 255, 0.2);">
             <img src="{img_src}" style="max-height: 100%; max-width: 100%; object-fit: contain; border-radius: 6px;" alt="{p_name_esc}" />
         </div>
         <div style="flex: 1; min-width: 260px;">
-            <div style="display: flex; gap: 0.5rem; margin-bottom: 0.3rem;">
-                <span style="background: #F1F5F9; color: #475569; font-weight: 600; font-size: 0.75rem; padding: 0.2rem 0.6rem; border-radius: 4px;">{p_cat_esc}</span>
-                <span style="background: #EFF6FF; color: #2563EB; font-weight: 600; font-size: 0.75rem; padding: 0.2rem 0.6rem; border-radius: 4px;">{p_brand_esc}</span>
-                <span style="background: #FEF3C7; color: #D97706; font-weight: 600; font-size: 0.75rem; padding: 0.2rem 0.6rem; border-radius: 4px;">🛡️ Demo Data (Illustrative)</span>
+            <div style="display: flex; gap: 0.5rem; margin-bottom: 0.3rem; flex-wrap: wrap;">
+                <span style="background: rgba(155, 92, 255, 0.15); color: #C4B5FD; font-weight: 600; font-size: 0.75rem; padding: 0.2rem 0.6rem; border-radius: 6px;">{p_cat_esc}</span>
+                <span style="background: rgba(37, 99, 235, 0.18); color: #93C5FD; font-weight: 600; font-size: 0.75rem; padding: 0.2rem 0.6rem; border-radius: 6px;">{p_brand_esc}</span>
+                <span style="background: rgba(245, 158, 11, 0.18); color: #FCD34D; font-weight: 600; font-size: 0.75rem; padding: 0.2rem 0.6rem; border-radius: 6px;">🛡️ Demo Data (Illustrative)</span>
             </div>
-            <h2 style="margin: 0 0 0.3rem 0; font-size: 1.35rem; font-weight: 800; color: #0F172A;">{p_name_esc}</h2>
+            <h2 style="margin: 0 0 0.3rem 0; font-size: 1.35rem; font-weight: 800; color: #FFFFFF;">{p_name_esc}</h2>
             <div style="display: flex; align-items: baseline; gap: 0.8rem;">
-                <span style="font-size: 1.4rem; font-weight: 800; color: #0F172A;">{format_currency_inr(prod.get('price'))}</span>
+                <span style="font-size: 1.4rem; font-weight: 800; color: #FFFFFF;">{format_currency_inr(prod.get('price'))}</span>
                 <span style="color: #F59E0B; font-weight: 700; font-size: 0.95rem;">★ {prod.get('rating'):.1f}</span>
-                <span style="color: #64748B; font-size: 0.85rem;">({prod.get('review_count'):,} Ratings)</span>
+                <span style="color: #94A3B8; font-size: 0.85rem;">({prod.get('review_count'):,} Ratings)</span>
             </div>
         </div>
     </div>
@@ -1180,21 +1234,21 @@ elif st.session_state["nav_view"] == "🔍 Review Intelligence":
 
         health_badge_color = "#10B981" if clean_pct >= 90 else ("#F59E0B" if clean_pct >= 75 else "#EF4444")
         render_html_block(f"""
-        <div style="background: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 12px; padding: 1.2rem; box-shadow: 0 2px 6px rgba(0,0,0,0.03);">
+        <div style="background: rgba(22, 17, 46, 0.85); border: 1px solid rgba(155, 92, 255, 0.3); border-radius: 14px; padding: 1.2rem; box-shadow: 0 8px 24px rgba(0,0,0,0.35);">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.8rem;">
-                <span style="font-weight: 700; color: #1E293B; font-size: 0.95rem;">Trust Health Score</span>
+                <span style="font-weight: 700; color: #FFFFFF; font-size: 0.95rem;">Trust Health Score</span>
                 <span style="background: {health_badge_color}; color: #FFFFFF; font-weight: 800; padding: 0.2rem 0.7rem; border-radius: 12px; font-size: 0.85rem;">{clean_pct}% Clean</span>
             </div>
-            <div style="font-size: 0.85rem; color: #64748B; margin-bottom: 0.8rem;">
+            <div style="font-size: 0.85rem; color: #CBD5E1; margin-bottom: 0.8rem; line-height: 1.5;">
                 Automated multi-heuristic review audit evaluating promotional patterns, repetitive templates, and star rating contradictions.
             </div>
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.6rem;">
-                <div style="background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 8px; padding: 0.6rem;">
-                    <div style="font-size: 0.75rem; color: #64748B;">Spam Flags</div>
+                <div style="background: rgba(12, 9, 28, 0.7); border: 1px solid rgba(155, 92, 255, 0.2); border-radius: 8px; padding: 0.6rem;">
+                    <div style="font-size: 0.75rem; color: #94A3B8;">Spam Flags</div>
                     <div style="font-size: 1.1rem; font-weight: 800; color: #EF4444;">{spam_count} <span style="font-size: 0.75rem; color: #94A3B8;">/ {len(reviews_df)}</span></div>
                 </div>
-                <div style="background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 8px; padding: 0.6rem;">
-                    <div style="font-size: 0.75rem; color: #64748B;">Rating Anomalies</div>
+                <div style="background: rgba(12, 9, 28, 0.7); border: 1px solid rgba(155, 92, 255, 0.2); border-radius: 8px; padding: 0.6rem;">
+                    <div style="font-size: 0.75rem; color: #94A3B8;">Rating Anomalies</div>
                     <div style="font-size: 1.1rem; font-weight: 800; color: #F59E0B;">{anomaly_cnt} <span style="font-size: 0.75rem; color: #94A3B8;">mismatches</span></div>
                 </div>
             </div>
@@ -1378,12 +1432,12 @@ elif st.session_state["nav_view"] == "🧪 Live Review Analyzer":
                     aspect_tags = "".join([f'<span class="topic-pill">{html.escape(a)}</span>' for a in c["aspects"]]) if c["aspects"] else '<span style="font-size: 0.78rem; color: #94A3B8;">(General statement)</span>'
 
                     render_html_block(f"""
-                    <div style="background: #FFFFFF; border: 1px solid #E2E8F0; border-left: 4px solid {c_color}; border-radius: 8px; padding: 0.75rem 1rem; margin-bottom: 0.6rem;">
+                    <div style="background: rgba(22, 17, 46, 0.85); border: 1px solid rgba(155, 92, 255, 0.25); border-left: 4px solid {c_color}; border-radius: 8px; padding: 0.75rem 1rem; margin-bottom: 0.6rem; box-shadow: 0 4px 14px rgba(0,0,0,0.25);">
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.3rem;">
                             <span style="font-size: 0.78rem; font-weight: 700; color: {c_color};">{c_badge} ({c_comp:+.2f})</span>
                             <div>{aspect_tags}</div>
                         </div>
-                        <div style="font-size: 0.88rem; color: #1E293B; font-style: italic;">\"{html.escape(c['text'])}\"</div>
+                        <div style="font-size: 0.88rem; color: #F1F5F9; font-style: italic; line-height: 1.5;">\"{html.escape(c['text'])}\"</div>
                     </div>
                     """)
 
@@ -1618,16 +1672,16 @@ elif st.session_state["nav_view"] == "🎯 Smart Recommendations":
                     esc_reason = html.escape(str(rec_data.get('reason', '')))
                     amazon_url = p.get("product_url") or p.get("amazon_url") or f"https://www.amazon.in/s?k={esc_p_name}"
                     render_html_block(f"""
-                    <div style="background: #FFFFFF; border: 1px solid #E2E8F0; border-left: 6px solid {color}; border-radius: 12px; padding: 1.2rem; margin-bottom: 1.2rem; box-shadow: 0 2px 6px rgba(0,0,0,0.03);">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.4rem;">
+                    <div style="background: rgba(22, 17, 46, 0.85); border: 1px solid rgba(155, 92, 255, 0.3); border-left: 6px solid {color}; border-radius: 12px; padding: 1.2rem; margin-bottom: 1.2rem; box-shadow: 0 8px 24px rgba(0,0,0,0.35);">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.4rem; flex-wrap: wrap; gap: 0.5rem;">
                             <span style="font-weight: 800; font-size: 1.05rem; color: {color};">{title}</span>
-                            <span style="font-size: 1.2rem; font-weight: 800; color: #0F172A;">{format_currency_inr(p.get('price'))}</span>
+                            <span style="font-size: 1.2rem; font-weight: 800; color: #FFFFFF;">{format_currency_inr(p.get('price'))}</span>
                         </div>
-                        <div style="font-size: 1.15rem; font-weight: 700; color: #0F172A; margin-bottom: 0.4rem;">{esc_p_name}</div>
-                        <div style="font-size: 0.88rem; color: #475569; line-height: 1.5; margin-bottom: 0.6rem;">{esc_reason}</div>
+                        <div style="font-size: 1.15rem; font-weight: 700; color: #FFFFFF; margin-bottom: 0.4rem;">{esc_p_name}</div>
+                        <div style="font-size: 0.88rem; color: #CBD5E1; line-height: 1.5; margin-bottom: 0.6rem;">{esc_reason}</div>
                         <div style="display: flex; gap: 0.8rem; align-items: center; flex-wrap: wrap;">
-                            <span style="font-size: 0.82rem; color: #64748B;">Rating: ★ {p.get('rating'):.1f} ({p.get('review_count'):,} sample ratings)</span>
-                            <span style="font-size: 0.82rem; color: #64748B;">• Reviews Analyzed: {rec_data.get('review_count', 0)}</span>
+                            <span style="font-size: 0.82rem; color: #94A3B8;">Rating: ★ {p.get('rating'):.1f} ({p.get('review_count'):,} sample ratings)</span>
+                            <span style="font-size: 0.82rem; color: #94A3B8;">• Reviews Analyzed: {rec_data.get('review_count', 0)}</span>
                             <a href="{amazon_url}" target="_blank" style="font-size: 0.82rem; color: #FF9900; font-weight: 700; text-decoration: none;">Search on Amazon India ↗</a>
                         </div>
                     </div>
@@ -1635,9 +1689,9 @@ elif st.session_state["nav_view"] == "🎯 Smart Recommendations":
                 elif rec_data:
                     esc_reason = html.escape(str(rec_data.get('reason', 'Insufficient review evidence for this category award.')))
                     render_html_block(f"""
-                    <div style="background: #F8FAFC; border: 1px dashed #CBD5E1; border-left: 6px solid #94A3B8; border-radius: 12px; padding: 1.2rem; margin-bottom: 1.2rem;">
-                        <div style="font-weight: 800; font-size: 1.05rem; color: #64748B; margin-bottom: 0.4rem;">{title}</div>
-                        <div style="font-size: 0.95rem; font-weight: 700; color: #475569; margin-bottom: 0.2rem;">Insufficient review evidence</div>
+                    <div style="background: rgba(22, 17, 46, 0.6); border: 1px dashed rgba(155, 92, 255, 0.3); border-left: 6px solid #94A3B8; border-radius: 12px; padding: 1.2rem; margin-bottom: 1.2rem;">
+                        <div style="font-weight: 800; font-size: 1.05rem; color: #CBD5E1; margin-bottom: 0.4rem;">{title}</div>
+                        <div style="font-size: 0.95rem; font-weight: 700; color: #94A3B8; margin-bottom: 0.2rem;">Insufficient review evidence</div>
                         <div style="font-size: 0.85rem; color: #64748B; line-height: 1.4;">{esc_reason}</div>
                     </div>
                     """)
@@ -1687,21 +1741,21 @@ elif st.session_state["nav_view"] == "🎯 Smart Recommendations":
                 p_name = html.escape(str(p_item.get("product_name", "Product")))
                 badge_bg = "#10B981" if m_score >= 80 else ("#2563EB" if m_score >= 65 else "#F59E0B")
 
-                hl_pills = "".join([f'<span class="topic-pill" style="background: #ECFDF5; color: #065F46; border-color: #A7F3D0;">🟢 {html.escape(h)}</span>' for h in match.get("highlights", [])])
-                to_pills = "".join([f'<span class="topic-pill" style="background: #FEF2F2; color: #991B1B; border-color: #FECACA;">🔴 {html.escape(t)}</span>' for t in match.get("trade_offs", [])])
+                hl_pills = "".join([f'<span class="topic-pill" style="background: rgba(16, 185, 129, 0.15); color: #34D399; border: 1px solid rgba(16, 185, 129, 0.35); padding: 0.2rem 0.55rem; border-radius: 6px; font-size: 0.78rem;">🟢 {html.escape(h)}</span>' for h in match.get("highlights", [])])
+                to_pills = "".join([f'<span class="topic-pill" style="background: rgba(239, 68, 68, 0.15); color: #F87171; border: 1px solid rgba(239, 68, 68, 0.35); padding: 0.2rem 0.55rem; border-radius: 6px; font-size: 0.78rem;">🔴 {html.escape(t)}</span>' for t in match.get("trade_offs", [])])
 
                 render_html_block(f"""
-                <div style="background: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 12px; padding: 1.1rem 1.4rem; margin-bottom: 1rem; box-shadow: 0 2px 6px rgba(0,0,0,0.03);">
+                <div style="background: rgba(22, 17, 46, 0.85); border: 1px solid rgba(155, 92, 255, 0.25); border-radius: 12px; padding: 1.1rem 1.4rem; margin-bottom: 1rem; box-shadow: 0 6px 20px rgba(0,0,0,0.35);">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.3rem;">
-                        <span style="font-weight: 800; font-size: 1.05rem; color: #0F172A;">#{idx+1} {p_name}</span>
+                        <span style="font-weight: 800; font-size: 1.05rem; color: #FFFFFF;">#{idx+1} {p_name}</span>
                         <span style="background: {badge_bg}; color: #FFFFFF; font-weight: 800; padding: 0.25rem 0.75rem; border-radius: 20px; font-size: 0.88rem;">{m_score:.0f}% Match</span>
                     </div>
-                    <div style="display: flex; gap: 1rem; color: #64748B; font-size: 0.85rem; margin-bottom: 0.5rem;">
-                        <span>Price: <b>{format_currency_inr(match['price'])}</b></span>
-                        <span>Rating: <b>★ {match['rating']:.1f}</b></span>
-                        <span>Category: <b>{p_item.get('category')}</b></span>
+                    <div style="display: flex; gap: 1rem; color: #94A3B8; font-size: 0.85rem; margin-bottom: 0.5rem; flex-wrap: wrap;">
+                        <span>Price: <b style="color: #FFFFFF;">{format_currency_inr(match['price'])}</b></span>
+                        <span>Rating: <b style="color: #F59E0B;">★ {match['rating']:.1f}</b></span>
+                        <span>Category: <b style="color: #C4B5FD;">{p_item.get('category')}</b></span>
                     </div>
-                    <div style="font-size: 0.88rem; color: #334155; margin-bottom: 0.5rem;">{html.escape(match['rationale'])}</div>
+                    <div style="font-size: 0.88rem; color: #CBD5E1; margin-bottom: 0.5rem; line-height: 1.5;">{html.escape(match['rationale'])}</div>
                     <div style="display: flex; flex-wrap: wrap; gap: 0.4rem; margin-bottom: 0.6rem;">{hl_pills} {to_pills}</div>
                 </div>
                 """)
@@ -1867,6 +1921,53 @@ elif st.session_state["nav_view"] == "📈 Model Evaluation & Benchmarks":
                 "True Is Spam": "Yes" if is_spam else "No"
             })
         st.dataframe(pd.DataFrame(bench_records), use_container_width=True, hide_index=True)
+
+    st.markdown("---")
+    st.markdown("### 3. Supervised Baseline Comparison & Dataset Alignment")
+
+    baseline_metrics = evaluate_baseline_comparison()
+    curated_alignment = evaluate_curated_reviews_corpus()
+
+    b_col1, b_col2, b_col3, b_col4 = st.columns(4)
+    with b_col1:
+        render_html_block(f"""
+        <div class="metric-card">
+            <div class="metric-label">VADER Rule-Based Acc</div>
+            <div class="metric-value">{baseline_metrics['vader_accuracy'] * 100:.1f}%</div>
+            <div class="metric-sub">Curated Benchmark (n=50)</div>
+        </div>
+        """)
+    with b_col2:
+        render_html_block(f"""
+        <div class="metric-card">
+            <div class="metric-label">TF-IDF + LogReg (5-Fold)</div>
+            <div class="metric-value">{baseline_metrics['baseline_accuracy'] * 100:.1f}%</div>
+            <div class="metric-sub">Cross-Validated Baseline</div>
+        </div>
+        """)
+    with b_col3:
+        render_html_block(f"""
+        <div class="metric-card metric-card-purple">
+            <div class="metric-label">Baseline Macro F1</div>
+            <div class="metric-value">{baseline_metrics['baseline_f1_macro']:.3f}</div>
+            <div class="metric-sub">Supervised 5-Fold F1</div>
+        </div>
+        """)
+    with b_col4:
+        render_html_block(f"""
+        <div class="metric-card metric-card-green">
+            <div class="metric-label">Catalogue Reviews Agreement</div>
+            <div class="metric-value">{curated_alignment.get('agreement_rate', 0.0) * 100:.1f}%</div>
+            <div class="metric-sub">Rating vs VADER (n=77)</div>
+        </div>
+        """)
+
+    st.info(
+        "⚠️ **Evaluation Sample Size & Generalization Caveat**: "
+        "These performance figures are evaluated on a curated benchmark sample (n=50) and the 77-review demonstration corpus. "
+        "They serve as regression validation and methodology demonstrations. In production applications, models should be evaluated "
+        "on large-scale external datasets (e.g., Stanford SST-2 or Amazon Reviews Polarity with 100,000+ samples)."
+    )
 
 
 # ==========================================

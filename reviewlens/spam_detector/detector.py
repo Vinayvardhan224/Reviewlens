@@ -5,6 +5,7 @@ Analyzes reviews for synthetic patterns, promotional manipulation, rating mismat
 
 from typing import List, Optional, Set
 import re
+import threading
 from reviewlens.config import SPAM_DETECTION_CONFIG
 from reviewlens.models import SpamResult
 
@@ -15,6 +16,7 @@ class SpamDetector:
     def __init__(self, config: Optional[dict] = None):
         self.config = config or SPAM_DETECTION_CONFIG
         self.seen_signatures: Set[str] = set()
+        self._lock = threading.Lock()
 
     def _normalize_signature(self, text: str) -> str:
         """Create a simplified hashable signature for duplicate checking."""
@@ -98,11 +100,12 @@ class SpamDetector:
         if check_duplicate:
             sig = self._normalize_signature(text)
             if len(sig) > 20:
-                if sig in self.seen_signatures:
-                    spam_points += 0.70
-                    reasons.append("Exact or near-identical duplicate of an earlier review")
-                else:
-                    self.seen_signatures.add(sig)
+                with self._lock:
+                    if sig in self.seen_signatures:
+                        spam_points += 0.70
+                        reasons.append("Exact or near-identical duplicate of an earlier review")
+                    else:
+                        self.seen_signatures.add(sig)
 
         normalized_score = min(1.0, round(spam_points, 2))
         is_spam = normalized_score >= 0.50
@@ -115,5 +118,6 @@ class SpamDetector:
         )
 
     def reset_session(self):
-        """Clear duplicate signature memory."""
-        self.seen_signatures.clear()
+        """Clear duplicate signature memory safely."""
+        with self._lock:
+            self.seen_signatures.clear()
