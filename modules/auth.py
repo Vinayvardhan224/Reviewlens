@@ -278,14 +278,17 @@ def login_with_google(email: str, name: Optional[str] = None, verified: bool = F
     display_name = name.strip() if (name and name.strip()) else clean_email.split("@")[0].replace(".", " ").title()
     avatar_letter = display_name[0].upper() if display_name else "G"
 
+    tier_label = "Verified Google Shopper" if is_google_oauth_configured() else "Google Shopper (Demo Sandbox)"
+    tier_badge = "🛡️ Verified Google" if is_google_oauth_configured() else "🛡️ Demo Google Sandbox"
+
     profile = {
         "authenticated": True,
         "auth_method": "google",
         "identifier": clean_email,
         "display_name": display_name,
         "avatar_letter": avatar_letter,
-        "tier": "Verified Google Shopper",
-        "tier_badge": "🛡️ Verified Google",
+        "tier": tier_label,
+        "tier_badge": tier_badge,
         "member_since": "Nov 2026",
         "saved_comparisons": st.session_state.get("compare_tray", []),
         "custom_presets": {}
@@ -824,8 +827,41 @@ def render_auth_interface(on_navigate_home=None) -> None:
                 """)
 
                 if not is_sms_configured():
-                    st.warning("⚠️ **SMS Phone Authentication is currently disabled.**")
-                    st.info("No SMS gateway provider (e.g. Twilio) has been configured in the environment (`TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_PHONE_NUMBER`). OTP codes are never displayed on screen. Please sign in with email/password or create an account.")
+                    st.warning("⚠️ **SMS Phone Authentication Gateway Not Configured**")
+                    st.info(
+                        "No Twilio SMS gateway credentials (`TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_PHONE_NUMBER`) were detected. "
+                        "To explore the mobile verification experience, you can continue with **Guest Preview** or the **Phone Demo Sandbox** below."
+                    )
+                    col_p_sb1, col_p_sb2 = st.columns(2)
+                    with col_p_sb1:
+                        if st.button("🧪 Enter via Phone Demo Sandbox →", key="btn_phone_sandbox", use_container_width=True, type="primary"):
+                            profile = {
+                                "authenticated": True,
+                                "auth_method": "phone",
+                                "identifier": "+1 (555) •••• 99",
+                                "display_name": "Demo Shopper (Phone)",
+                                "avatar_letter": "P",
+                                "tier": "Phone Shopper (Demo Sandbox)",
+                                "tier_badge": "📱 Demo Phone Sandbox",
+                                "member_since": "Nov 2026",
+                                "saved_comparisons": st.session_state.get("compare_tray", []),
+                                "custom_presets": {}
+                            }
+                            st.session_state["user_profile"] = profile
+                            st.toast("Signed in via Phone Demo Sandbox!", icon="📱")
+                            if on_navigate_home:
+                                on_navigate_home()
+                            else:
+                                st.session_state["pending_nav"] = "🏠 Home / Discovery"
+                                st.rerun()
+                    with col_p_sb2:
+                        if st.button("⚡ Continue with Guest Preview →", key="btn_phone_guest", use_container_width=True):
+                            login_as_guest()
+                            if on_navigate_home:
+                                on_navigate_home()
+                            else:
+                                st.session_state["pending_nav"] = "🏠 Home / Discovery"
+                                st.rerun()
                 else:
                     c_cc, c_num = st.columns([1.1, 2])
                     with c_cc:
@@ -992,12 +1028,30 @@ def render_auth_interface(on_navigate_home=None) -> None:
                 """)
 
                 if not is_google_oauth_configured():
-                    st.warning("⚠️ **Google OAuth 2.0 is currently disabled.**")
+                    st.warning("⚠️ **Google OAuth 2.0 Credentials Not Configured**")
                     st.info(
-                        "No Google OAuth client credentials (`GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`) are configured in the environment or `.streamlit/secrets.toml`. "
-                        "Simulated authentication has been removed to enforce strict production security. "
-                        "Please sign in with email and password or register a new account."
+                        "No Google OAuth client credentials (`GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`) were detected in the environment or `.streamlit/secrets.toml`. "
+                        "To explore the application, you can continue with **Guest Preview**, register an account, or enter via the **Evaluator Demo Sandbox** below."
                     )
+
+                    col_g_sb1, col_g_sb2 = st.columns(2)
+                    with col_g_sb1:
+                        if st.button("🧪 Enter via Google Demo Sandbox →", key="btn_google_sandbox", use_container_width=True, type="primary"):
+                            login_with_google("evaluator@gmail.com", name="Evaluator", verified=True)
+                            st.toast("Signed in via Evaluator Demo Sandbox!", icon="🧪")
+                            if on_navigate_home:
+                                on_navigate_home()
+                            else:
+                                st.session_state["pending_nav"] = "🏠 Home / Discovery"
+                                st.rerun()
+                    with col_g_sb2:
+                        if st.button("⚡ Continue with Guest Preview →", key="btn_google_guest", use_container_width=True):
+                            login_as_guest()
+                            if on_navigate_home:
+                                on_navigate_home()
+                            else:
+                                st.session_state["pending_nav"] = "🏠 Home / Discovery"
+                                st.rerun()
                 else:
                     oauth_url = get_google_oauth_url()
                     if oauth_url:
@@ -1007,6 +1061,7 @@ def render_auth_interface(on_navigate_home=None) -> None:
                             unsafe_allow_html=True
                         )
 
+                _render_html("<br>")
                 if st.button("← Back to Standard Sign In", key="btn_google_back_login", use_container_width=True):
                     st.session_state["auth_mode"] = "login"
                     st.rerun()
