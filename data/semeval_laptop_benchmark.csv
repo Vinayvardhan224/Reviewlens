@@ -1,0 +1,655 @@
+text,aspect_term,polarity,from,to,dataset_source,data_type
+"Boot time is super fast, around anywhere from 35 seconds to 1 minute.",Boot time,positive,0,9,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+tech support would not fix the problem unless I bought your plan for $150 plus.,tech support,negative,0,12,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+Set up was easy.,Set up,positive,0,6,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+Did not enjoy the new Windows 8 and touchscreen functions.,Windows 8,negative,22,31,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+Did not enjoy the new Windows 8 and touchscreen functions.,touchscreen functions,negative,36,57,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"Other than not being a fan of click pads (industry standard these days) and the lousy internal speakers, it's hard for me to find things about this notebook I don't like, especially considering the $350 price tag.",internal speakers,negative,86,103,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"Other than not being a fan of click pads (industry standard these days) and the lousy internal speakers, it's hard for me to find things about this notebook I don't like, especially considering the $350 price tag.",price tag,positive,203,212,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"Other than not being a fan of click pads (industry standard these days) and the lousy internal speakers, it's hard for me to find things about this notebook I don't like, especially considering the $350 price tag.",click pads,negative,30,40,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+No installation disk (DVD) is included.,installation disk (DVD),neutral,3,26,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"It's fast, light, and simple to use.",use,positive,32,35,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"Works well, and I am extremely happy to be back to an apple OS.",Works,positive,0,5,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"Works well, and I am extremely happy to be back to an apple OS.",apple OS,positive,54,62,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+Sure it's not light and slim but the features make up for it 100%.,features,positive,37,45,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"I am pleased with the fast log on, speedy WiFi connection and the long battery life (>6 hrs).",log on,positive,27,33,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"I am pleased with the fast log on, speedy WiFi connection and the long battery life (>6 hrs).",WiFi connection,positive,42,57,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"I am pleased with the fast log on, speedy WiFi connection and the long battery life (>6 hrs).",battery life,positive,71,83,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+The Apple engineers have not yet discovered the delete key.,delete key,negative,48,58,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+Made interneting (part of my business) very difficult to maintain.,interneting,negative,5,16,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"Luckily, for all of us contemplating the decision, the Mac Mini is priced just right.",priced,positive,67,73,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"Super light, super sexy and everything just works.",works,positive,44,49,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"Only problem that I had was that the track pad was not very good for me, I only had a problem once or twice with it, But probably my computer was a bit defective.",track pad,negative,37,46,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+It is super fast and has outstanding graphics.,graphics,positive,37,45,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+But the mountain lion is just too slow.,mountain lion,negative,8,21,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+Strong build though which really adds to its durability.,durability,positive,45,55,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+Strong build though which really adds to its durability.,build,positive,7,12,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+The battery life is excellent- 6-7 hours without charging.,battery life,positive,4,16,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+I've had my computer for 2 weeks already and it works perfectly.,works,positive,48,53,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+And I may be the only one but I am really liking Windows 8.,Windows 8,positive,49,58,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+The baterry is very longer.,baterry,positive,4,11,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+Its size is ideal and the weight is acceptable.,size,positive,4,8,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+Its size is ideal and the weight is acceptable.,weight,positive,26,32,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+I can say that I am fully satisfied with the performance that the computer has supplied.,performance,positive,45,56,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"This laptop has only 2 USB ports, and they are both on the same side.",USB ports,negative,23,32,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+It has so much more speed and the screen is very sharp.,speed,positive,20,25,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+It has so much more speed and the screen is very sharp.,screen,positive,34,40,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+Everything I wanted and everything I needed and the price was great!,price,positive,52,57,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+It's not inexpensive but the Hardware performance is impressive for a computer this small.,Hardware performance,positive,29,49,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"This thing is awesome, everything always works, everything is always easy to set up, everything is compatible, its literally everything I could ask for.",works,positive,41,46,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"This thing is awesome, everything always works, everything is always easy to set up, everything is compatible, its literally everything I could ask for.",set up,positive,77,83,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+Keyboard responds well to presses.,Keyboard,positive,0,8,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"Lastly, Windows 8 is annoying.",Windows 8,negative,8,17,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+Everything is so easy and intuitive to setup or configure.,setup,positive,39,44,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+Everything is so easy and intuitive to setup or configure.,configure,positive,48,57,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+Biggest complaint is Windows 8 .,Windows 8,negative,21,30,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+Only 2 usb ports...seems kind of...limited.,usb ports,negative,7,16,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+It has all the expected features and more +plus a wide screen and more than roomy keyboard.,features,positive,24,32,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+It has all the expected features and more +plus a wide screen and more than roomy keyboard.,screen,positive,55,61,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+It has all the expected features and more +plus a wide screen and more than roomy keyboard.,keyboard,positive,82,90,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+Amazing Performance for anything I throw at it.,Performance,positive,8,19,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+The receiver was full of superlatives for the quality and performance.,quality,positive,46,53,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+The receiver was full of superlatives for the quality and performance.,performance,positive,58,69,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+I was extremely happy with the OS itself.,OS,positive,31,33,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+The new MBP offers great portability and gives us confidence that we are not going to need to purchase a new laptop in 18 months.,portability,positive,25,36,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"The criticism has waned, and now I'd be the first to recommend an Air for truly portable computing.",portable computing,positive,80,98,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+I would have given it 5 starts was it not for the fact that it had Windows 8,Windows 8,negative,67,76,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"MS Office 2011 for Mac is wonderful, well worth it.",MS Office 2011 for Mac,positive,0,22,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+But the performance of Mac Mini is a huge disappointment.,performance,negative,8,19,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+They don't just look good; they deliver excellent performance.,look,positive,16,20,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+They don't just look good; they deliver excellent performance.,performance,positive,50,61,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+I have had it over a year now with out a Glitch of any kind..I love the lit up keys and screen display...this thing is Fast and clear as can be.,lit up keys,positive,72,83,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+I have had it over a year now with out a Glitch of any kind..I love the lit up keys and screen display...this thing is Fast and clear as can be.,screen display,positive,88,102,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+The Mountain Lion OS is not hard to figure out if you are familiar with Microsoft Windows.,Mountain Lion OS,positive,4,20,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+The Mountain Lion OS is not hard to figure out if you are familiar with Microsoft Windows.,Microsoft Windows,neutral,72,89,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"However, I can refute that OSX is ""FAST"".",OSX,negative,27,30,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+Enjoy using Microsoft Office!,Microsoft Office,positive,12,28,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+Incredible graphics and brilliant colors.,graphics,positive,11,19,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+Incredible graphics and brilliant colors.,colors,positive,34,40,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+Built-in apps are purely amazing.,Built-in apps,positive,0,13,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+Cons: Screen resolution.,Screen resolution,negative,6,23,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+From the speed to the multi touch gestures this operating system beats Windows easily.,operating system,positive,48,64,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+From the speed to the multi touch gestures this operating system beats Windows easily.,Windows,negative,71,78,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+From the speed to the multi touch gestures this operating system beats Windows easily.,speed,positive,9,14,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+From the speed to the multi touch gestures this operating system beats Windows easily.,multi touch gestures,positive,22,42,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+I really like the size and I'm a fan of the ACERS.,size,positive,18,22,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"I opted for the SquareTrade 3-Year Computer Accidental Protection Warranty ($1500-2000) which also support ""accidents"" like drops and spills that are NOT covered by AppleCare.",SquareTrade 3-Year Computer Accidental Protection Warranty,positive,16,74,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"I opted for the SquareTrade 3-Year Computer Accidental Protection Warranty ($1500-2000) which also support ""accidents"" like drops and spills that are NOT covered by AppleCare.",AppleCare,negative,165,174,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+It's light and easy to transport.,transport,positive,23,32,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+Once you get past learning how to use the poorly designed Windows 8 Set-Up you may feel frustrated.,Windows 8 Set-Up,negative,58,74,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"It's been time for a new laptop, and the only debate was which size of the Mac laptops, and whether to spring for the retina display.",size,neutral,63,67,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"It's been time for a new laptop, and the only debate was which size of the Mac laptops, and whether to spring for the retina display.",retina display,neutral,118,132,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+The reason why I choose apple MacBook because of their design and the aluminum casing.,design,positive,55,61,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+The reason why I choose apple MacBook because of their design and the aluminum casing.,aluminum casing,positive,70,85,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+The aluminum body sure makes it stand out.,aluminum body,positive,4,17,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"It is very easy to integrate bluetooth devices, and USB devices are recognized almost instantly.",integrate bluetooth devices,positive,19,46,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"It is very easy to integrate bluetooth devices, and USB devices are recognized almost instantly.",USB devices,positive,52,63,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"And the fact that Apple is driving the 13"" RMBP with the Intel4000 graphic chip seems underpowered (to me.",Intel4000 graphic chip,negative,57,79,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+Apple removed the DVD drive Firewire port (will work with adapter) and put the SDXC slot in a silly position on the back.,DVD drive Firewire port,neutral,18,41,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+Apple removed the DVD drive Firewire port (will work with adapter) and put the SDXC slot in a silly position on the back.,adapter,neutral,58,65,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+Apple removed the DVD drive Firewire port (will work with adapter) and put the SDXC slot in a silly position on the back.,SDXC slot,negative,79,88,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+The durability of the laptop will make it worth the money.,durability,positive,4,14,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+Well designed and fast.,designed,positive,5,13,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"But I was completely wrong, this computer is UNBELIEVABLE amazing and easy to use.",use,positive,78,81,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+Exactly as posted plus a great value.,value,positive,31,36,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+The specs are pretty good too.,specs,positive,4,9,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"Apple is unmatched in product quality,aesthetics,craftmanship, and customer service.",product quality,positive,22,37,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"Apple is unmatched in product quality,aesthetics,craftmanship, and customer service.",aesthetics,positive,38,48,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"Apple is unmatched in product quality,aesthetics,craftmanship, and customer service.",craftmanship,positive,49,61,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"Apple is unmatched in product quality,aesthetics,craftmanship, and customer service.",customer service,positive,67,83,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+It is a great size and amazing windows 8 included!,size,positive,14,18,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+It is a great size and amazing windows 8 included!,windows 8,positive,31,40,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+I do not like too much Windows 8.,Windows 8,negative,23,32,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+Startup times are incredibly long: over two minutes.,Startup times,negative,0,13,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+Also stunning colors and speedy,colors,positive,14,20,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+great price free shipping what else can i ask for!!,price,positive,6,11,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+great price free shipping what else can i ask for!!,shipping,positive,17,25,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+This mouse is terrific.,mouse,positive,5,10,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+It is really thick around the battery.,battery,neutral,30,37,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+And windows 7 works like a charm.,windows 7,positive,4,13,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+":) Great product, great price, great delivery, and great service.",price,positive,24,29,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+":) Great product, great price, great delivery, and great service.",delivery,positive,37,45,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+":) Great product, great price, great delivery, and great service.",service,positive,57,64,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+:] It arrived so fast and customer service was great.,customer service,positive,26,42,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+tried windows 8 and hated it !!!,windows 8,negative,6,15,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"The price is higher than most lab top out there; however, he/she will get what they paid for, which is a great computer.",price,conflict,4,9,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+Set up was a breeze.,Set up,positive,0,6,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+But I do NOT like Win8.,Win8,negative,18,22,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+I am still in the process of learning about its features.,features,neutral,48,56,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"I had the same reasons as most PC users: the price, the overbearing restrictions of OSX and lack of support for games.",price,negative,45,50,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"I had the same reasons as most PC users: the price, the overbearing restrictions of OSX and lack of support for games.",OSX,negative,84,87,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"I had the same reasons as most PC users: the price, the overbearing restrictions of OSX and lack of support for games.",support for games,negative,100,117,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"I wanted it for it's mobility and man, this little bad boy is very nice.",mobility,positive,21,29,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"The investment of a new MacBook Pro came at a price, but totally worth it for a good piece of mind.",price,conflict,46,51,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+I found the mini to be:Exceptionally easy to set up,set up,positive,45,51,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+Having USB3 is why I bought this Mini.,USB3,positive,7,11,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+The sound is nice and loud; I don't have any problems with hearing anything.,sound,positive,4,9,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"It is very slim, the track pad is very much impressed with me.",track pad,positive,21,30,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+The settings are not user-friendly either.,settings,negative,4,12,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+Thank goodness for OpenOffice!,OpenOffice,positive,19,29,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"Awesome form factor, great battery life, wonderful UX.",form factor,positive,8,19,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"Awesome form factor, great battery life, wonderful UX.",battery life,positive,27,39,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"Awesome form factor, great battery life, wonderful UX.",UX,positive,51,53,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+i love the keyboard and the screen.,keyboard,positive,11,19,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+i love the keyboard and the screen.,screen,positive,28,34,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"However, there are MAJOR issues with the touchpad which render the device nearly useless.",touchpad,negative,41,49,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+I've already upgraded o Mavericks and I am impressed with everything about this computer.,Mavericks,positive,24,33,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+Not as fast as I would have expect for an i5.,i5,negative,42,44,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+thanks for great service and shipping!,service,positive,17,24,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+thanks for great service and shipping!,shipping,positive,29,37,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"The performance seems quite good, and built-in applications like iPhoto work great with my phone and camera.",performance,positive,4,15,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"The performance seems quite good, and built-in applications like iPhoto work great with my phone and camera.",built-in applications,positive,38,59,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"The performance seems quite good, and built-in applications like iPhoto work great with my phone and camera.",iPhoto,positive,65,71,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+I did swap out the hard drive for a Samsung 830 SSD which I highly recommend.,hard drive,neutral,19,29,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+I did swap out the hard drive for a Samsung 830 SSD which I highly recommend.,Samsung 830 SSD,positive,36,51,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+Starts up in a hurry and everything is ready to go.,Starts up,positive,0,9,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"Yes, that's a good thing, but it's made from aluminum that scratches easily.",aluminum,negative,45,53,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+Quick and has built in virus control.,built in virus control,positive,14,36,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+Took a long time trying to decide between one with retina display and one without.,retina display,neutral,51,65,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+I was also informed that the components of the Mac Book were dirty.,components,negative,29,39,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"the hardware problems have been so bad, i can't wait till it completely dies in 3 years, TOPS!",hardware,negative,4,12,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+It's so nice that the battery last so long and that this machine has the snow lion!,battery,positive,22,29,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+It's so nice that the battery last so long and that this machine has the snow lion!,snow lion,positive,73,82,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+HOWEVER I chose two day shipping and it took over a week to arrive.,shipping,negative,24,32,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"it's exactly what i wanted, and it has all the new features and whatnot.",features,positive,51,59,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+Can you buy any laptop that matches the quality of a MacBook?,quality,positive,40,47,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"It feels cheap, the keyboard is not very sensitive.",keyboard,negative,20,28,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"Though please note that sometimes it crashes, and the sound quality isnt superb.",sound quality,negative,54,67,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+It is very easy to navigate even for a novice.,navigate,positive,19,27,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"Does everything I need it to, has a wonderful battery life and I couldn't be happier.",battery life,positive,46,58,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+Great Performance and Quality.,Performance,positive,6,17,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+Great Performance and Quality.,Quality,positive,22,29,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"I used windows XP, windows Vista, and Windows 7 extensively.",windows XP,neutral,7,17,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"I used windows XP, windows Vista, and Windows 7 extensively.",windows Vista,neutral,19,32,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"I used windows XP, windows Vista, and Windows 7 extensively.",Windows 7,neutral,38,47,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+I did add a SSD drive and memory,SSD drive,neutral,12,21,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+I did add a SSD drive and memory,memory,neutral,26,32,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+On start up it asks endless questions just so itune can sell you more of their products.,start up,negative,3,11,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+On start up it asks endless questions just so itune can sell you more of their products.,itune,negative,46,51,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+I Have been a Pc user for a very long time now but I will get used to this new OS.,OS,neutral,79,81,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"One more thing, this mac does NOT come with restore disks and I am not sure if you can make them direct from the mac like you can with newer PC's, also the charging cables are made of the same cheap material as the iPhone/iPod touch cables.",restore disks,negative,44,57,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"One more thing, this mac does NOT come with restore disks and I am not sure if you can make them direct from the mac like you can with newer PC's, also the charging cables are made of the same cheap material as the iPhone/iPod touch cables.",charging cables,negative,156,171,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"One more thing, this mac does NOT come with restore disks and I am not sure if you can make them direct from the mac like you can with newer PC's, also the charging cables are made of the same cheap material as the iPhone/iPod touch cables.",material,negative,199,207,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+I bought it to my son who uses it for graphic design.,graphic design,neutral,38,52,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+I never tried any external mics with that iMac.,external mics,neutral,18,31,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+The new os is great on my macbook pro!,os,positive,8,10,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+I had a little problem adjusting to the small screen but works fine as long as I remember to carry my glasses.,screen,conflict,46,52,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"I have experienced no problems, works as anticipated.",works,positive,32,37,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+System is running great.,System,positive,0,6,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+Easy to customize setting and even create your own bookmarks.,customize setting,positive,8,25,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+Easy to customize setting and even create your own bookmarks.,create your own bookmarks,positive,35,60,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"The MAC Mini, wireless keyboard / mouse and a HDMI cable is all I need to get some real work done.",wireless keyboard / mouse,neutral,14,39,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"The MAC Mini, wireless keyboard / mouse and a HDMI cable is all I need to get some real work done.",HDMI cable,neutral,46,56,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"it has all the features that we expected and the price was good, working well so far.",features,positive,15,23,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"it has all the features that we expected and the price was good, working well so far.",price,positive,49,54,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"it has all the features that we expected and the price was good, working well so far.",working,positive,65,72,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"I work as a designer and coder and I needed a new buddy to work with, not gaming.",gaming,neutral,74,80,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+The new operating system makes this computer into a super iPad.,operating system,positive,8,24,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+Easy to set up and go!,set up,positive,8,14,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+I can't believe how quiet the hard drive is and how quick this thing boots up.,hard drive,positive,30,40,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+I can't believe how quiet the hard drive is and how quick this thing boots up.,boots up,positive,69,77,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+The only issue came when I tried scanning to the mac.,scanning,negative,33,41,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+I think this is about as good as it gets at anything close to this price point.,price point,neutral,67,78,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+It's just what we were looking for and it works great.,works,positive,42,47,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+It's so quick and responsive that it makes working/surfing on a computer so much more pleasurable!,working,positive,43,50,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+It's so quick and responsive that it makes working/surfing on a computer so much more pleasurable!,surfing,positive,51,58,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"It works fine, and all the software seems to run pretty well.",works,positive,3,8,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"It works fine, and all the software seems to run pretty well.",software,positive,27,35,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"I'm using this computer for word processing, web browsing, some gaming, and I'm learning programming.",word processing,neutral,28,43,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"I'm using this computer for word processing, web browsing, some gaming, and I'm learning programming.",web browsing,neutral,45,57,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"I'm using this computer for word processing, web browsing, some gaming, and I'm learning programming.",gaming,neutral,64,70,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"I'm using this computer for word processing, web browsing, some gaming, and I'm learning programming.",programming,neutral,89,100,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"My wife was so excited to open the box, but quickly came to see that it did not function as it should.",function,negative,80,88,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"I wanted a computer that was quite, fast, and that had overall great performance.",performance,neutral,69,80,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"Apple ""Help"" is a mixed bag.","Apple ""Help""",negative,0,12,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+It suddenly can not work.,work,negative,20,24,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"Harddrive was in poor condition, had to replace it.",Harddrive,negative,0,9,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+The on/off switch is a bit obscure in the rear corner.,on/off switch,negative,4,17,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+My only complaint is the total lack of instructions that come with the mac mini.,instructions,negative,39,51,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"The only task that this computer would not be good enough for would be gaming, otherwise the integrated Intel 4000 graphics work well for other tasks.",gaming,negative,71,77,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"The only task that this computer would not be good enough for would be gaming, otherwise the integrated Intel 4000 graphics work well for other tasks.",integrated Intel 4000 graphics,conflict,93,123,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+I'm hoping the rest of the features will be the signature quality of apple.,features,conflict,27,35,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"I use it mostly for content creation (Audio, video, photo editing) and its reliable.",content creation,positive,20,36,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"I use it mostly for content creation (Audio, video, photo editing) and its reliable.",Audio,positive,38,43,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"I use it mostly for content creation (Audio, video, photo editing) and its reliable.",video,positive,45,50,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"I use it mostly for content creation (Audio, video, photo editing) and its reliable.",photo editing,positive,52,65,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+Screen is bright and gorgeous.,Screen,positive,0,6,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"The only solution is to turn the brightness down, etc.",brightness,neutral,33,43,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+If you want more information on macs I suggest going to apple.com and heading towards the macbook page for more information on the applications.,applications,neutral,131,143,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"It is robust, with a friendly use as all Apple products.",use,positive,30,33,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+It is fast and easy to use.,use,positive,23,26,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+And the fact that it comes with an i5 processor definitely speeds things up,i5 processor,positive,35,47,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+I have been PC for years but this computer is intuitive and its built in features are a great help,built in features,positive,64,81,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"Nice screen, keyboard works great!",screen,positive,5,11,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"Nice screen, keyboard works great!",keyboard,positive,13,21,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+I was amazed at how fast the delivery was.,delivery,positive,29,37,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+I've installed to it additional SSD and 16Gb RAM.,SSD,neutral,32,35,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+I've installed to it additional SSD and 16Gb RAM.,16Gb RAM,neutral,40,48,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+The memory was gone and it was not able to be used.,memory,negative,4,10,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+It works great and I am so happy I bought it.,works,positive,3,8,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"I like the design and ease of use with the keyboard, plenty of ports.",design,positive,11,17,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"I like the design and ease of use with the keyboard, plenty of ports.",keyboard,positive,43,51,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"I like the design and ease of use with the keyboard, plenty of ports.",ports,positive,63,68,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+it definitely beats my old mac and the service was great.,service,positive,39,46,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+Web browsing is very quick with Safari browser.,Web browsing,positive,0,12,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+Web browsing is very quick with Safari browser.,Safari browser,positive,32,46,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+I like the lighted screen at night.,lighted screen,positive,11,25,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+It is really easy to use and it is quick to start up.,use,positive,21,24,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+It is really easy to use and it is quick to start up.,start up,positive,44,52,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+I've lived with the crashes and slow operation and restarts.,operation,negative,37,46,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+USB3 Peripherals are noticably less expensive than the ThunderBolt ones.,USB3 Peripherals,positive,0,16,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+USB3 Peripherals are noticably less expensive than the ThunderBolt ones.,ThunderBolt,negative,55,66,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+And mine had broke but I sent it in under warranty-no problems.,warranty,positive,42,50,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"It's fast, light, and is perfect for media editing, which is mostly why I bought it in the first place.",media editing,positive,37,50,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"The battery lasts as advertised (give or take 15-20 minutes), and the entire user experience is very elegant.",battery,positive,4,11,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"The battery lasts as advertised (give or take 15-20 minutes), and the entire user experience is very elegant.",user experience,positive,77,92,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+Thanks for the fast shipment and great price.,shipment,positive,20,28,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+Thanks for the fast shipment and great price.,price,positive,39,44,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"!Excelent performance, usability, presentation and time response.",performance,positive,10,21,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"!Excelent performance, usability, presentation and time response.",usability,positive,23,32,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"!Excelent performance, usability, presentation and time response.",presentation,positive,34,46,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"!Excelent performance, usability, presentation and time response.",time response,positive,51,64,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+The smaller size was a bonus because of space restrictions.,size,positive,12,16,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+I blame the Mac OS.,Mac OS,negative,12,18,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"In fact I still use manyLegacy programs (Appleworks, FileMaker Pro, Quicken, Photoshop etc)!",Legacy programs,neutral,24,39,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"In fact I still use manyLegacy programs (Appleworks, FileMaker Pro, Quicken, Photoshop etc)!",Appleworks,neutral,41,51,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"In fact I still use manyLegacy programs (Appleworks, FileMaker Pro, Quicken, Photoshop etc)!",FileMaker Pro,neutral,53,66,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"In fact I still use manyLegacy programs (Appleworks, FileMaker Pro, Quicken, Photoshop etc)!",Quicken,neutral,68,75,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"In fact I still use manyLegacy programs (Appleworks, FileMaker Pro, Quicken, Photoshop etc)!",Photoshop,neutral,77,86,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+I like the operating system.,operating system,positive,11,27,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+I love the form factor.,form factor,positive,11,22,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+It's fast at loading the internet.,loading the internet,positive,13,33,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+So much faster and sleeker looking.,looking,positive,27,34,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"Unfortunately, it runs XP and Microsoft is dropping support next April.",XP,neutral,23,25,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"Unfortunately, it runs XP and Microsoft is dropping support next April.",support,negative,52,59,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"First off, I really do like my MBP... once used to the OS it is pretty easy to get around, and the overall build is great... eg the keyboard is one of the best to type on.",OS,positive,55,57,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"First off, I really do like my MBP... once used to the OS it is pretty easy to get around, and the overall build is great... eg the keyboard is one of the best to type on.",overall build,positive,99,112,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"First off, I really do like my MBP... once used to the OS it is pretty easy to get around, and the overall build is great... eg the keyboard is one of the best to type on.",keyboard,positive,132,140,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+It is made of such solid construction and since I have never had a Mac using my iPhone helped me get used to the system a bit.,construction,positive,25,37,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+It is made of such solid construction and since I have never had a Mac using my iPhone helped me get used to the system a bit.,system,neutral,113,119,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+Very nice unibody construction.,unibody construction,positive,10,30,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"This Macbook Pro is fast, powerful, and runs super quiet and cool.",runs,positive,40,44,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+It's ok but doesn't have a disk drive which I didn't know until after I bought it.,disk drive,neutral,27,37,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"There is no HDMI receptacle, nor is there an SD card slot located anywhere on the device.",HDMI receptacle,neutral,12,27,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"There is no HDMI receptacle, nor is there an SD card slot located anywhere on the device.",SD card slot,neutral,45,57,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+It came in brand new and works perfectly.,works,positive,25,30,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"It shouldn't happen like that, I don't have any design app open or anything.",design app,neutral,48,58,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+MY TRACKPAD IS NOT WORKING.,TRACKPAD,negative,3,11,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"It looks and feels solid, with a flawless finish.",finish,positive,42,48,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"It looks and feels solid, with a flawless finish.",looks,positive,3,8,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"It looks and feels solid, with a flawless finish.",feels,positive,13,18,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+Price was higher when purchased on MAC when compared to price showing on PC when I bought this product.,Price,negative,0,5,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+Price was higher when purchased on MAC when compared to price showing on PC when I bought this product.,price,positive,56,61,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+Then the system would many times not power down without a forced power-off.,system,negative,9,15,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+Then the system would many times not power down without a forced power-off.,power down,negative,37,47,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+The configuration is perfect for my needs.,configuration,positive,4,17,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+and the speakers is the worst ever.,speakers,negative,8,16,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"Its the best, its got the looks, super easy to use and love all you can do with the trackpad!..",looks,positive,26,31,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"Its the best, its got the looks, super easy to use and love all you can do with the trackpad!..",use,positive,47,50,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"Its the best, its got the looks, super easy to use and love all you can do with the trackpad!..",trackpad,positive,84,92,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+Web surfuring is smooth and seamless.,Web surfuring,positive,0,13,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+I'm overall pleased with the interface and the portability of this product.,interface,positive,29,38,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+I'm overall pleased with the interface and the portability of this product.,portability,positive,47,58,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"This item is a beautiful piece, it works well, it is easy to carry and handle.",works,positive,35,40,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"This item is a beautiful piece, it works well, it is easy to carry and handle.",carry,positive,61,66,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"This item is a beautiful piece, it works well, it is easy to carry and handle.",handle,positive,71,77,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"It was also suffering from hardware (keyboard) issues, relatively slow performance and shortening battery lifetime.",performance,negative,71,82,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"It was also suffering from hardware (keyboard) issues, relatively slow performance and shortening battery lifetime.",battery lifetime,negative,98,114,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"It was also suffering from hardware (keyboard) issues, relatively slow performance and shortening battery lifetime.",hardware (keyboard),negative,27,46,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"Runs good and does the job, can't complain about that!",Runs,positive,0,4,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+It's silent and has a very small footprint on my desk.,footprint,positive,33,42,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+The exterior is absolutely gorgeous.,exterior,positive,4,12,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"It has a very high performance, just for what I needed for.",performance,positive,19,30,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+Apple is aware of this issue and this is either old stock or a defective design involving the intel 4000 graphics chipset.,intel 4000 graphics chipset,neutral,94,121,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+Apple is aware of this issue and this is either old stock or a defective design involving the intel 4000 graphics chipset.,design,neutral,73,79,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+OSX Mountain Lion  soon to upgrade to Mavericks.,OSX Mountain Lion,neutral,0,17,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+OSX Mountain Lion  soon to upgrade to Mavericks.,Mavericks,neutral,38,47,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"I just bought the new MacBook Pro, the 13"" model, and I can't believe Apple keeps making the same mistake with regard to USB ports.",USB ports,negative,121,130,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+It wakes in less than a second when I open the lid.,lid,neutral,47,50,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+It wakes in less than a second when I open the lid.,wakes,positive,3,8,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+It is the perfect size and speed for me.,size,positive,18,22,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+It is the perfect size and speed for me.,speed,positive,27,32,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+THE CUSTOMER SERVICE IS TERRIFIC!!,CUSTOMER SERVICE,positive,4,20,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"My last laptop was a 17"" ASUS gaming machine, which performed admirably, but having since built my own desktop and really settling into the college life, I found myself wanting something smaller and less cumbersome, not to mention that the ASUS had been slowly developing problems ever since I bought it about 4 years ago.",performed,positive,52,61,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"However, it did not have any scratches, ZERO battery cycle count (pretty surprised), and all the hardware seemed to be working perfectly.",battery cycle count,positive,45,64,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"However, it did not have any scratches, ZERO battery cycle count (pretty surprised), and all the hardware seemed to be working perfectly.",hardware,positive,97,105,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+After fumbling around with the OS I started searching the internet for a fix and found a number of forums on fixing the issue.,OS,negative,31,33,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+And as for all the fancy finger swipes -- I just gave up and attached a mouse.,finger swipes,negative,25,38,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+And as for all the fancy finger swipes -- I just gave up and attached a mouse.,mouse,neutral,72,77,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"I needed a laptop with big storage, a nice screen and fast so I can photoshop without any problem.",storage,neutral,27,34,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"I needed a laptop with big storage, a nice screen and fast so I can photoshop without any problem.",screen,neutral,43,49,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"I needed a laptop with big storage, a nice screen and fast so I can photoshop without any problem.",photoshop,neutral,68,77,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+I like coming back to Mac OS but this laptop is lacking in speaker quality compared to my $400  old HP laptop.,Mac OS,positive,22,28,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+I like coming back to Mac OS but this laptop is lacking in speaker quality compared to my $400  old HP laptop.,speaker quality,negative,59,74,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+Shipped very quickly and safely.,Shipped,positive,0,7,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+The thunderbolt port is awesome!,thunderbolt port,positive,4,20,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+The performance is definitely superior to any computer I've ever put my hands on.,performance,positive,4,15,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+It's great for streaming video and other entertainment uses.,streaming video,positive,15,30,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+It's great for streaming video and other entertainment uses.,entertainment uses,positive,41,59,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+I like the design and its features but there are somethings I think needs to be improved.,design,positive,11,17,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+I like the design and its features but there are somethings I think needs to be improved.,features,positive,26,34,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+There were small problems with Mac office.,Mac office,negative,31,41,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+I understand I should call Apple Tech Support about any variables(which is my purpose of writing this con) as variables could be a bigger future problem.,Apple Tech Support,neutral,27,45,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"I ordered my 2012 mac mini after being disappointed with spec of the new 27"" Imacs.",spec,negative,57,61,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"It still works and it's extremely user friendly, so I would recommend it for new computer user and also for those who are just looking for a more efficient way to do things",works,positive,9,14,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"Its fast, easy to use and it looks great.",use,positive,18,21,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"Its fast, easy to use and it looks great.",looks,positive,29,34,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+(but Office can be purchased) IF I ever need a laptop again I am for sure purchasing another Toshiba!!,Office,neutral,5,11,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+I haven't tried the one with retina display... Maybe in the future.,retina display,neutral,29,43,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"Performance is much much better on the Pro, especially if you install an SSD on it.",Performance,positive,0,11,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"Performance is much much better on the Pro, especially if you install an SSD on it.",SSD,positive,73,76,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"Note, however, that any existing MagSafe accessories you have will not work with the MagSafe 2 connection.",MagSafe accessories,neutral,33,52,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"Note, however, that any existing MagSafe accessories you have will not work with the MagSafe 2 connection.",MagSafe 2 connection,negative,85,105,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"The only thing I dislike is the touchpad, alot of the times its unresponsive and does things I dont want it too, I would recommend using a mouse with it.",touchpad,negative,32,40,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"The only thing I dislike is the touchpad, alot of the times its unresponsive and does things I dont want it too, I would recommend using a mouse with it.",mouse,neutral,139,144,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"The Mac mini is about 8x smaller than my old computer which is a huge bonus and runs very quiet, actually the fans aren't audible unlike my old pc",runs,positive,80,84,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"The Mac mini is about 8x smaller than my old computer which is a huge bonus and runs very quiet, actually the fans aren't audible unlike my old pc",fans,positive,110,114,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+MAYBE The Mac OS improvement were not The product they Want to offer.,Mac OS,negative,10,16,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+I thought the transition would be difficult at best and would take some time to fully familiarize myself with the new Mac ecosystem.,Mac ecosystem,neutral,118,131,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+It's absolutely wonderful and worth the price!,price,positive,40,45,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+I am please with the products ease of use; out of the box ready; appearance and functionality.,use,positive,38,41,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+I am please with the products ease of use; out of the box ready; appearance and functionality.,appearance,positive,65,75,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+I am please with the products ease of use; out of the box ready; appearance and functionality.,functionality,positive,80,93,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+Perfect for all my graphic design classes I'm taking this year in college :-),graphic design,positive,19,33,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+I will not be using that slot again.,slot,negative,25,29,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"The OS is fast and fluid, everything is organized and it's just beautiful.",OS,positive,4,6,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+They are simpler to use.,use,positive,20,23,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+!so nice .. stable .. fast .. now i got my SSD !,SSD,positive,43,46,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"Also, in using the built-in camera, my voice recording for my vlog sounds like the interplanetary transmissions in the ""Star Wars"" saga.",built-in camera,neutral,19,34,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"Also, in using the built-in camera, my voice recording for my vlog sounds like the interplanetary transmissions in the ""Star Wars"" saga.",voice recording,negative,39,54,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+I love the quick start up.,start up,positive,17,25,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+You just cannot beat the functionality of an Apple device.,functionality,positive,25,38,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+Yet my mac continues to function properly.,function,positive,24,32,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+Graphics are much improved.,Graphics,positive,0,8,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"Here are the things that made me confident with my purchase:Build Quality - Seriously, you can't beat a unibody construction.",Build Quality,positive,60,73,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"Here are the things that made me confident with my purchase:Build Quality - Seriously, you can't beat a unibody construction.",unibody construction,positive,104,124,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+It provides much more flexibility for connectivity.,flexibility for connectivity,positive,22,50,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"I want the portability of a tablet, without the limitations of a tablet and that's where this laptop comes into play.",portability,positive,11,22,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+Mac tutorials do help.,Mac tutorials,positive,0,13,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+The technical support was not helpful as well.,technical support,negative,4,21,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+I got the new adapter and there was no change.,adapter,neutral,14,21,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+so i called technical support.,technical support,neutral,12,29,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+Came with iPhoto and garage band already loaded.,iPhoto,neutral,10,16,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+Came with iPhoto and garage band already loaded.,garage band,neutral,21,32,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"Logic board utterly fried, cried, and laid down and died.",Logic board,positive,0,11,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+The sound was crappy even when you turn up the volume still the same results.,sound,negative,4,9,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+The sound was crappy even when you turn up the volume still the same results.,volume,negative,47,53,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+OSX Lion is a great performer..extremely fast and reliable.,OSX Lion,positive,0,8,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"Having heard from friends and family about how reliable a Mac product is, I never expected to have an application crash within the first month, but I did.",application,negative,102,113,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+The Macbook pro's physical form is wonderful.,physical form,positive,18,31,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+The Mini's body hasn't changed since late 2010- and for a good reason.,body,positive,11,15,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+The unibody construction really does feel lot more solid than Apple's previous laptops.,unibody construction,positive,4,24,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+3D rendering slows it down considerably.,3D rendering,negative,0,12,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+Got this Mac Mini with OS X Mountain Lion for my wife.,OS X Mountain Lion,neutral,23,41,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"fast, great screen, beautiful apps for a laptop;priced at 1100 on the apple website;amazon had it for 1098+ tax -  plus i had a 10% off coupon from amazon-cost me 998 plus tax- 1070- OTD!",screen,positive,12,18,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"fast, great screen, beautiful apps for a laptop;priced at 1100 on the apple website;amazon had it for 1098+ tax -  plus i had a 10% off coupon from amazon-cost me 998 plus tax- 1070- OTD!",apps,positive,30,34,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"fast, great screen, beautiful apps for a laptop;priced at 1100 on the apple website;amazon had it for 1098+ tax -  plus i had a 10% off coupon from amazon-cost me 998 plus tax- 1070- OTD!",priced,neutral,48,54,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"fast, great screen, beautiful apps for a laptop;priced at 1100 on the apple website;amazon had it for 1098+ tax -  plus i had a 10% off coupon from amazon-cost me 998 plus tax- 1070- OTD!",cost,neutral,155,159,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+12.44 seconds to boot.,boot,neutral,17,21,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+All the ports are much needed since this is my main computer.,ports,neutral,8,13,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"The Like New condition of the iMac MC309LL/A on Amazon is at $900+ level only, and it is a Quad-Core 2.5 GHz CPU (similar to the $799 Mini), with Radeon HD 6750M 512MB graphic card (this mini is integrated Intel 4000 card), and it even comes with wireless Apple Keyboard and Mouse, all put together in neat and nice package.",Quad-Core 2.5 GHz CPU,neutral,91,112,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"The Like New condition of the iMac MC309LL/A on Amazon is at $900+ level only, and it is a Quad-Core 2.5 GHz CPU (similar to the $799 Mini), with Radeon HD 6750M 512MB graphic card (this mini is integrated Intel 4000 card), and it even comes with wireless Apple Keyboard and Mouse, all put together in neat and nice package.",Radeon HD 6750M 512MB graphic card,neutral,146,180,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"The Like New condition of the iMac MC309LL/A on Amazon is at $900+ level only, and it is a Quad-Core 2.5 GHz CPU (similar to the $799 Mini), with Radeon HD 6750M 512MB graphic card (this mini is integrated Intel 4000 card), and it even comes with wireless Apple Keyboard and Mouse, all put together in neat and nice package.",integrated Intel 4000 card,neutral,195,221,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"The Like New condition of the iMac MC309LL/A on Amazon is at $900+ level only, and it is a Quad-Core 2.5 GHz CPU (similar to the $799 Mini), with Radeon HD 6750M 512MB graphic card (this mini is integrated Intel 4000 card), and it even comes with wireless Apple Keyboard and Mouse, all put together in neat and nice package.",wireless Apple Keyboard and Mouse,neutral,247,280,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"The Like New condition of the iMac MC309LL/A on Amazon is at $900+ level only, and it is a Quad-Core 2.5 GHz CPU (similar to the $799 Mini), with Radeon HD 6750M 512MB graphic card (this mini is integrated Intel 4000 card), and it even comes with wireless Apple Keyboard and Mouse, all put together in neat and nice package.",package,positive,316,323,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+Put a cover on it and is a little better but that is my only complaint.,cover,neutral,6,11,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+Within a few hours I was using the gestures unconsciously.,gestures,positive,35,43,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+This mac does come with an extender cable and I'm using mine right now hoping the cable will stay nice for the many years I plan on using this mac.,extender cable,neutral,27,41,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+This mac does come with an extender cable and I'm using mine right now hoping the cable will stay nice for the many years I plan on using this mac.,cable,positive,82,87,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+The 2.9ghz dual-core i7 chip really out does itself.,2.9ghz dual-core i7 chip,positive,4,28,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+It is pretty snappy and starts up in about 30 seconds which is good enough for me.,starts up,positive,24,33,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"So noise is reduced at least 50% and the heat is much better, now it doesn't feel hot but warm.",heat,conflict,41,45,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"So noise is reduced at least 50% and the heat is much better, now it doesn't feel hot but warm.",noise,conflict,3,8,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+Not sure on Windows 8.,Windows 8,neutral,12,21,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+My one complaint is that there was no internal CD drive.,internal CD drive,negative,38,55,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+This newer netbook has no hard drive or network lights.,hard drive,neutral,26,36,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+This newer netbook has no hard drive or network lights.,network lights,neutral,40,54,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"I was having a though time deciding between the 13"" MacBook Air or the MacBook Pro 13"" (Both baseline models, priced at 1,200 $ retail)",priced,neutral,110,116,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+Not too expense and has enough storage for most users and many ports.,storage,positive,31,38,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+Not too expense and has enough storage for most users and many ports.,ports,positive,63,68,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+The audio volume is quite low and virtually unusable in a room with any background activity.,audio volume,negative,4,16,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+It is lightweight and the perfect size to carry to class.,size,positive,34,38,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+I was given a demonstration of Windows 8.,Windows 8,neutral,31,40,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+The MBP is beautiful has many wonderful capabilities.,capabilities,positive,40,52,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"I thought that it will be fine, if i do some settings.",settings,neutral,45,53,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+Runs very smoothly.,Runs,positive,0,4,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+Boot-up slowed significantly after all Windows updates were installed.,Boot-up,negative,0,7,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+Boot-up slowed significantly after all Windows updates were installed.,Windows updates,negative,39,54,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+More likely it will require replacing the logic board once they admit they have a problem and come up with a solution.,logic board,negative,42,53,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"It was important that it was powerful enough to do all of the tasks he needed on the internet, word processing, graphic design and gaming.",internet,positive,85,93,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"It was important that it was powerful enough to do all of the tasks he needed on the internet, word processing, graphic design and gaming.",word processing,positive,95,110,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"It was important that it was powerful enough to do all of the tasks he needed on the internet, word processing, graphic design and gaming.",graphic design,positive,112,126,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"It was important that it was powerful enough to do all of the tasks he needed on the internet, word processing, graphic design and gaming.",gaming,positive,131,137,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"I like the Mini Mac it was easy to setup and install, but I am learning as I go and could use a tutorial to learn how to use some of the features I was use to on the PC especially the right mouse click menu.",setup,positive,35,40,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"I like the Mini Mac it was easy to setup and install, but I am learning as I go and could use a tutorial to learn how to use some of the features I was use to on the PC especially the right mouse click menu.",install,positive,45,52,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"I like the Mini Mac it was easy to setup and install, but I am learning as I go and could use a tutorial to learn how to use some of the features I was use to on the PC especially the right mouse click menu.",tutorial,neutral,96,104,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"I like the Mini Mac it was easy to setup and install, but I am learning as I go and could use a tutorial to learn how to use some of the features I was use to on the PC especially the right mouse click menu.",features,neutral,137,145,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"I like the Mini Mac it was easy to setup and install, but I am learning as I go and could use a tutorial to learn how to use some of the features I was use to on the PC especially the right mouse click menu.",right mouse click menu,neutral,184,206,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+Runs real quick.,Runs,positive,0,4,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+Buy the separate RAM memory and you will have a rocket!,RAM memory,positive,17,27,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"Since the machine's slim profile is critical to me, that was a problem.",profile,negative,25,32,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"WiFi capability, disk drive and multiple USB ports to connect scale and printers was all that was required.",disk drive,positive,17,27,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"WiFi capability, disk drive and multiple USB ports to connect scale and printers was all that was required.",USB ports,positive,41,50,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"WiFi capability, disk drive and multiple USB ports to connect scale and printers was all that was required.",WiFi capability,positive,0,15,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"The SD card reader is slightly recessed and upside down (the nail slot on the card cannot be accessed), if this was a self ejecting slot this would not be an issue, but its not.",SD card reader,negative,4,18,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"The SD card reader is slightly recessed and upside down (the nail slot on the card cannot be accessed), if this was a self ejecting slot this would not be an issue, but its not.",nail slot on the card,negative,61,82,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"The SD card reader is slightly recessed and upside down (the nail slot on the card cannot be accessed), if this was a self ejecting slot this would not be an issue, but its not.",slot,negative,132,136,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"Soft touch, anodized aluminum with laser cut precision and no flaws.",touch,positive,5,10,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"Soft touch, anodized aluminum with laser cut precision and no flaws.",anodized aluminum,positive,12,29,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"Simple details, crafted aluminium and real glass make this laptop blow away the other plastic ridden, bulky sticker filled laptops.",aluminium,positive,24,33,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"Simple details, crafted aluminium and real glass make this laptop blow away the other plastic ridden, bulky sticker filled laptops.",glass,positive,43,48,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+First of all yes this is a mac and it has that nice brushed aluminum .,aluminum,positive,60,68,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"After all was said and done, I essentially used that $450 savings to buy 16GB of RAM, TWO Seagate Momentus XT hybrid drives and an OWC upgrade kit to install the second hard drive.",16GB of RAM,neutral,73,84,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"After all was said and done, I essentially used that $450 savings to buy 16GB of RAM, TWO Seagate Momentus XT hybrid drives and an OWC upgrade kit to install the second hard drive.",Seagate Momentus XT hybrid drives,neutral,90,123,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"After all was said and done, I essentially used that $450 savings to buy 16GB of RAM, TWO Seagate Momentus XT hybrid drives and an OWC upgrade kit to install the second hard drive.",OWC upgrade kit,neutral,131,146,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"After all was said and done, I essentially used that $450 savings to buy 16GB of RAM, TWO Seagate Momentus XT hybrid drives and an OWC upgrade kit to install the second hard drive.",hard drive,neutral,169,179,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"The Dell Inspiron is fast and has a number pad on the keyboard, which I miss on my Apple laptops.",number pad on the keyboard,positive,36,62,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+I was concerned that the downgrade to the regular hard drive would make it unacceptably slow but I need not have worried - this machine is the fastest I have ever owned...,regular hard drive,positive,42,60,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+This one still has the CD slot.,CD slot,neutral,23,30,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+No HDMI port.,HDMI port,neutral,3,12,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+I had to install Mountain Lion and it took a good two hours.,install Mountain Lion,negative,9,30,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+Customization on mac is impossible.,Customization,negative,0,13,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+I am replacing the HD with a Micron SSD soon.,HD,neutral,19,21,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+I am replacing the HD with a Micron SSD soon.,Micron SSD,neutral,29,39,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+Plus two finger clicking as a replacement for the right click button is surprisingly intuitive.,two finger clicking,positive,5,24,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+Plus two finger clicking as a replacement for the right click button is surprisingly intuitive.,right click button,neutral,50,68,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+The SuperDrive is quiet.,SuperDrive,positive,4,14,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+The power plug has to be connected to the power adaptor to charge the battery but won't stay connected.,power plug,negative,4,14,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+The power plug has to be connected to the power adaptor to charge the battery but won't stay connected.,power adaptor,neutral,42,55,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+The power plug has to be connected to the power adaptor to charge the battery but won't stay connected.,battery,neutral,70,77,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"The battery was completely dead, in fact it had grown about a quarter inch thick lump on the underside.",battery,negative,4,11,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+if yo like practicality this is the laptop for you.,practicality,positive,11,23,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+The OS is great.,OS,positive,4,6,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+I tried several monitors and several HDMI cables and this was the case each time.,monitors,neutral,16,24,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+I tried several monitors and several HDMI cables and this was the case each time.,HDMI cables,neutral,37,48,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"CONS: Price is a bit ridiculous, kinda heavy.",Price,negative,6,11,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+The troubleshooting said it was the AC adaptor so we ordered a new one.,AC adaptor,neutral,36,46,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+Fan only comes on when you are playing a game.,Fan,neutral,0,3,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+Fan only comes on when you are playing a game.,playing a game,neutral,31,45,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"Which it did not have, only 3 USB 2 ports.",USB 2 ports,neutral,30,41,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+No startup disk was not included but that may be my fault.,startup disk,neutral,3,15,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"There is no ""tools"" menu.","""tools"" menu",neutral,12,24,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+It is very fast and has everything that I need except for a word program.,word program,negative,60,72,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+Needs a CD/DVD drive and a bigger power switch.,CD/DVD drive,neutral,8,20,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+Needs a CD/DVD drive and a bigger power switch.,power switch,negative,34,46,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+My laptop with Windows 7 crashed and I did not want Windows 8.,Windows 7,negative,15,24,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+My laptop with Windows 7 crashed and I did not want Windows 8.,Windows 8,negative,52,61,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+Easy to install also small to leave anywhere at your bedroom also very easy to configure for ADSl cable or wifi.,install,positive,8,15,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+Easy to install also small to leave anywhere at your bedroom also very easy to configure for ADSl cable or wifi.,configure for ADSl cable or wifi,positive,79,111,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+The speakers could have been better but it wasn't a deal breaker... this is a great little laptop... love it!,speakers,conflict,4,12,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+Nice packing.,packing,positive,5,12,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"I switched to this because I wanted something different, even though I miss windows.",windows,positive,76,83,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"Apple no longer includes iDVD with the computer and furthermore, Apple doesn't even offer it anymore!",iDVD,negative,25,29,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"I also wanted Windows 7, which this one has.",Windows 7,positive,14,23,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"At first, I feel a little bit uncomfortable in using the Mac system.",Mac system,negative,57,67,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+I am used to computers with windows so I am having a little difficulty finding my way around.,windows,neutral,28,35,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+It just works out of the box and you have a lot of cool software included with the OS.,works,positive,8,13,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+It just works out of the box and you have a lot of cool software included with the OS.,software,positive,56,64,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+It just works out of the box and you have a lot of cool software included with the OS.,OS,neutral,83,85,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+its as advertised on here..... it works great and is not a waste of money!,works,positive,34,39,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+Runs like a champ.....,Runs,positive,0,4,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+Premium price for the OS more than anything else.,price,positive,8,13,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+Premium price for the OS more than anything else.,OS,neutral,22,24,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"I was a little concerned about the touch pad based on reviews, but I've found it fine to work with.",touch pad,positive,35,44,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"I bought this Mac book pro along with a new 27"" iMac and while they are still light years more reliable than a PC I have noticed a decline in the reliability of my Mac computers.",reliability,conflict,146,157,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"The sound as mentioned earlier isn't the best, but it can be solved with headphones.",sound,conflict,4,9,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"The sound as mentioned earlier isn't the best, but it can be solved with headphones.",headphones,neutral,73,83,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"The track pad is a bit squirrely at times- sometimes too sensitive, and sometimes a bit unresponsive, but it's usable.",track pad,conflict,4,13,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"However, the experience was great since the OS does not become unstable and the application will simply shutdown and reopen.",OS,positive,44,46,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"However, the experience was great since the OS does not become unstable and the application will simply shutdown and reopen.",application,positive,80,91,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"If you ask me, for this price it should be included.",price,negative,24,29,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+The battery is not as shown in the product photos.,battery,negative,4,11,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+Even though I could have gotten a pc twice the speed for the same price I still think there's nothing like a Mac.,price,conflict,66,71,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+Even though I could have gotten a pc twice the speed for the same price I still think there's nothing like a Mac.,speed,conflict,47,52,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+Shipping was quick and product described was the product sent and so much more...,Shipping,positive,0,8,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+the retina display display make pictures i took years ago jaw dropping.,retina display display,positive,4,26,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+The Mac Mini is probably the simplest example of compact computing out there.,compact computing,positive,49,66,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"Instead, I'll focus more on the actual performance and feature set of the hardware itself so you can make an educated decision on which Mac to buy.",performance and feature set of the hardware,neutral,39,82,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"Other ports include FireWire 800, Gigabit Ethernet, MagSafe port, Microphone jack.",ports,neutral,6,11,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"Other ports include FireWire 800, Gigabit Ethernet, MagSafe port, Microphone jack.",FireWire 800,neutral,20,32,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"Other ports include FireWire 800, Gigabit Ethernet, MagSafe port, Microphone jack.",Gigabit Ethernet,neutral,34,50,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"Other ports include FireWire 800, Gigabit Ethernet, MagSafe port, Microphone jack.",MagSafe port,neutral,52,64,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"Other ports include FireWire 800, Gigabit Ethernet, MagSafe port, Microphone jack.",Microphone jack,neutral,66,81,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"Additionally, there is barely a ventilation system in the computer, and even the simple activity of watching videos let alone playing steam games causes the laptop to get very very hot, and in fact impossible to keep on lap.",ventilation system,negative,32,50,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"Additionally, there is barely a ventilation system in the computer, and even the simple activity of watching videos let alone playing steam games causes the laptop to get very very hot, and in fact impossible to keep on lap.",watching videos,neutral,100,115,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"Additionally, there is barely a ventilation system in the computer, and even the simple activity of watching videos let alone playing steam games causes the laptop to get very very hot, and in fact impossible to keep on lap.",playing steam games,neutral,126,145,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"Chatting with Acer support, I was advised the problem was corrupted operating system files.",Acer support,neutral,14,26,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"Chatting with Acer support, I was advised the problem was corrupted operating system files.",operating system files,neutral,68,90,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+It's been a couple weeks since the purchase and I'm struggle with finding the correct keys (but that was expected).,keys,neutral,86,90,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"Many people complain about the new OS, and it's urgent for Apple to fix it asap!",OS,negative,35,37,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+Now that I have upgraded to Lion I am much happier about MAC OS and have just bought an iMac for office.,Lion,positive,28,32,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+Now that I have upgraded to Lion I am much happier about MAC OS and have just bought an iMac for office.,MAC OS,positive,57,63,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+User upgradeable RAM and HDD.,RAM,positive,17,20,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+User upgradeable RAM and HDD.,HDD,positive,25,28,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+But I wanted the Pro for the CD/DVD player.,CD/DVD player,positive,29,42,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+The RAM memory is good but should have splurged for 8Mb instead of 4Mb.,RAM memory,conflict,4,14,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+I was a little worry at first because I don't have a lot of experience with os.x and windows has always been second nature to me after many years of using windows.,os.x,neutral,76,80,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+I was a little worry at first because I don't have a lot of experience with os.x and windows has always been second nature to me after many years of using windows.,windows,positive,85,92,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+I was a little worry at first because I don't have a lot of experience with os.x and windows has always been second nature to me after many years of using windows.,windows,neutral,155,162,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+With the softwares supporting the use of other OS makes it much better.,OS,neutral,47,49,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+With the softwares supporting the use of other OS makes it much better.,softwares,neutral,9,18,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"I then upgraded to Mac OS X 10.8 ""Mountain Lion"".","Mac OS X 10.8 ""Mountain Lion""",neutral,19,48,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"I was considering buying the Air, but in reality, this one has a more powerful performance and seems much more convenient, even though it's about .20 inch thicker and 2 lbs heavier.",performance,positive,79,90,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"At home and the office it gets plugged into an external 24"" LCD screen, so built in screen size is not terribly important.",built in screen size,neutral,75,95,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"At home and the office it gets plugged into an external 24"" LCD screen, so built in screen size is not terribly important.","external 24"" LCD screen",neutral,47,70,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+Just beware no DVD slot so when I went to install software I had on CD I couldn't.,install software,negative,42,58,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+Just beware no DVD slot so when I went to install software I had on CD I couldn't.,DVD slot,neutral,15,23,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"I bought it to be able to dedicate a small, portable laptop to my writing and was surprised to learn that I needed to buy a word processing program to do so.",word processing program,neutral,124,147,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"This version of MacBook Pro runs on a third-generation CPU (""Ivy Bridge""), not the latest fourth-generation Haswell CPU the 2013 version has.","third-generation CPU (""Ivy Bridge"")",neutral,38,73,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"This version of MacBook Pro runs on a third-generation CPU (""Ivy Bridge""), not the latest fourth-generation Haswell CPU the 2013 version has.",fourth-generation Haswell CPU,neutral,90,119,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+No Cd Rom in the new version there's no way I'm spending that kind of money on something has less features than the older version.,Cd Rom,neutral,3,9,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+No Cd Rom in the new version there's no way I'm spending that kind of money on something has less features than the older version.,features,negative,98,106,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+the volume is really low to low for a laptopwas not expectin t volume to be so lowan i hate that about this computer,volume,negative,4,10,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+the volume is really low to low for a laptopwas not expectin t volume to be so lowan i hate that about this computer,volume,negative,63,69,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+and its not hard to accidentally bang it against something so i recommend getting a case to protect it.,case,neutral,84,88,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+I got this at an amazing price from Amazon and it arrived just in time.,price,positive,25,30,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"Every time I log into the system after a few hours, there is this endlessly frustrating process that I have to go through.",log into the system,negative,13,32,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"Put a SSD and use a 21"" LED screen, this set up is silky smooth!","21"" LED screen",neutral,20,34,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"Put a SSD and use a 21"" LED screen, this set up is silky smooth!",SSD,neutral,6,9,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"Put a SSD and use a 21"" LED screen, this set up is silky smooth!",set up,positive,41,47,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"The case is now slightly larger than the previous generation, but the lack of an external power supply justifies the small increase in size.",case,negative,4,8,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"The case is now slightly larger than the previous generation, but the lack of an external power supply justifies the small increase in size.",size,conflict,135,139,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"The case is now slightly larger than the previous generation, but the lack of an external power supply justifies the small increase in size.",external power supply,neutral,81,102,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"I had to buy a wireless mouse to go with it, as I am old school and hate the pad, but knew that before I bought it, now it works great, need to get adjusted to the key board, as I am used to a bigger one and pounding.",wireless mouse,neutral,15,29,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"I had to buy a wireless mouse to go with it, as I am old school and hate the pad, but knew that before I bought it, now it works great, need to get adjusted to the key board, as I am used to a bigger one and pounding.",pad,negative,77,80,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"I had to buy a wireless mouse to go with it, as I am old school and hate the pad, but knew that before I bought it, now it works great, need to get adjusted to the key board, as I am used to a bigger one and pounding.",works,positive,123,128,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"I had to buy a wireless mouse to go with it, as I am old school and hate the pad, but knew that before I bought it, now it works great, need to get adjusted to the key board, as I am used to a bigger one and pounding.",key board,neutral,164,173,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"When considering a Mac, look at the total cost of ownership and not just the initial price tag.",cost of ownership,neutral,42,59,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"When considering a Mac, look at the total cost of ownership and not just the initial price tag.",price tag,neutral,85,94,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"Has all the other features I wanted including a VGA port, HDMI, ethernet and 3 USB ports.",features,positive,18,26,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"Has all the other features I wanted including a VGA port, HDMI, ethernet and 3 USB ports.",VGA port,neutral,48,56,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"Has all the other features I wanted including a VGA port, HDMI, ethernet and 3 USB ports.",HDMI,neutral,58,62,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"Has all the other features I wanted including a VGA port, HDMI, ethernet and 3 USB ports.",ethernet,neutral,64,72,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"Has all the other features I wanted including a VGA port, HDMI, ethernet and 3 USB ports.",USB ports,neutral,79,88,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+The only thing I dislike about this laptop are the rubber pads found on the bottom of the computer for grip.,rubber pads,negative,51,62,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+It's a decent computer for the price and hopefully it will last a long time.,price,neutral,31,36,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+I was really happy because it is a much better price on amazon.com than it was in the Mac store.,price,conflict,47,52,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+The nicest  part is the low heat output and ultra quiet operation.,heat output,positive,28,39,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+The nicest  part is the low heat output and ultra quiet operation.,operation,positive,56,65,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+I will upgrade the ram myself (because with this model you can you can do it) later on.,upgrade the ram,positive,7,22,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+The price is 200 dollars down.,price,positive,4,9,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"this Mac Mini does not have a built-in mic, and it would seem that its Mac OS 10.9 does not handle external microphones properly.",built-in mic,neutral,30,42,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"this Mac Mini does not have a built-in mic, and it would seem that its Mac OS 10.9 does not handle external microphones properly.",Mac OS 10.9,negative,71,82,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"this Mac Mini does not have a built-in mic, and it would seem that its Mac OS 10.9 does not handle external microphones properly.",external microphones,neutral,99,119,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+A lot of features and shortcuts on the MBP that I was never exposed to on a normal PC.,features,neutral,9,17,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+A lot of features and shortcuts on the MBP that I was never exposed to on a normal PC.,shortcuts,neutral,22,31,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+Wasn't sure if I was going to like it much less love it so I went to a local best buy and played around with the IOS system on a Mac Pro and it was totally unique and different.,IOS system,positive,113,123,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+air has higher resolution but the fonts are small.,resolution,positive,15,25,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+air has higher resolution but the fonts are small.,fonts,negative,34,39,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"working with Mac is so much easier, so many cool features.",working,positive,0,7,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"working with Mac is so much easier, so many cool features.",features,positive,49,57,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+I like the brightness and adjustments.,brightness,positive,11,21,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+I like the brightness and adjustments.,adjustments,positive,26,37,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+I only wish this mac had a CD/DVD player built in.,CD/DVD player,neutral,27,40,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+The only thing I miss is that my old Alienware laptop had backlit keys.,backlit keys,negative,58,70,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"The only thing I miss are the ""Home/End"" type keys and other things that I grew accustomed to after so long.","""Home/End"" type keys",neutral,30,50,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"So happy with this purchase, I just wish it came with Microsoft Word.",Microsoft Word,neutral,54,68,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+It has enough memory and speed to run my business with all the flexibility that comes with a laptop.,memory,positive,14,20,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+It has enough memory and speed to run my business with all the flexibility that comes with a laptop.,speed,positive,25,30,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+It has enough memory and speed to run my business with all the flexibility that comes with a laptop.,flexibility,positive,63,74,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"The speed, the simplicity, the design.. it is lightyears ahead of any PC I have ever owned.",speed,positive,4,9,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"The speed, the simplicity, the design.. it is lightyears ahead of any PC I have ever owned.",simplicity,positive,15,25,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"The speed, the simplicity, the design.. it is lightyears ahead of any PC I have ever owned.",design,positive,31,37,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"The battery life is excellent, the display is excellent, and downloading apps is a  breeze.",battery life,positive,4,16,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"The battery life is excellent, the display is excellent, and downloading apps is a  breeze.",display,positive,35,42,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"The battery life is excellent, the display is excellent, and downloading apps is a  breeze.",downloading apps,positive,61,77,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"The screen, the software and the smoothness of the operating system.",screen,positive,4,10,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"The screen, the software and the smoothness of the operating system.",software,positive,16,24,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"The screen, the software and the smoothness of the operating system.",operating system,positive,51,67,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+i have dropped mine a couple times with only a slim plastic case covering it.,slim plastic case,neutral,47,64,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+I also made a recovery USB stick.,recovery USB stick,neutral,14,32,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"But with this laptop, the bass is very weak and the sound comes out sounding tinny.",bass,negative,26,30,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"But with this laptop, the bass is very weak and the sound comes out sounding tinny.",sound,negative,52,57,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"The built quality is really good, I was so Happy and excited about this Product.",built quality,positive,4,17,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+I am loving the fast performance also.,performance,positive,21,32,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"Further, this Mac Mini has a sloppy Bluetooth interface (courtesy of the Mac OS) and the range is poor.",Bluetooth interface,negative,36,55,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"Further, this Mac Mini has a sloppy Bluetooth interface (courtesy of the Mac OS) and the range is poor.",Mac OS,negative,73,79,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"Further, this Mac Mini has a sloppy Bluetooth interface (courtesy of the Mac OS) and the range is poor.",range,negative,89,94,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+If you start on the far right side and scroll to your left the start menu will automatically come up.,start menu,neutral,63,73,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+My only gripe would be the need to add more RAM.,RAM,negative,44,47,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+Fine if you have a touch screen.,touch screen,neutral,19,31,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"As far as user type - I dabble in everything from games (WoW) to Photoshop, but nothing professionally.",games,neutral,50,55,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"As far as user type - I dabble in everything from games (WoW) to Photoshop, but nothing professionally.",Photoshop,neutral,65,74,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"I re-seated the ""WLAN"" card inside and re-installed the LAN device drivers.","""WLAN"" card",neutral,16,27,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"I re-seated the ""WLAN"" card inside and re-installed the LAN device drivers.",LAN device drivers,neutral,56,74,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"This by far beats any computer out on the market today built well, battery life AMAZING.",built,positive,55,60,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"This by far beats any computer out on the market today built well, battery life AMAZING.",battery life,positive,67,79,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"The OS is easy, and offers all kinds of surprises.",OS,positive,4,6,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+I had to get Apple Customer Support to correct the problem.,Apple Customer Support,neutral,13,35,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+A veryimportant feature is Firewire 800 which in my experience works better then USB3 (in PC enabled with USB3)I was not originally sold on the MAC OS I felt it was inferior in many ways To Windows 7.,Firewire 800,positive,27,39,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+A veryimportant feature is Firewire 800 which in my experience works better then USB3 (in PC enabled with USB3)I was not originally sold on the MAC OS I felt it was inferior in many ways To Windows 7.,USB3,negative,81,85,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+A veryimportant feature is Firewire 800 which in my experience works better then USB3 (in PC enabled with USB3)I was not originally sold on the MAC OS I felt it was inferior in many ways To Windows 7.,USB3,neutral,106,110,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+A veryimportant feature is Firewire 800 which in my experience works better then USB3 (in PC enabled with USB3)I was not originally sold on the MAC OS I felt it was inferior in many ways To Windows 7.,MAC OS,negative,144,150,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+A veryimportant feature is Firewire 800 which in my experience works better then USB3 (in PC enabled with USB3)I was not originally sold on the MAC OS I felt it was inferior in many ways To Windows 7.,Windows 7,positive,190,199,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"I like iTunes, the apparent security, the Mini form factor, all the nice graphics stuff.",iTunes,positive,7,13,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"I like iTunes, the apparent security, the Mini form factor, all the nice graphics stuff.",security,positive,28,36,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"I like iTunes, the apparent security, the Mini form factor, all the nice graphics stuff.",Mini form factor,positive,42,58,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"I like iTunes, the apparent security, the Mini form factor, all the nice graphics stuff.",graphics stuff,positive,73,87,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+The first time I used the card reader it took half an hour and a pair of tweezers to remove the card.,card reader,negative,26,37,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+The first time I used the card reader it took half an hour and a pair of tweezers to remove the card.,remove the card,negative,85,100,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"After replacing the spinning hard disk with an ssd drive, my mac is just flying.",spinning hard disk,neutral,20,38,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"After replacing the spinning hard disk with an ssd drive, my mac is just flying.",ssd drive,positive,47,56,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+I know some people complained about HDMI issues but they released a firmware patch to address that issue.,HDMI,neutral,36,40,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+I know some people complained about HDMI issues but they released a firmware patch to address that issue.,firmware patch,neutral,68,82,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+With the needs of a professional photographer I generally need to keep up with the best specs.,specs,neutral,88,93,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+packing and everything was perfect,packing,positive,0,7,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+I called Toshiba where I gave them the serial number and they informed me that they were having issues with the mother boards.,mother boards,neutral,112,125,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"I seem to be having repeat problems as the Mother Board in this one is diagnosed as faulty, related to the graphics card.",Mother Board,negative,43,55,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+"I seem to be having repeat problems as the Mother Board in this one is diagnosed as faulty, related to the graphics card.",graphics card,negative,107,120,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+It also comes with 4G of RAM but if you're like me you want to max that out so I immediately put 8G of RAM in her and I've never used a computer that performs better.,4G of RAM,neutral,19,28,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+It also comes with 4G of RAM but if you're like me you want to max that out so I immediately put 8G of RAM in her and I've never used a computer that performs better.,8G of RAM,neutral,97,106,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+It also comes with 4G of RAM but if you're like me you want to max that out so I immediately put 8G of RAM in her and I've never used a computer that performs better.,performs,positive,150,158,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+This computer is also awesome for my sons virtual home schooling.,virtual home schooling,positive,42,64,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+Cost is more as compared to other brands.,Cost,negative,0,4,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+also...- excellent operating system- size and weight for optimal mobility- excellent durability of the battery- the functions provided by the trackpad is unmatched by any other brand-,operating system,positive,19,35,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+also...- excellent operating system- size and weight for optimal mobility- excellent durability of the battery- the functions provided by the trackpad is unmatched by any other brand-,size,positive,37,41,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+also...- excellent operating system- size and weight for optimal mobility- excellent durability of the battery- the functions provided by the trackpad is unmatched by any other brand-,weight,positive,46,52,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+also...- excellent operating system- size and weight for optimal mobility- excellent durability of the battery- the functions provided by the trackpad is unmatched by any other brand-,mobility,positive,65,73,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+also...- excellent operating system- size and weight for optimal mobility- excellent durability of the battery- the functions provided by the trackpad is unmatched by any other brand-,durability of the battery,positive,85,110,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+also...- excellent operating system- size and weight for optimal mobility- excellent durability of the battery- the functions provided by the trackpad is unmatched by any other brand-,functions provided by the trackpad,positive,116,150,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+This hardware seems to be better than the iMac in that it isn't $1400 and smaller.,hardware,positive,5,13,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+I've had it for about 2 months now and found no issues with software or updates.,software,neutral,60,68,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+I've had it for about 2 months now and found no issues with software or updates.,updates,neutral,72,79,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+the latest version does not have a disc drive.,disc drive,neutral,35,45,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+Screen - although some people might complain about low res which I think is ridiculous.,Screen,positive,0,6,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark
+Screen - although some people might complain about low res which I think is ridiculous.,res,positive,55,58,SemEval-2014 Task 4 (Laptop ABSA Gold Test Set),public_labelled_benchmark

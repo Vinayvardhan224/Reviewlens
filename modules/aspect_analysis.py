@@ -210,14 +210,24 @@ def analyze_reviews_aspects(df_reviews, category: Optional[str] = None) -> Dict[
                             data = aspect_data[asp]
                             data["mention_count"] += 1
 
+                            quote_text = clause.strip() if len(clause.strip()) >= 15 and len(clauses) > 1 else sent.strip()
+
                             if label == "POSITIVE":
                                 data["pos_count"] += 1
-                                if len(data["positive_quotes"]) < 4:
-                                    data["positive_quotes"].append(sent)
+                                if sentiment["compound"] >= 0.05 and len(data["positive_quotes"]) < 5:
+                                    if quote_text not in data["positive_quotes"]:
+                                        if asp.lower() in quote_text.lower():
+                                            data["positive_quotes"].insert(0, quote_text)
+                                        else:
+                                            data["positive_quotes"].append(quote_text)
                             elif label == "NEGATIVE":
                                 data["neg_count"] += 1
-                                if len(data["negative_quotes"]) < 4:
-                                    data["negative_quotes"].append(sent)
+                                if sentiment["compound"] <= -0.05 and len(data["negative_quotes"]) < 5:
+                                    if quote_text not in data["negative_quotes"]:
+                                        if asp.lower() in quote_text.lower():
+                                            data["negative_quotes"].insert(0, quote_text)
+                                        else:
+                                            data["negative_quotes"].append(quote_text)
                             else:
                                 data["neu_count"] += 1
 

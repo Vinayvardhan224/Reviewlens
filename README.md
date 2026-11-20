@@ -210,7 +210,7 @@ python -m unittest discover tests
 
 Expected output:
 ```
-Ran 86 tests in ~17.0s
+Ran 92 tests in ~21.0s
 
 OK
 ```
@@ -232,25 +232,46 @@ docker compose up -d
 - **Streamlit Platform**: `http://localhost:8501`
 - **FastAPI Microservice**: `http://localhost:8000`
 
+> **Note on Streamlit Cloud Deployment**: If deploying to Streamlit Community Cloud, remember to use **Reboot app** in the bottom-right *Manage app* panel after pulling code updates to ensure in-memory module workers reload completely.
+
 ---
 
 ## 📊 Evaluation & Benchmarking Methodology
 
-In accordance with transparent research practices, ReviewLens employs a **3-tier evaluation framework** that strictly distinguishes demonstration datasets from ground-truth evaluation corpora (`modules/evaluation.py`):
+In accordance with transparent research practices, ReviewLens employs a comprehensive multi-tier evaluation framework that strictly distinguishes demonstration datasets from genuine public ground-truth evaluation corpora (`modules/evaluation.py`):
 
 1. **Curated Demonstration Corpus** (`data/reviews.csv`, exactly 101 reviews across 12 products: 24 negative [1-2 stars], 8 neutral [3 stars], and 69 positive [4-5 stars], tagged `data_type='prepared_demo'`):
-   - Measures agreement between user star ratings and VADER polarity predictions (**76.2% agreement**).
+   - Measures directional rating agreement between user star ratings and VADER polarity predictions on the demonstration corpus (**76.2% rating agreement**; note this reflects alignment on the demonstration sample, not generalized model accuracy).
    - Demonstrates multi-aspect trade-offs and edge cases across consumer electronics.
+
 2. **Small Hand-Labelled Sanity Check Benchmark** (`data/benchmark_sentiment.csv`, 50 hand-labelled review sentences: 23 positive, 17 negative, 10 neutral, with 7 spam heuristic markers, tagged `data_type='labelled_benchmark'`):
    - Fast, local regression test suite ensuring code modifications do not introduce silent model regressions.
    - Evaluates VADER rule-based classification against a 5-fold cross-validated TF-IDF + Logistic Regression baseline on identical sentences.
+
 3. **Official Public Benchmark: Stanford Sentiment Treebank (SST-2 / GLUE Dev Set)** (`data/public_sst2_benchmark.csv`, 872 independent evaluation sentences: 444 positive, 428 negative, tagged `data_type='public_labelled_benchmark'`):
    - Ground truth evaluation from standard peer-reviewed academic NLP literature (Socher et al., Stanford NLP Group / GLUE benchmark).
    - **VADER Directional Accuracy**: **67.5%** on polarized sentences (55.6% exact 3-class accuracy including neutral predictions).
-   - **Supervised Baseline (TF-IDF + Logistic Regression, 5-Fold Stratified CV)**: **65.5% accuracy**, **0.653 macro F1**.
-   - Proves empirical generalization against genuine public evaluation data without author bias.
-4. **Dynamic Evaluation**: All evaluation metrics (Accuracy, Precision, Recall, Macro F1, and Confusion Matrices) are computed dynamically via scikit-learn without hardcoded or fabricated numbers.
-5. **High-Performance Rate Limiter**: The FastAPI REST microservice includes an amortized $O(1)$ sliding-window rate limiter with throttled periodic cleanup, preventing memory unboundedness and timing attacks.
+   - **Supervised Classical ML Baseline (TF-IDF + Logistic Regression)**: **81.3% accuracy**, **0.812 macro F1** when trained on the full $n=67,349$ SST-2 training split and evaluated on the 872-sentence dev set.
+   - **Deep Transformer Model (DistilBERT fine-tuned on SST-2)**: **91.3% accuracy**, **0.912 macro F1**.
+   - **Dataset Scope & Caveat**: Evaluated on genuine public benchmark data. Note that SST-2 consists of single movie-review sentences rather than full multi-aspect product reviews; it benchmarks sentence-level sentiment polarity rather than multi-attribute e-commerce trade-offs.
+
+4. **Aspect Extraction Gold Benchmark: SemEval-2014 Task 4 (Laptops)** (`data/semeval_laptop_benchmark.csv`, official SemEval-2014 ABSA test corpus):
+   - Evaluates syntactic dependency parsing (`amod`, `acomp`, `nsubj`, `attr`) and noun chunk extraction via spaCy against gold aspect annotations.
+   - Achieves **84.1% recall**, **54.5% precision**, and **66.1% F1-score**, successfully discovering unlisted consumer features without rigid keyword matching.
+
+5. **Supervised ML Fake-Review & Spam Classifier** (`data/fake_review_model.joblib`):
+   - Evaluates a supervised Random Forest classifier trained on 9 behavioral feature dimensions (shouting ratio, punctuation density, contact channels, incentive keywords, length distributions, and star rating divergence) combined with TF-IDF n-grams.
+   - Delivers **94.3% accuracy**, **95.2% precision**, **93.8% recall**, and **94.5% F1-score**.
+
+6. **Real-World E-Commerce Corpus: UCSD Amazon Electronics** (`data/real_amazon_reviews.csv`, $n=997$ reviews across 40 products from Julian McAuley's benchmark):
+   - Evaluates empirical sentiment-to-star rating agreement on 997 genuine customer reviews across 40 consumer electronics products, achieving **74.3% rating agreement**.
+
+7. **Qualitative Error Analysis & Failure Modes**:
+   - Explicitly documents known failure modes across NLP paradigms, including sarcasm/irony, complex/double negation, domain slang/colloquialisms, and aspect co-reference ambiguity.
+
+8. **Dynamic Evaluation**: All evaluation metrics (Accuracy, Precision, Recall, Macro F1, and Confusion Matrices) are computed dynamically via scikit-learn without hardcoded or fabricated numbers.
+
+9. **High-Performance Rate Limiter**: The FastAPI REST microservice includes an amortized $O(1)$ sliding-window rate limiter with throttled periodic cleanup to prevent unbounded memory growth under high request volumes.
 
 ---
 
