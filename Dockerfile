@@ -14,10 +14,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
-# Install Python requirements
-COPY requirements.txt .
+# Install Python requirements from pinned lockfile for reproducible production builds
+COPY requirements-lock.txt .
 RUN pip install --no-cache-dir --upgrade pip && \
-    pip install --no-cache-dir -r requirements.txt
+    pip install --no-cache-dir -r requirements-lock.txt && \
+    python -m spacy download en_core_web_sm
 
 # Pre-download required NLTK corpora during build for instant container startup
 RUN python -c "import nltk; \

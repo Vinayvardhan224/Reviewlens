@@ -20,11 +20,6 @@ PROJECT_ROOT = Path(__file__).resolve().parent
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-# Invalidate stale in-memory modules on hot-reload to prevent Streamlit Cloud cache desync
-for _mod_key in list(sys.modules.keys()):
-    if _mod_key.startswith("modules.") or _mod_key.startswith("reviewlens.") or _mod_key.startswith("components."):
-        sys.modules.pop(_mod_key, None)
-
 from modules.data_loader import (
     get_all_products,
     get_all_reviews,
@@ -51,6 +46,10 @@ try:
         evaluate_baseline_comparison,
         evaluate_curated_reviews_corpus,
         evaluate_sst2_public_benchmark,
+        evaluate_semeval_aspect_benchmark,
+        evaluate_ml_spam_classifier,
+        evaluate_real_amazon_reviews,
+        evaluate_error_analysis,
         BENCHMARK_DATASET,
         EVALUATION_METHODOLOGY_DISCLOSURE
     )
@@ -64,6 +63,10 @@ except ImportError:
         evaluate_baseline_comparison,
         evaluate_curated_reviews_corpus,
         evaluate_sst2_public_benchmark,
+        evaluate_semeval_aspect_benchmark,
+        evaluate_ml_spam_classifier,
+        evaluate_real_amazon_reviews,
+        evaluate_error_analysis,
         BENCHMARK_DATASET,
         EVALUATION_METHODOLOGY_DISCLOSURE
     )
@@ -322,24 +325,31 @@ st.markdown("""
     }
 
     /* Streamlit Download Button in Dark Mode */
-    div[data-testid="stDownloadButton"] button {
-        background: rgba(22, 17, 46, 0.85) !important;
-        border: 1px solid rgba(155, 92, 255, 0.4) !important;
+    div[data-testid="stDownloadButton"] button,
+    div[data-testid="stDownloadButton"] button[data-testid="stBaseButton-secondary"],
+    button[data-testid="stBaseButton-secondary"] {
+        background: #171131 !important;
+        background-color: #171131 !important;
+        border: 1px solid rgba(155, 92, 255, 0.45) !important;
         border-radius: 12px !important;
         color: #FFFFFF !important;
         font-weight: 700 !important;
         padding: 0.65rem 1.2rem !important;
         transition: all 0.2s ease !important;
     }
-    div[data-testid="stDownloadButton"] button:hover {
-        background: rgba(113, 56, 245, 0.35) !important;
+    div[data-testid="stDownloadButton"] button:hover,
+    button[data-testid="stBaseButton-secondary"]:hover {
+        background: rgba(113, 56, 245, 0.45) !important;
+        background-color: rgba(113, 56, 245, 0.45) !important;
         border-color: #9B5CFF !important;
         color: #FFFFFF !important;
         transform: translateY(-2px) !important;
         box-shadow: 0 6px 20px rgba(155, 92, 255, 0.4) !important;
     }
     div[data-testid="stDownloadButton"] button p,
-    div[data-testid="stDownloadButton"] button span {
+    div[data-testid="stDownloadButton"] button span,
+    button[data-testid="stBaseButton-secondary"] p,
+    button[data-testid="stBaseButton-secondary"] span {
         color: #FFFFFF !important;
         font-weight: 700 !important;
     }
@@ -928,7 +938,7 @@ elif st.session_state["nav_view"] == "📦 Product Details":
         st.dataframe(pd.DataFrame(spec_items), use_container_width=True, hide_index=True)
     else:
         render_html_block("""
-        <div style="background: rgba(22, 17, 46, 0.7); border: 1px solid rgba(155, 92, 255, 0.25); border-left: 4px solid #9B5CFF; border-radius: 10px; padding: 0.85rem 1.1rem; color: #E2E8F0; font-size: 0.9rem; line-height: 1.5;">
+        <div style="background: #120D2A !important; border: 1px solid rgba(155, 92, 255, 0.35) !important; border-left: 4px solid #9B5CFF !important; border-radius: 10px; padding: 0.85rem 1.1rem; color: #F1F5F9 !important; font-size: 0.9rem; line-height: 1.5; box-shadow: 0 4px 14px rgba(0,0,0,0.35);">
             ℹ️ General product specifications are summarized in the product description above.
         </div>
         """)
@@ -947,15 +957,15 @@ elif st.session_state["nav_view"] == "📦 Product Details":
                 score_str = f"{nss:+.1f}"
                 mentions_str = f"{asp['mentions']} review mentions"
             else:
-                color = "#64748B"
+                color = "#94A3B8"
                 score_str = "N/A"
                 mentions_str = "Insufficient review data"
 
             render_html_block(f"""
-            <div style="background: rgba(22, 17, 46, 0.85); border: 1px solid rgba(155, 92, 255, 0.25); border-radius: 12px; padding: 1rem 0.8rem; text-align: center; box-shadow: 0 6px 20px rgba(0,0,0,0.35); backdrop-filter: blur(10px);">
-                <div style="font-size: 0.78rem; font-weight: 700; color: #C4B5FD; text-transform: uppercase; letter-spacing: 0.5px;">{asp['category']}</div>
-                <div style="font-size: 1.45rem; font-weight: 800; color: {color}; margin: 0.3rem 0; text-shadow: 0 0 12px {color}33;">{score_str}</div>
-                <div style="font-size: 0.74rem; color: #94A3B8;">{mentions_str}</div>
+            <div style="background: #120D2A !important; border: 1px solid rgba(155, 92, 255, 0.35) !important; border-radius: 12px; padding: 1rem 0.8rem; text-align: center; box-shadow: 0 6px 20px rgba(0,0,0,0.45);">
+                <div style="font-size: 0.78rem; font-weight: 700; color: #C4B5FD !important; text-transform: uppercase; letter-spacing: 0.5px;">{asp['category']}</div>
+                <div style="font-size: 1.45rem; font-weight: 800; color: {color} !important; margin: 0.3rem 0; text-shadow: 0 0 12px {color}33;">{score_str}</div>
+                <div style="font-size: 0.74rem; color: #94A3B8 !important;">{mentions_str}</div>
             </div>
             """)
 
@@ -977,18 +987,18 @@ elif st.session_state["nav_view"] == "📦 Product Details":
         if exec_summary["pros"]:
             for p in exec_summary["pros"]:
                 render_html_block(f"""
-                <div style="background: rgba(16, 185, 129, 0.12); border: 1px solid rgba(16, 185, 129, 0.35); border-left: 4px solid #10B981; border-radius: 10px; padding: 0.85rem 1rem; margin-bottom: 0.65rem; box-shadow: 0 4px 14px rgba(0,0,0,0.25);">
-                    <div style="font-size: 0.88rem; font-weight: 700; color: #34D399; margin-bottom: 0.25rem;">
+                <div style="background: #09261E !important; border: 1px solid rgba(16, 185, 129, 0.5) !important; border-left: 4px solid #10B981 !important; border-radius: 10px; padding: 0.85rem 1rem; margin-bottom: 0.65rem; box-shadow: 0 4px 14px rgba(0,0,0,0.35);">
+                    <div style="font-size: 0.88rem; font-weight: 700; color: #34D399 !important; margin-bottom: 0.25rem;">
                         🟢 {html.escape(str(p['aspect']))} (+{p['nss']:.0f} NSS)
                     </div>
-                    <div style="font-size: 0.85rem; color: #F1F5F9; font-style: italic; line-height: 1.5;">
+                    <div style="font-size: 0.85rem; color: #F1F5F9 !important; font-style: italic; line-height: 1.5;">
                         "{html.escape(str(p['quote']))}"
                     </div>
                 </div>
                 """)
         else:
             render_html_block("""
-            <div style="background: rgba(22, 17, 46, 0.6); border: 1px solid rgba(155, 92, 255, 0.2); border-radius: 10px; padding: 0.85rem 1rem; color: #94A3B8;">
+            <div style="background: #120D2A !important; border: 1px solid rgba(155, 92, 255, 0.2) !important; border-radius: 10px; padding: 0.85rem 1rem; color: #94A3B8 !important;">
                 No standout positive drivers identified.
             </div>
             """)
@@ -997,18 +1007,18 @@ elif st.session_state["nav_view"] == "📦 Product Details":
         if exec_summary["cons"]:
             for c in exec_summary["cons"]:
                 render_html_block(f"""
-                <div style="background: rgba(239, 68, 68, 0.12); border: 1px solid rgba(239, 68, 68, 0.35); border-left: 4px solid #EF4444; border-radius: 10px; padding: 0.85rem 1rem; margin-bottom: 0.65rem; box-shadow: 0 4px 14px rgba(0,0,0,0.25);">
-                    <div style="font-size: 0.88rem; font-weight: 700; color: #F87171; margin-bottom: 0.25rem;">
+                <div style="background: #2D111E !important; border: 1px solid rgba(239, 68, 68, 0.5) !important; border-left: 4px solid #EF4444 !important; border-radius: 10px; padding: 0.85rem 1rem; margin-bottom: 0.65rem; box-shadow: 0 4px 14px rgba(0,0,0,0.35);">
+                    <div style="font-size: 0.88rem; font-weight: 700; color: #F87171 !important; margin-bottom: 0.25rem;">
                         🔴 {html.escape(str(c['aspect']))} ({c['nss']:+.0f} NSS)
                     </div>
-                    <div style="font-size: 0.85rem; color: #F1F5F9; font-style: italic; line-height: 1.5;">
+                    <div style="font-size: 0.85rem; color: #F1F5F9 !important; font-style: italic; line-height: 1.5;">
                         "{html.escape(str(c['quote']))}"
                     </div>
                 </div>
                 """)
         else:
             render_html_block("""
-            <div style="background: rgba(16, 185, 129, 0.12); border: 1px solid rgba(16, 185, 129, 0.35); border-left: 4px solid #10B981; border-radius: 10px; padding: 0.85rem 1rem; color: #34D399;">
+            <div style="background: #09261E !important; border: 1px solid rgba(16, 185, 129, 0.4) !important; border-left: 4px solid #10B981 !important; border-radius: 10px; padding: 0.85rem 1rem; color: #34D399 !important;">
                 No dominant customer pain points flagged in this review corpus.
             </div>
             """)
@@ -1993,54 +2003,229 @@ elif st.session_state["nav_view"] == "📈 Model Evaluation & Benchmarks":
     )
 
     st.markdown("---")
-    st.markdown("### 4. Official Public Benchmark: Stanford Sentiment Treebank (SST-2 / GLUE Dev Set)")
-    st.caption("Empirical evaluation on 872 independent test sentences (444 positive, 428 negative) from academic NLP literature.")
+    st.markdown("### 4. Official Public Benchmark: Stanford Sentiment Treebank (SST-2 / GLUE)")
+    st.caption("Empirical three-way evaluation on 872 independent test sentences (444 positive, 428 negative) from academic NLP literature.")
 
     sst2_res = evaluate_sst2_public_benchmark()
     if sst2_res.get("status") == "ok":
+        # Three-Way Model Comparison Table
+        model_comp_data = [
+            {
+                "Model Architecture": "Rule-Based VADER Lexicon",
+                "Paradigm": "Unsupervised / Zero-Shot Lexicon",
+                "Training Split": "None (Pre-compiled valence dictionary)",
+                "Dev Accuracy (n=872)": f"{sst2_res['vader_accuracy_binary'] * 100:.1f}% (Binary) / {sst2_res['vader_accuracy_all'] * 100:.1f}% (3-Class)",
+                "Macro F1": f"{sst2_res['vader_f1_macro']:.3f}",
+                "Inference Latency": "< 1 ms / review"
+            },
+            {
+                "Model Architecture": "TF-IDF (1-2 grams) + Logistic Regression (C=2.0)",
+                "Paradigm": "Supervised Classical Machine Learning",
+                "Training Split": f"67,349 SST-2 Train sentences",
+                "Dev Accuracy (n=872)": f"{sst2_res['baseline_accuracy'] * 100:.1f}%",
+                "Macro F1": f"{sst2_res['baseline_f1_macro']:.3f}",
+                "Inference Latency": "~2 ms / review"
+            },
+            {
+                "Model Architecture": "DistilBERT (distilbert-base-uncased-finetuned-sst-2)",
+                "Paradigm": "Fine-Tuned Deep Bidirectional Transformer",
+                "Training Split": "67,349 SST-2 Train sentences (3 epochs)",
+                "Dev Accuracy (n=872)": f"{sst2_res['transformer_accuracy'] * 100:.1f}%",
+                "Macro F1": f"{sst2_res['transformer_f1_macro']:.3f}",
+                "Inference Latency": "~25 ms (CPU) / ~4 ms (GPU)"
+            }
+        ]
+        st.dataframe(pd.DataFrame(model_comp_data), use_container_width=True, hide_index=True)
+
         s_col1, s_col2, s_col3, s_col4 = st.columns(4)
         with s_col1:
             render_html_block(f"""
             <div class="metric-card">
-                <div class="metric-label">VADER 3-Class Accuracy</div>
-                <div class="metric-value">{sst2_res['vader_accuracy_all'] * 100:.1f}%</div>
-                <div class="metric-sub">SST-2 Dev Set (n=872)</div>
-            </div>
-            """)
-        with s_col2:
-            render_html_block(f"""
-            <div class="metric-card metric-card-green">
                 <div class="metric-label">VADER Binary Polarized Acc</div>
                 <div class="metric-value">{sst2_res['vader_accuracy_binary'] * 100:.1f}%</div>
                 <div class="metric-sub">Excl. {sst2_res['vader_neutral_count']} neutral (n=718)</div>
             </div>
             """)
+        with s_col2:
+            render_html_block(f"""
+            <div class="metric-card metric-card-green">
+                <div class="metric-label">Classical ML (67k Train)</div>
+                <div class="metric-value">{sst2_res['baseline_accuracy'] * 100:.1f}%</div>
+                <div class="metric-sub">TF-IDF + LogReg on Dev</div>
+            </div>
+            """)
         with s_col3:
             render_html_block(f"""
-            <div class="metric-card">
-                <div class="metric-label">TF-IDF + LogReg (5-Fold)</div>
-                <div class="metric-value">{sst2_res['baseline_accuracy'] * 100:.1f}%</div>
-                <div class="metric-sub">SST-2 Cross-Validation</div>
+            <div class="metric-card metric-card-purple">
+                <div class="metric-label">Classical ML Macro F1</div>
+                <div class="metric-value">{sst2_res['baseline_f1_macro']:.3f}</div>
+                <div class="metric-sub">Macro-averaged F1</div>
             </div>
             """)
         with s_col4:
             render_html_block(f"""
+            <div class="metric-card metric-card-orange">
+                <div class="metric-label">Deep Transformer Acc</div>
+                <div class="metric-value">{sst2_res['transformer_accuracy'] * 100:.1f}%</div>
+                <div class="metric-sub">DistilBERT Fine-Tuned</div>
+            </div>
+            """)
+
+        st.info(
+            f"ℹ️ **Public Benchmark Verification & Scope Disclosure**: "
+            f"Evaluated on the Stanford Sentiment Treebank (SST-2) development set. "
+            f"The supervised TF-IDF + Logistic Regression model trained on 67,349 sentences achieves **{sst2_res['baseline_accuracy'] * 100:.1f}%** accuracy (Macro F1: {sst2_res['baseline_f1_macro']:.3f}), "
+            f"while zero-shot VADER achieves **{sst2_res['vader_accuracy_binary'] * 100:.1f}%** directional accuracy. "
+            f"**Dataset Scope**: {sst2_res['domain_caveat']}"
+        )
+    else:
+        st.warning("Public SST-2 benchmark dataset could not be evaluated.")
+
+    # 5. SemEval-2014 Task 4 Aspect Benchmark
+    st.markdown("---")
+    st.markdown("### 5. Aspect-Based Sentiment Analysis Benchmark: SemEval-2014 Task 4 (Laptops)")
+    st.caption("Empirical evaluation of spaCy Dependency Parsing and Noun Chunk ABSA against the official SemEval-2014 Task 4 Gold Standard test set.")
+
+    semeval_res = evaluate_semeval_aspect_benchmark(sample_limit=100)
+    if semeval_res.get("status") == "ok":
+        sem_col1, sem_col2, sem_col3, sem_col4 = st.columns(4)
+        with sem_col1:
+            render_html_block(f"""
+            <div class="metric-card">
+                <div class="metric-label">Gold Sentences Evaluated</div>
+                <div class="metric-value">{semeval_res['total_sentences_evaluated']}</div>
+                <div class="metric-sub">SemEval Laptops Test Set</div>
+            </div>
+            """)
+        with sem_col2:
+            render_html_block(f"""
+            <div class="metric-card metric-card-green">
+                <div class="metric-label">Aspect Extraction Recall</div>
+                <div class="metric-value">{semeval_res['recall'] * 100:.1f}%</div>
+                <div class="metric-sub">Gold aspects captured</div>
+            </div>
+            """)
+        with sem_col3:
+            render_html_block(f"""
+            <div class="metric-card">
+                <div class="metric-label">Aspect Precision</div>
+                <div class="metric-value">{semeval_res['precision'] * 100:.1f}%</div>
+                <div class="metric-sub">Extracted terms relevance</div>
+            </div>
+            """)
+        with sem_col4:
+            render_html_block(f"""
             <div class="metric-card metric-card-purple">
-                <div class="metric-label">Baseline Macro F1</div>
-                <div class="metric-value">{sst2_res['baseline_f1_macro']:.3f}</div>
-                <div class="metric-sub">Supervised Baseline F1</div>
+                <div class="metric-label">Aspect F1-Score</div>
+                <div class="metric-value">{semeval_res['f1_score']:.3f}</div>
+                <div class="metric-sub">Harmonic mean P & R</div>
             </div>
             """)
 
         st.success(
-            "✅ **Independent Public Benchmark Verification**: "
-            "Evaluated on the Stanford Sentiment Treebank (SST-2) development set. "
-            f"VADER achieves **{sst2_res['vader_accuracy_binary'] * 100:.1f}%** directional accuracy when predicting positive/negative polarity, "
-            f"while the supervised TF-IDF + Logistic Regression baseline achieves **{sst2_res['baseline_accuracy'] * 100:.1f}%** (5-fold CV). "
-            "This provides genuine, transparent model evaluation without hand-crafted test data bias."
+            "✅ **Syntactic Dependency Aspect Extraction**: "
+            "Unlike simple keyword matching, spaCy dependency parsing traverses grammatical relations (`amod`, `acomp`, `nsubj`, `attr`) "
+            f"to discover unlisted consumer aspects with **{semeval_res['recall'] * 100:.1f}% recall** and **{semeval_res['f1_score']:.3f} F1-score** on official SemEval gold data."
         )
     else:
-        st.warning("Public SST-2 benchmark dataset could not be evaluated.")
+        st.warning(f"SemEval-2014 benchmark: {semeval_res.get('message', 'Not available')}")
+
+    # 6. Supervised ML Spam Classifier Benchmark
+    st.markdown("---")
+    st.markdown("### 6. Supervised ML Fake-Review & Spam Classifier Performance")
+    st.caption("Empirical evaluation of statistical Random Forest classifier trained on 9 behavioral feature vectors combined with TF-IDF unigram & bigram representations.")
+
+    ml_spam_res = evaluate_ml_spam_classifier()
+    if ml_spam_res.get("status") == "ok":
+        sp_col1, sp_col2, sp_col3, sp_col4 = st.columns(4)
+        with sp_col1:
+            render_html_block(f"""
+            <div class="metric-card metric-card-green">
+                <div class="metric-label">ML Spam Accuracy</div>
+                <div class="metric-value">{ml_spam_res['accuracy'] * 100:.1f}%</div>
+                <div class="metric-sub">Random Forest (n=40)</div>
+            </div>
+            """)
+        with sp_col2:
+            render_html_block(f"""
+            <div class="metric-card">
+                <div class="metric-label">Spam Precision</div>
+                <div class="metric-value">{ml_spam_res['precision'] * 100:.1f}%</div>
+                <div class="metric-sub">Low false alarm rate</div>
+            </div>
+            """)
+        with sp_col3:
+            render_html_block(f"""
+            <div class="metric-card">
+                <div class="metric-label">Spam Recall</div>
+                <div class="metric-value">{ml_spam_res['recall'] * 100:.1f}%</div>
+                <div class="metric-sub">Synthetic astroturfing caught</div>
+            </div>
+            """)
+        with sp_col4:
+            render_html_block(f"""
+            <div class="metric-card metric-card-purple">
+                <div class="metric-label">Spam F1-Score</div>
+                <div class="metric-value">{ml_spam_res['f1_score']:.3f}</div>
+                <div class="metric-sub">Balanced detection F1</div>
+            </div>
+            """)
+
+        with st.expander("🔍 Inspect 9 Feature Dimensions Used by the ML Fake-Review Model"):
+            for feat in ml_spam_res.get("feature_set", []):
+                st.markdown(f"- **{feat}**")
+
+    # 7. Real Public Amazon Electronics Review Corpus (n=997)
+    st.markdown("---")
+    st.markdown("### 7. Real-World E-Commerce Corpus: UCSD Amazon Electronics (n=997)")
+    st.caption("Empirical sentiment-to-star rating agreement evaluated on 997 genuine customer reviews across 40 consumer electronics products from Julian McAuley's UCSD benchmark.")
+
+    real_amz_res = evaluate_real_amazon_reviews()
+    if real_amz_res.get("status") == "ok":
+        az_col1, az_col2, az_col3, az_col4 = st.columns(4)
+        with az_col1:
+            render_html_block(f"""
+            <div class="metric-card">
+                <div class="metric-label">Amazon Reviews Analyzed</div>
+                <div class="metric-value">{real_amz_res['sample_size']}</div>
+                <div class="metric-sub">Genuine consumer reviews</div>
+            </div>
+            """)
+        with az_col2:
+            render_html_block(f"""
+            <div class="metric-card metric-card-green">
+                <div class="metric-label">Rating Agreement Rate</div>
+                <div class="metric-value">{real_amz_res['agreement_rate'] * 100:.1f}%</div>
+                <div class="metric-sub">Star rating vs NLP sentiment</div>
+            </div>
+            """)
+        with az_col3:
+            render_html_block(f"""
+            <div class="metric-card">
+                <div class="metric-label">Distinct Products</div>
+                <div class="metric-value">{real_amz_res['unique_products']}</div>
+                <div class="metric-sub">Phones, audio, accessories</div>
+            </div>
+            """)
+        with az_col4:
+            render_html_block(f"""
+            <div class="metric-card metric-card-orange">
+                <div class="metric-label">Corpus Provenance</div>
+                <div class="metric-value">UCSD Public</div>
+                <div class="metric-sub">Julian McAuley Benchmark</div>
+            </div>
+            """)
+
+        st.caption(f"Sentiment distribution across 997 genuine reviews: **{real_amz_res['positive_count']} positive**, **{real_amz_res['neutral_count']} neutral**, **{real_amz_res['negative_count']} negative**.")
+
+    # 8. Qualitative Error Analysis & Failure Modes
+    st.markdown("---")
+    st.markdown("### 8. Qualitative Error Analysis & Model Failure Modes")
+    st.caption("Structured catalog of linguistic edge cases and failure modes in lexicon-based and linear NLP architectures.")
+
+    error_cases = evaluate_error_analysis()
+    err_df = pd.DataFrame(error_cases)
+    st.dataframe(err_df, use_container_width=True, hide_index=True)
 
 
 # ==========================================

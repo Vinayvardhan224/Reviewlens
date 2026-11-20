@@ -24,26 +24,33 @@ def generate_executive_summary(
     # Filter active aspects
     active_aspects = [a for a in aspects if a.get("mentions", 0) > 0]
 
-    # Find highest NSS aspects for Pros
+    # Find highest NSS aspects for Pros (NSS > 10 with genuine positive quote evidence)
     sorted_pos = sorted(active_aspects, key=lambda x: x.get("net_sentiment_score", 0), reverse=True)
     for a in sorted_pos:
-        if a.get("net_sentiment_score", 0) > 10 and a.get("positive_quotes"):
+        nss_score = a.get("net_sentiment_score", 0)
+        pos_quotes = a.get("positive_quotes", [])
+        if nss_score > 10 and pos_quotes:
             pros.append({
                 "aspect": a["category"],
-                "nss": a["net_sentiment_score"],
-                "quote": a["positive_quotes"][0]
+                "nss": nss_score,
+                "quote": pos_quotes[0]
             })
             if len(pros) >= 3:
                 break
 
-    # Find lowest NSS aspects for Cons
+    # Find genuine pain points for Cons (NSS < 0 or negative mentions dominating, with verified negative quote)
     sorted_neg = sorted(active_aspects, key=lambda x: x.get("net_sentiment_score", 0))
     for a in sorted_neg:
-        if (a.get("net_sentiment_score", 0) < 40 or a.get("negative_count", 0) > 0) and a.get("negative_quotes"):
+        nss_score = a.get("net_sentiment_score", 0)
+        neg_count = a.get("negative_count", 0) or a.get("neg_count", 0)
+        neg_quotes = a.get("negative_quotes", [])
+        
+        # Only classify as a trade-off/pain point if net sentiment is negative or zero with complaints
+        if (nss_score < 0 or (nss_score <= 0 and neg_count > 0)) and neg_quotes:
             cons.append({
                 "aspect": a["category"],
-                "nss": a["net_sentiment_score"],
-                "quote": a["negative_quotes"][0]
+                "nss": nss_score,
+                "quote": neg_quotes[0]
             })
             if len(cons) >= 3:
                 break
