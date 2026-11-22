@@ -38,6 +38,12 @@ from modules.review_summary import generate_executive_summary, generate_markdown
 from modules.comparison import compare_two_products
 from modules.recommendation import generate_category_recommendations, rank_products_by_preferences, RECOMMENDATION_METHODOLOGY_DISCLOSURE
 from modules.topic_modeling import extract_topic_clusters, extract_topic_clusters_result
+from modules.action_brief import (
+    evaluate_review_actionability,
+    synthesize_engineering_action_brief,
+    export_brief_to_jira_markdown,
+    ACTIONABILITY_LAYERS
+)
 
 try:
     from modules.evaluation import (
@@ -411,6 +417,186 @@ st.markdown("""
         border-color: #9B5CFF;
         color: #FFFFFF;
     }
+
+    /* ========================================================
+       VECTOR-INSPIRED REQUIREMENT ENGINEERING DESIGN SYSTEM
+       ======================================================== */
+    .fig-tag {
+        font-family: 'JetBrains Mono', 'Fira Code', monospace !important;
+        font-size: 0.72rem !important;
+        font-weight: 800 !important;
+        letter-spacing: 0.08em !important;
+        color: #C4B5FD !important;
+        background: rgba(155, 92, 255, 0.15) !important;
+        border: 1px solid rgba(155, 92, 255, 0.35) !important;
+        padding: 0.2rem 0.6rem !important;
+        border-radius: 6px !important;
+        display: inline-block !important;
+        margin-bottom: 0.5rem !important;
+        text-transform: uppercase !important;
+    }
+
+    .mono-badge {
+        font-family: 'JetBrains Mono', monospace !important;
+        font-size: 0.75rem !important;
+        padding: 0.2rem 0.55rem !important;
+        border-radius: 6px !important;
+        background: rgba(255, 255, 255, 0.06) !important;
+        border: 1px solid rgba(255, 255, 255, 0.12) !important;
+        color: #CBD5E1 !important;
+    }
+
+    .layer-card {
+        background: #120D2A !important;
+        background-color: #120D2A !important;
+        border: 1px solid rgba(155, 92, 255, 0.25) !important;
+        border-radius: 10px !important;
+        padding: 0.75rem 1rem !important;
+        margin-bottom: 0.5rem !important;
+        box-shadow: 0 4px 14px rgba(0,0,0,0.3) !important;
+    }
+
+    .bdd-block {
+        font-family: 'JetBrains Mono', 'Fira Code', monospace !important;
+        background: #09061A !important;
+        background-color: #09061A !important;
+        border: 1px solid rgba(155, 92, 255, 0.35) !important;
+        border-left: 4px solid #10B981 !important;
+        border-radius: 12px !important;
+        padding: 1.1rem 1.4rem !important;
+        color: #F1F5F9 !important;
+        font-size: 0.88rem !important;
+        line-height: 1.65 !important;
+        box-shadow: 0 6px 22px rgba(0,0,0,0.45) !important;
+    }
+
+    /* High-contrast solid Obsidian specification box */
+    .spec-box {
+        background: #120D2A !important;
+        background-color: #120D2A !important;
+        border: 1px solid rgba(155, 92, 255, 0.35) !important;
+        border-left: 4px solid #9B5CFF !important;
+        border-radius: 12px !important;
+        padding: 0.95rem 1.2rem !important;
+        color: #F1F5F9 !important;
+        font-size: 0.9rem !important;
+        line-height: 1.55 !important;
+        box-shadow: 0 4px 14px rgba(0,0,0,0.4) !important;
+    }
+
+    /* Category Aspect Sentiment Card */
+    .aspect-card {
+        background: #120D2A !important;
+        background-color: #120D2A !important;
+        border: 1px solid rgba(155, 92, 255, 0.35) !important;
+        border-radius: 14px !important;
+        padding: 1.1rem 0.9rem !important;
+        text-align: center !important;
+        box-shadow: 0 8px 24px rgba(0,0,0,0.45) !important;
+        transition: transform 0.2s ease, border-color 0.2s ease !important;
+    }
+    .aspect-card:hover {
+        transform: translateY(-2px) !important;
+        border-color: #9B5CFF !important;
+    }
+    .aspect-card .aspect-label {
+        font-size: 0.78rem !important;
+        font-weight: 800 !important;
+        color: #C4B5FD !important;
+        text-transform: uppercase !important;
+        letter-spacing: 0.6px !important;
+    }
+    .aspect-card .aspect-val {
+        font-size: 1.55rem !important;
+        font-weight: 800 !important;
+        margin: 0.35rem 0 !important;
+    }
+    .aspect-card .aspect-sub {
+        font-size: 0.74rem !important;
+        color: #94A3B8 !important;
+    }
+
+    /* Customer Feedback Strength Card (Emerald Obsidian) */
+    .strength-card {
+        background: #09261E !important;
+        background-color: #09261E !important;
+        border: 1px solid rgba(16, 185, 129, 0.5) !important;
+        border-left: 4px solid #10B981 !important;
+        border-radius: 12px !important;
+        padding: 0.95rem 1.1rem !important;
+        margin-bottom: 0.75rem !important;
+        box-shadow: 0 6px 18px rgba(0,0,0,0.35) !important;
+    }
+    .strength-card .strength-title {
+        font-size: 0.9rem !important;
+        font-weight: 800 !important;
+        color: #34D399 !important;
+        margin-bottom: 0.3rem !important;
+    }
+    .strength-card .strength-quote {
+        font-size: 0.85rem !important;
+        color: #F1F5F9 !important;
+        font-style: italic !important;
+        line-height: 1.55 !important;
+    }
+
+    /* Customer Feedback Pain Point Card (Ruby Obsidian) */
+    .painpoint-card {
+        background: #2D111E !important;
+        background-color: #2D111E !important;
+        border: 1px solid rgba(239, 68, 68, 0.5) !important;
+        border-left: 4px solid #EF4444 !important;
+        border-radius: 12px !important;
+        padding: 0.95rem 1.1rem !important;
+        margin-bottom: 0.75rem !important;
+        box-shadow: 0 6px 18px rgba(0,0,0,0.35) !important;
+    }
+    .painpoint-card .painpoint-title {
+        font-size: 0.9rem !important;
+        font-weight: 800 !important;
+        color: #F87171 !important;
+        margin-bottom: 0.3rem !important;
+    }
+    .painpoint-card .painpoint-quote {
+        font-size: 0.85rem !important;
+        color: #F1F5F9 !important;
+        font-style: italic !important;
+        line-height: 1.55 !important;
+    }
+
+    /* Universal Button & Secondary Action Styling */
+    div[data-testid="stDownloadButton"] button,
+    .stDownloadButton button,
+    button[data-testid="baseButton-secondary"],
+    button[data-testid="stBaseButton-secondary"],
+    button[kind="secondary"],
+    div[data-testid="stButton"] button[kind="secondary"] {
+        background: #171131 !important;
+        background-color: #171131 !important;
+        border: 1px solid rgba(155, 92, 255, 0.45) !important;
+        border-radius: 12px !important;
+        color: #FFFFFF !important;
+        font-weight: 700 !important;
+        padding: 0.65rem 1.2rem !important;
+        transition: all 0.2s ease !important;
+    }
+    div[data-testid="stDownloadButton"] button:hover,
+    .stDownloadButton button:hover,
+    button[data-testid="baseButton-secondary"]:hover,
+    button[kind="secondary"]:hover {
+        background: rgba(113, 56, 245, 0.45) !important;
+        background-color: rgba(113, 56, 245, 0.45) !important;
+        border-color: #9B5CFF !important;
+        color: #FFFFFF !important;
+        transform: translateY(-2px) !important;
+        box-shadow: 0 6px 20px rgba(155, 92, 255, 0.4) !important;
+    }
+    div[data-testid="stDownloadButton"] button *,
+    .stDownloadButton button *,
+    button[data-testid="baseButton-secondary"] *,
+    button[kind="secondary"] * {
+        color: #FFFFFF !important;
+        font-weight: 700 !important;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -930,15 +1116,42 @@ elif st.session_state["nav_view"] == "📦 Product Details":
 
     st.markdown("---")
 
-    # Hardware & Feature Specifications Table
+    # Hardware & Feature Specifications Table (Vector Monospace Token Grid)
     st.markdown("### 📋 **Product Specifications**")
-    specs_dict = prod.get("specs", {})
+    raw_specs = prod.get("specifications") or prod.get("specs") or {}
+    specs_dict = {}
+    if isinstance(raw_specs, str):
+        try:
+            specs_dict = json.loads(raw_specs)
+        except Exception:
+            specs_dict = {}
+    elif isinstance(raw_specs, dict):
+        specs_dict = raw_specs
+
     if specs_dict:
-        spec_items = [{"Specification": k, "Detail": v} for k, v in specs_dict.items()]
-        st.dataframe(pd.DataFrame(spec_items), use_container_width=True, hide_index=True)
+        spec_cols = st.columns(3)
+        spec_keys = list(specs_dict.keys())
+        for idx, k in enumerate(spec_keys):
+            v = specs_dict[k]
+            col_target = spec_cols[idx % 3]
+            with col_target:
+                render_html_block(f"""
+                <div class="layer-card">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.25rem;">
+                        <span style="font-weight: 700; color: #FFFFFF; font-size: 0.85rem;">{html.escape(k)}</span>
+                        <span class="mono-badge">SPEC {idx+1}</span>
+                    </div>
+                    <div style="font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; color: #CBD5E1; line-height: 1.4;">
+                        {html.escape(str(v))}
+                    </div>
+                </div>
+                """)
+        with st.expander("📊 Tabular Specifications View (Dataframe)", expanded=False):
+            spec_items = [{"Specification": k, "Detail": v} for k, v in specs_dict.items()]
+            st.dataframe(pd.DataFrame(spec_items), use_container_width=True, hide_index=True)
     else:
         render_html_block("""
-        <div style="background: #120D2A !important; border: 1px solid rgba(155, 92, 255, 0.35) !important; border-left: 4px solid #9B5CFF !important; border-radius: 10px; padding: 0.85rem 1.1rem; color: #F1F5F9 !important; font-size: 0.9rem; line-height: 1.5; box-shadow: 0 4px 14px rgba(0,0,0,0.35);">
+        <div class="spec-box">
             ℹ️ General product specifications are summarized in the product description above.
         </div>
         """)
@@ -962,10 +1175,10 @@ elif st.session_state["nav_view"] == "📦 Product Details":
                 mentions_str = "Insufficient review data"
 
             render_html_block(f"""
-            <div style="background: #120D2A !important; border: 1px solid rgba(155, 92, 255, 0.35) !important; border-radius: 12px; padding: 1rem 0.8rem; text-align: center; box-shadow: 0 6px 20px rgba(0,0,0,0.45);">
-                <div style="font-size: 0.78rem; font-weight: 700; color: #C4B5FD !important; text-transform: uppercase; letter-spacing: 0.5px;">{asp['category']}</div>
-                <div style="font-size: 1.45rem; font-weight: 800; color: {color} !important; margin: 0.3rem 0; text-shadow: 0 0 12px {color}33;">{score_str}</div>
-                <div style="font-size: 0.74rem; color: #94A3B8 !important;">{mentions_str}</div>
+            <div class="aspect-card">
+                <div class="aspect-label">{html.escape(str(asp['category']))}</div>
+                <div class="aspect-val" style="color: {color}; text-shadow: 0 0 12px {color}33;">{score_str}</div>
+                <div class="aspect-sub">{mentions_str}</div>
             </div>
             """)
 
@@ -987,18 +1200,18 @@ elif st.session_state["nav_view"] == "📦 Product Details":
         if exec_summary["pros"]:
             for p in exec_summary["pros"]:
                 render_html_block(f"""
-                <div style="background: #09261E !important; border: 1px solid rgba(16, 185, 129, 0.5) !important; border-left: 4px solid #10B981 !important; border-radius: 10px; padding: 0.85rem 1rem; margin-bottom: 0.65rem; box-shadow: 0 4px 14px rgba(0,0,0,0.35);">
-                    <div style="font-size: 0.88rem; font-weight: 700; color: #34D399 !important; margin-bottom: 0.25rem;">
+                <div class="strength-card">
+                    <div class="strength-title">
                         🟢 {html.escape(str(p['aspect']))} (+{p['nss']:.0f} NSS)
                     </div>
-                    <div style="font-size: 0.85rem; color: #F1F5F9 !important; font-style: italic; line-height: 1.5;">
+                    <div class="strength-quote">
                         "{html.escape(str(p['quote']))}"
                     </div>
                 </div>
                 """)
         else:
             render_html_block("""
-            <div style="background: #120D2A !important; border: 1px solid rgba(155, 92, 255, 0.2) !important; border-radius: 10px; padding: 0.85rem 1rem; color: #94A3B8 !important;">
+            <div class="aspect-card" style="text-align: left; color: #94A3B8;">
                 No standout positive drivers identified.
             </div>
             """)
@@ -1007,21 +1220,75 @@ elif st.session_state["nav_view"] == "📦 Product Details":
         if exec_summary["cons"]:
             for c in exec_summary["cons"]:
                 render_html_block(f"""
-                <div style="background: #2D111E !important; border: 1px solid rgba(239, 68, 68, 0.5) !important; border-left: 4px solid #EF4444 !important; border-radius: 10px; padding: 0.85rem 1rem; margin-bottom: 0.65rem; box-shadow: 0 4px 14px rgba(0,0,0,0.35);">
-                    <div style="font-size: 0.88rem; font-weight: 700; color: #F87171 !important; margin-bottom: 0.25rem;">
+                <div class="painpoint-card">
+                    <div class="painpoint-title">
                         🔴 {html.escape(str(c['aspect']))} ({c['nss']:+.0f} NSS)
                     </div>
-                    <div style="font-size: 0.85rem; color: #F1F5F9 !important; font-style: italic; line-height: 1.5;">
+                    <div class="painpoint-quote">
                         "{html.escape(str(c['quote']))}"
                     </div>
                 </div>
                 """)
         else:
             render_html_block("""
-            <div style="background: #09261E !important; border: 1px solid rgba(16, 185, 129, 0.4) !important; border-left: 4px solid #10B981 !important; border-radius: 10px; padding: 0.85rem 1rem; color: #34D399 !important;">
+            <div class="aspect-card" style="text-align: left; color: #34D399;">
                 No dominant customer pain points flagged in this review corpus.
             </div>
             """)
+
+    # Vector-Inspired Feature: Requirement Engineering Action Brief for Product Defects
+    if exec_summary["cons"]:
+        st.markdown("<br>", unsafe_allow_html=True)
+        st.markdown('<div class="fig-tag">VECTOR REQUIREMENT ENGINEERING</div>', unsafe_allow_html=True)
+        with st.expander("⚡ Synthesize Engineering Action Brief & BDD Acceptance Criteria for Product Defects", expanded=False):
+            st.caption("Compile an authoritative 6-section technical bug brief with Gherkin Given/When/Then acceptance criteria for your engineering team.")
+            con_aspects = [c["aspect"] for c in exec_summary["cons"]]
+            selected_con_asp = st.selectbox("Target Defect / Aspect:", con_aspects, key="prod_con_select")
+            matched_con = next((c for c in exec_summary["cons"] if c["aspect"] == selected_con_asp), exec_summary["cons"][0])
+
+            prod_brief = synthesize_engineering_action_brief(
+                product_name=prod["product_name"],
+                aspect_name=selected_con_asp,
+                nss_score=matched_con["nss"],
+                verified_quotes=[matched_con["quote"]],
+                category=prod.get("category", "Electronics"),
+                brand=prod.get("brand", "OEM")
+            )
+
+            p_ac = prod_brief["06_acceptance_criteria"]
+            p_gherkin = f"""Scenario: {p_ac['scenario']}
+  Given {p_ac['given']}
+  When {p_ac['when']}
+  Then {p_ac['then'][0]}
+  Then {p_ac['then'][1]}"""
+
+            render_html_block(f"""
+            <div class="bdd-block">
+                <div style="font-size: 0.74rem; color: #10B981; font-weight: 800; letter-spacing: 0.05em; margin-bottom: 0.35rem;">
+                    // GHERKIN BDD ACCEPTANCE CRITERIA FOR {selected_con_asp.upper()}
+                </div>
+                <div style="white-space: pre-wrap; font-family: 'JetBrains Mono', monospace; font-size: 0.83rem;">{p_gherkin}</div>
+            </div>
+            """)
+
+            col_b1, col_b2 = st.columns([1, 1])
+            with col_b1:
+                st.markdown(f"**Ticket ID:** `{prod_brief['01_context']['ticket_id']}` | **Priority:** `{prod_brief['01_context']['priority']}`")
+                st.markdown(f"**Affected Subsystem:** `{prod_brief['02_subsystem']['component']}`")
+                st.markdown(f"**Observed Symptom:** {prod_brief['04_reproduction']['symptom']}")
+            with col_b2:
+                st.markdown(f"**Proposed Remediation:** {prod_brief['05_remediation']['action_plan']}")
+                st.markdown(f"**Validation Test:** {prod_brief['05_remediation']['verification_method']}")
+
+            prod_jira_md = export_brief_to_jira_markdown(prod_brief)
+            st.download_button(
+                label=f"📥 Download {prod_brief['01_context']['ticket_id']} Brief (.md)",
+                data=prod_jira_md,
+                file_name=f"{prod_brief['01_context']['ticket_id']}.md",
+                mime="text/markdown",
+                key=f"btn_dl_{selected_con_asp}",
+                use_container_width=True
+            )
 
     st.markdown("<br>", unsafe_allow_html=True)
     cta_col1, cta_col2 = st.columns([2, 1])
@@ -1479,6 +1746,135 @@ elif st.session_state["nav_view"] == "🧪 Live Review Analyzer":
                 neg_words = diag_res.get("negated_words", [])
                 st.markdown(f"**Negated Tokens Detected:** {', '.join([f'`{w}`' for w in neg_words]) if neg_words else 'None (standard polarity weighting)'}")
                 st.markdown(f"**Spam Heuristic Triggers:** {', '.join(diag_res['spam_analysis']['reasons']) if diag_res['spam_analysis']['reasons'] else 'Clean — no repetitive keywords, suspicious URLs, or excessive caps.'}")
+
+            # Vector-Inspired Requirement Engineering & Review Actionability Index
+            st.markdown("---")
+            act_res = diag_res.get("actionability", {})
+            act_score = act_res.get("actionability_score", 0)
+            act_level = act_res.get("level", "LOW")
+            act_label = act_res.get("level_label", "")
+            act_cov = act_res.get("coverage_pct", 0)
+            act_covered_layers = act_res.get("layers_covered", 0)
+
+            act_color = "#10B981" if act_score >= 75 else ("#F59E0B" if act_score >= 50 else "#EF4444")
+
+            st.markdown('<div class="fig-tag">FIG 1.0 · REQUIREMENT ENGINEERING & ACTION BRIEF</div>', unsafe_allow_html=True)
+            st.markdown("### 📐 **Vector-Style Review Actionability & Gap Index**")
+            st.caption("Deterministic inspection across 6 structural feedback layers (Subsystem, Defect Symptom, Trigger Context, Polarity, Reproducibility, Expected Outcome) to measure whether customer feedback is engineering-actionable.")
+
+            # Score and KPI metrics
+            ak1, ak2, ak3 = st.columns([1.5, 2, 2.5])
+            with ak1:
+                render_html_block(f"""
+                <div class="metric-card" style="border-left: 4px solid {act_color}; text-align: center;">
+                    <div class="metric-label">Actionability Score</div>
+                    <div class="metric-value" style="color: {act_color}; font-size: 2.2rem;">{act_score}<span style="font-size: 1rem; color: #94A3B8;"> / 100</span></div>
+                    <div class="metric-sub" style="font-weight: 700; color: {act_color};">{act_level} ACTIONABILITY</div>
+                </div>
+                """)
+            with ak2:
+                render_html_block(f"""
+                <div class="metric-card" style="border-left: 4px solid #9B5CFF;">
+                    <div class="metric-label">Structural Layer Coverage</div>
+                    <div class="metric-value" style="font-size: 1.8rem;">{act_covered_layers} / 6 <span style="font-size: 1rem; color: #C4B5FD;">({act_cov}%)</span></div>
+                    <div class="metric-sub">{act_label}</div>
+                </div>
+                """)
+            with ak3:
+                gaps = act_res.get("gap_findings", [])
+                if gaps:
+                    gap_items = "".join([f"<div style='font-size: 0.78rem; margin-bottom: 0.25rem; color: #FCA5A5;'>⚠️ <b>{g['type']}</b>: {g['message']} [{g['severity']}]</div>" for g in gaps[:2]])
+                    render_html_block(f"""
+                    <div class="metric-card" style="border-left: 4px solid #EF4444;">
+                        <div class="metric-label" style="color: #F87171;">Detected Structural Gaps ({len(gaps)})</div>
+                        <div style="padding-top: 0.2rem;">{gap_items}</div>
+                    </div>
+                    """)
+                else:
+                    render_html_block("""
+                    <div class="metric-card" style="border-left: 4px solid #10B981;">
+                        <div class="metric-label" style="color: #34D399;">Zero Critical Gaps</div>
+                        <div class="metric-value" style="color: #10B981; font-size: 1.25rem;">Deterministic Ready</div>
+                        <div class="metric-sub">Sufficient context for immediate developer triage</div>
+                    </div>
+                    """)
+
+            # 6 Structural Layers inspection checklist
+            with st.expander("🔎 Inspect 6 Structural Actionability Layers & Criteria", expanded=False):
+                l_cols = st.columns(2)
+                for idx, layer_info in enumerate(act_res.get("layer_breakdown", [])):
+                    col_target = l_cols[idx % 2]
+                    with col_target:
+                        status_icon = "🟢" if layer_info["covered"] else "⚪"
+                        status_badge = f'<span class="mono-badge" style="color:#10B981;border-color:rgba(16,185,129,0.4);">COVERED (+{layer_info["weight"]} pts)</span>' if layer_info["covered"] else '<span class="mono-badge" style="color:#94A3B8;border-color:rgba(148,163,184,0.3);">UNMET (0 pts)</span>'
+                        render_html_block(f"""
+                        <div class="layer-card">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.3rem;">
+                                <span style="font-weight: 700; color: #FFFFFF; font-size: 0.88rem;">{status_icon} {layer_info['layer']}</span>
+                                {status_badge}
+                            </div>
+                            <div style="font-size: 0.78rem; color: #94A3B8;">{layer_info['evidence']}</div>
+                        </div>
+                        """)
+
+            # 6-Section Technical Brief Synthesis
+            st.markdown("<br>", unsafe_allow_html=True)
+            st.markdown('<div class="fig-tag">FIG 2.0 · BDD SPECIFICATION SYNTHESIS</div>', unsafe_allow_html=True)
+            st.markdown("### ⚡ **Synthesize Jira / Linear Engineering Action Brief & BDD Tests**")
+            st.caption("Converts the unstructured customer review into an authoritative 6-section technical bug ticket with Gherkin Acceptance Criteria (Given/When/Then).")
+
+            primary_aspect = diag_res["aspects_found"][0] if diag_res["aspects_found"] else (input_cat if input_cat else "General Customer Experience")
+            action_brief = synthesize_engineering_action_brief(
+                product_name=f"Customer Feedback Item ({input_cat})",
+                aspect_name=primary_aspect,
+                nss_score=float(comp * 100),
+                verified_quotes=[input_text],
+                category=input_cat,
+                brand="OEM"
+            )
+
+            # Display the BDD block prominently
+            ac = action_brief["06_acceptance_criteria"]
+            bdd_gherkin = f"""Scenario: {ac['scenario']}
+  Given {ac['given']}
+  When {ac['when']}
+  Then {ac['then'][0]}
+  Then {ac['then'][1]}"""
+
+            render_html_block(f"""
+            <div class="bdd-block">
+                <div style="font-size: 0.75rem; color: #10B981; font-weight: 800; letter-spacing: 0.05em; margin-bottom: 0.4rem;">
+                    // DETERMINISTIC BDD ACCEPTANCE CRITERIA (GHERKIN SPEC)
+                </div>
+                <div style="white-space: pre-wrap; font-family: 'JetBrains Mono', monospace; font-size: 0.84rem;">{bdd_gherkin}</div>
+            </div>
+            """)
+
+            with st.expander("📋 View Full 6-Section Technical Action Brief (Jira / Linear Ticket Preview)", expanded=False):
+                b_c1 = action_brief["01_context"]
+                b_c2 = action_brief["02_subsystem"]
+                b_c4 = action_brief["04_reproduction"]
+                b_c5 = action_brief["05_remediation"]
+
+                st.markdown(f"**Ticket ID:** `{b_c1['ticket_id']}` | **Priority:** `{b_c1['priority']}`")
+                st.markdown(f"**Affected Subsystem:** `{b_c2['component']}`")
+                st.markdown(f"**Firmware Daemon:** `{b_c2['firmware_module']}`")
+                st.markdown(f"**Observed Symptom:** {b_c4['symptom']}")
+                st.markdown(f"**Reproduction Trigger:** {b_c4['trigger_condition']}")
+                st.markdown(f"**Root Cause Hypothesis:** {b_c4['root_cause_hypothesis']}")
+                st.markdown(f"**Proposed Remediation:** {b_c5['action_plan']}")
+                st.markdown(f"**Verification Method:** {b_c5['verification_method']}")
+
+            jira_text = export_brief_to_jira_markdown(action_brief)
+            st.download_button(
+                label="📥 Download Engineering Action Brief (.md)",
+                data=jira_text,
+                file_name=f"{action_brief['01_context']['ticket_id']}_action_brief.md",
+                mime="text/markdown",
+                help="Download full 6-section technical brief ready for Jira, Linear, or GitHub Issues import",
+                key="btn_download_live_brief",
+                use_container_width=True
+            )
 
     st.markdown("<br>", unsafe_allow_html=True)
     b_row1, b_row2, b_row3 = st.columns(3)

@@ -15,6 +15,7 @@ from reviewlens.sentiment.vader_analyzer import SentimentAnalyzer
 from reviewlens.spam_detector.detector import SpamDetector
 from modules.sentiment import detect_rating_anomaly
 from modules.preprocessing import split_into_aspect_clauses, detect_negations, tokenize
+from modules.action_brief import evaluate_review_actionability
 
 # Authoritative ReviewLens NLP Pipeline singleton for interactive diagnostics
 _pipeline = ReviewLensPipeline()
@@ -89,6 +90,13 @@ def analyze_custom_review(
         else:
             anomaly_desc = f"Rating ({rating}★) aligns normally with computed text sentiment ({analysis.sentiment.label}, compound {analysis.sentiment.compound:+.2f})."
 
+    # 6. Engineering Actionability & Gap Evaluation (Vector-Inspired Analysis)
+    actionability_res = evaluate_review_actionability(
+        text=clean_input,
+        aspects=list(aspects_detected),
+        sentiment_compound=analysis.sentiment.compound
+    )
+
     return {
         "status": "ok",
         "text": clean_input,
@@ -100,6 +108,7 @@ def analyze_custom_review(
         "aspects_found": sorted(list(aspects_detected)),
         "aspect_mentions": [a.model_dump() for a in analysis.aspects],
         "negated_words": negated_words,
+        "actionability": actionability_res,
         "spam_analysis": {
             "is_spam": analysis.spam.is_spam,
             "spam_score": round(analysis.spam.spam_score, 2),

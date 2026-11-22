@@ -70,6 +70,19 @@ Developed by **Vinay Vardhan / ReviewLens Team**.
    - Batch request size cap (maximum 100 reviews per batch).
    - API Key authentication via `X-API-Key` or `Authorization: Bearer <key>` headers.
 
+9. **Vector-Inspired Requirement Engineering & BDD Acceptance Criteria**:
+   - Inspired by **Vector** (`vectorco.in` requirement engineering for interface teams), ReviewLens bridges customer feedback directly to engineering issue trackers (Jira, Linear, GitHub Issues).
+   - **Deterministic Actionability Index (0-100 Score)**: Evaluates review quality across 6 structural layers:
+     1. Subsystem / Hardware Component Identification
+     2. Defect Symptom & Measurable Degradation
+     3. Trigger & Usage Operating Context
+     4. Sentiment Polarity & Valence
+     5. Reproducibility & Numeric Frequency Indicator
+     6. Expected Outcome & Performance Benchmark
+   - **Automated Gap Detection**: Identifies actionable deficiencies (`MissingSubsystem`, `MissingTrigger`, `MissingSymptom`).
+   - **6-Section Engineering Action Brief**: Compiles customer pain points into an authoritative technical ticket: Context, Subsystem Controller, Verbatim Customer Evidence, Reproduction Journey, Proposed Remediation, and **Gherkin Given/When/Then BDD Acceptance Criteria**.
+   - **1-Click Ticket Export**: Export production-ready Markdown briefs for Jira and Linear.
+
 ---
 
 ## 🏗️ Dual Architecture & Project Structure
@@ -108,6 +121,7 @@ reviewlens/
 │   └── dashboard.py            # Original analytics dashboard interface
 │
 ├── modules/                    # Application Integration Modules
+│   ├── action_brief.py         # Vector-inspired requirement engineering, 6-layer actionability & BDD briefs
 │   ├── auth.py                 # Hardened PBKDF2 authentication & demo accounts
 │   ├── data_loader.py          # Data ingestion, indexing, and INR currency formatting
 │   ├── validation.py           # Dataset schema validation and orphan review checks
@@ -132,8 +146,9 @@ reviewlens/
 │   ├── public_sst2_benchmark.csv # 872 genuine public benchmark sentences from Stanford SST-2 / GLUE (data_type: public_labelled_benchmark)
 │   └── users.json              # Local credential store (empty on fresh clone, no seeded demo accounts)
 │
-└── tests/                      # Automated Regression Test Suite (86 unit tests)
+└── tests/                      # Automated Regression Test Suite (98 unit tests)
     ├── test_absa.py            # Aspect taxonomy & categorization tests
+    ├── test_action_brief.py    # Vector requirement engineering, actionability & BDD tests
     ├── test_api.py             # FastAPI auth, rate limiting, and payload size tests
     ├── test_aspects.py         # Aspect extraction & sentiment aggregation tests
     ├── test_audit_fixes.py     # End-to-end audit regression checks
@@ -201,7 +216,7 @@ python cli.py batch --input data/reviews.csv --output results.json
 
 ## 🧪 Automated Testing
 
-ReviewLens includes a comprehensive test suite of **86 automated unit tests** across 17 test modules covering data validation, preprocessing, sentiment analysis, aspect extraction, spam detection, recommendation math, API security, PBKDF2 authentication, and empirical benchmark evaluation.
+ReviewLens includes a comprehensive test suite of **98 automated unit tests** across 18 test modules covering data validation, preprocessing, sentiment analysis, aspect extraction, spam detection, recommendation math, API security, PBKDF2 authentication, empirical benchmark evaluation, and Vector requirement engineering.
 
 Run all tests:
 ```bash
@@ -210,7 +225,7 @@ python -m unittest discover tests
 
 Expected output:
 ```
-Ran 92 tests in ~21.0s
+Ran 98 tests in ~35.0s
 
 OK
 ```
