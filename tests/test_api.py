@@ -45,6 +45,12 @@ class TestFastAPISecurityAndEndpoints(unittest.TestCase):
         self.assertIn("Battery & Power", data)
         self.assertIn("Camera & Optics", data)
 
+    def test_about_landing_page(self):
+        """Landing page endpoint /about serves landing.html with status 200."""
+        response = self.client.get("/about")
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("ReviewLens", response.text)
+
     def test_analyze_without_auth_when_not_enforced(self):
         """When auth is not enforced, analyze endpoint allows requests."""
         payload = {"text": "Great battery life and crystal clear display.", "rating": 5.0}

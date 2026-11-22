@@ -189,6 +189,15 @@ def serve_ui():
     }
 
 
+@app.get("/about", response_class=HTMLResponse)
+def serve_landing():
+    """Serve the animated scrolling landing page that explains ReviewLens."""
+    html_file = BASE_DIR / "landing.html"
+    if html_file.exists():
+        return FileResponse(html_file)
+    raise HTTPException(status_code=404, detail="landing.html not found")
+
+
 @app.get("/api/v1/health")
 def health_check():
     """Health check endpoint."""

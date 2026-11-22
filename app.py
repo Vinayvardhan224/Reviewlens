@@ -81,6 +81,7 @@ from modules.auth import get_current_user, render_auth_interface, logout_user
 from components.header import render_header
 from components.product_card import render_product_card
 from components.filters import render_sidebar_filters, apply_filters
+from components.landing import render_landing
 from components.charts import (
     create_sentiment_donut_chart,
     create_aspect_breakdown_bar_chart,
@@ -819,6 +820,9 @@ st.sidebar.caption("🛡️ **Data Provenance**: Sample prices & ratings are ill
 # VIEW 1: PRODUCT EXPLORER & STOREFRONT
 # ==========================================
 if st.session_state["nav_view"] in ["🏠 Home / Discovery", "🏠 Product Explorer & Storefront"]:
+    # Animated Landing Page Showcase
+    render_landing(height=880)
+
     render_html_block("""
     <div class="hero-banner">
         <div style="display: inline-block; padding: 4px 12px; border-radius: 20px; background: rgba(255,153,0,0.2); border: 1px solid #FF9900; color: #FF9900; font-size: 0.8rem; font-weight: 700; margin-bottom: 0.8rem;">
