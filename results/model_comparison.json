@@ -1,0 +1,78 @@
+{
+  "dataset_name": "UCSD Amazon Electronics Review Corpus",
+  "total_samples": 997,
+  "splits": {
+    "train": 697,
+    "val": 150,
+    "test": 150
+  },
+  "hyperparameters": {
+    "best_c": 0.1,
+    "ngram_range": [
+      1,
+      2
+    ],
+    "max_features": 12000,
+    "class_weight": "balanced"
+  },
+  "vader": {
+    "accuracy": 0.7533,
+    "macro_precision": 0.412,
+    "macro_recall": 0.4573,
+    "macro_f1": 0.4323,
+    "class_f1": {
+      "negative": 0.4167,
+      "neutral": 0.0,
+      "positive": 0.8803
+    },
+    "confusion_matrix": [
+      [
+        10,
+        1,
+        10
+      ],
+      [
+        8,
+        0,
+        6
+      ],
+      [
+        9,
+        3,
+        103
+      ]
+    ]
+  },
+  "logistic_regression": {
+    "accuracy": 0.7333,
+    "macro_precision": 0.4611,
+    "macro_recall": 0.4565,
+    "macro_f1": 0.4578,
+    "class_f1": {
+      "negative": 0.439,
+      "neutral": 0.0833,
+      "positive": 0.8511
+    },
+    "confusion_matrix": [
+      [
+        9,
+        1,
+        11
+      ],
+      [
+        4,
+        1,
+        9
+      ],
+      [
+        7,
+        8,
+        100
+      ]
+    ]
+  },
+  "delta": {
+    "accuracy_gain_pct": -2.0,
+    "f1_gain": 0.0255
+  }
+}

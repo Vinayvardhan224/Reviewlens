@@ -9,7 +9,9 @@ Provides interactive, explainable, real-time diagnostic evaluation of arbitrary 
 """
 
 from typing import Dict, Any, List, Optional
+from pathlib import Path
 import html
+import joblib
 from reviewlens.pipeline import ReviewLensPipeline
 from reviewlens.sentiment.vader_analyzer import SentimentAnalyzer
 from reviewlens.spam_detector.detector import SpamDetector
@@ -19,15 +21,31 @@ from modules.action_brief import evaluate_review_actionability
 
 # Authoritative ReviewLens NLP Pipeline singleton for interactive diagnostics
 _pipeline = ReviewLensPipeline()
+_ml_sentiment_model = None
+
+
+def get_ml_sentiment_model():
+    """Lazy loader for trained TF-IDF + Logistic Regression sentiment model."""
+    global _ml_sentiment_model
+    if _ml_sentiment_model is None:
+        model_path = Path(__file__).resolve().parent.parent / "models" / "sentiment_model.joblib"
+        if model_path.exists():
+            try:
+                _ml_sentiment_model = joblib.load(model_path)
+            except Exception as e:
+                print(f"[!] Warning: Could not load ML model: {e}")
+    return _ml_sentiment_model
 
 
 def analyze_custom_review(
     text: str,
     rating: Optional[float] = None,
-    category: Optional[str] = "Smartphones"
+    category: Optional[str] = "Smartphones",
+    model_type: str = "VADER"
 ) -> Dict[str, Any]:
     """
     Runs complete real-time NLP diagnostic on arbitrary review text using the authoritative ReviewLensPipeline.
+    Supports switching between rule-based VADER and trained ML (TF-IDF + Logistic Regression).
     Ensures Streamlit, FastAPI, and CLI return 100% consistent scores and classifications.
     """
     clean_input = text.strip() if text else ""
@@ -55,8 +73,41 @@ def analyze_custom_review(
         "neg": analysis.sentiment.neg,
         "label": analysis.sentiment.label,
         "confidence": analysis.sentiment.confidence,
-        "primary_emotion": analysis.sentiment.primary_emotion
+        "primary_emotion": analysis.sentiment.primary_emotion,
+        "engine": "VADER (Lexicon)"
     }
+
+    # Check if ML Model is requested
+    is_ml_mode = "ML" in model_type or "LogReg" in model_type or "TF-IDF" in model_type
+    if is_ml_mode:
+        ml_model = get_ml_sentiment_model()
+        if ml_model is not None:
+            try:
+                pred_label = ml_model.predict([clean_input])[0].lower()
+                classes = list(ml_model.classes_)
+                probs = ml_model.predict_proba([clean_input])[0]
+                prob_dict = dict(zip(classes, probs))
+
+                p_pos = float(prob_dict.get("positive", 0.0))
+                p_neg = float(prob_dict.get("negative", 0.0))
+                p_neu = float(prob_dict.get("neutral", 0.0))
+                ml_compound = round(p_pos - p_neg, 4)
+
+                sentiment = {
+                    "compound": ml_compound,
+                    "positive": round(p_pos, 4),
+                    "pos": round(p_pos, 4),
+                    "neutral": round(p_neu, 4),
+                    "neu": round(p_neu, 4),
+                    "negative": round(p_neg, 4),
+                    "neg": round(p_neg, 4),
+                    "label": pred_label.upper(),
+                    "confidence": round(float(max(probs)), 2),
+                    "primary_emotion": analysis.sentiment.primary_emotion,
+                    "engine": "TF-IDF + Logistic Regression (ML)"
+                }
+            except Exception as e:
+                print(f"[!] Warning: ML prediction fallback to VADER: {e}")
 
     # 3. Clause-by-Clause Aspect & Polarity Segmentation
     clauses_raw = split_into_aspect_clauses(clean_input)

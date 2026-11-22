@@ -1631,7 +1631,7 @@ elif st.session_state["nav_view"] == "🧪 Live Review Analyzer":
         placeholder="Type or paste any customer review here..."
     )
 
-    ctrl_col1, ctrl_col2, ctrl_col3 = st.columns([2, 2, 1])
+    ctrl_col1, ctrl_col2, ctrl_col3, ctrl_col4 = st.columns([1.5, 1.5, 1.5, 1])
     with ctrl_col1:
         input_rating = st.slider(
             "Associated Star Rating (1.0 to 5.0):",
@@ -1649,12 +1649,19 @@ elif st.session_state["nav_view"] == "🧪 Live Review Analyzer":
             index=cat_idx
         )
     with ctrl_col3:
+        model_choice = st.selectbox(
+            "Sentiment NLP Engine:",
+            ["VADER (Lexicon)", "TF-IDF + LogReg (ML Model)"],
+            index=0,
+            help="Choose between rule-based VADER or trained supervised TF-IDF + Logistic Regression model"
+        )
+    with ctrl_col4:
         st.write("")
         st.write("")
         run_nlp = st.button("🔬 Run Diagnostic", type="primary", use_container_width=True)
 
     if input_text.strip():
-        diag_res = analyze_custom_review(input_text, rating=input_rating, category=input_cat)
+        diag_res = analyze_custom_review(input_text, rating=input_rating, category=input_cat, model_type=model_choice)
 
         if diag_res.get("status") == "ok":
             st.markdown("---")
@@ -1666,9 +1673,10 @@ elif st.session_state["nav_view"] == "🧪 Live Review Analyzer":
                 sent = diag_res["sentiment"]
                 comp = sent["compound"]
                 s_color = "#10B981" if sent["label"] == "POSITIVE" else ("#EF4444" if sent["label"] == "NEGATIVE" else "#64748B")
+                engine_title = sent.get("engine", "Sentiment Polarity")
                 render_html_block(f"""
                 <div class="metric-card" style="border-left: 4px solid {s_color};">
-                    <div class="metric-label">VADER Sentiment Polarity</div>
+                    <div class="metric-label">{html.escape(engine_title)}</div>
                     <div class="metric-value" style="color: {s_color};">{sent['label']}</div>
                     <div class="metric-sub">Compound: <b>{comp:+.2f}</b> (Pos: {sent['pos']:.2f}, Neg: {sent['neg']:.2f})</div>
                 </div>
@@ -2236,6 +2244,89 @@ elif st.session_state["nav_view"] == "📈 Model Evaluation & Benchmarks":
     st.markdown("## 📈 **Model Evaluation & Ground-Truth Benchmarks**")
     st.caption(f"Empirical performance evaluation of VADER Sentiment Classification and Spam Detection against a manually labelled test set ({len(BENCHMARK_DATASET)} ground-truth samples). Serves as a sanity validation suite rather than an empirical proof of generalization on unseen production distribution.")
 
+    # EMPIRICAL MODEL COMPARISON ON REAL AMAZON DATA
+    model_comp_path = PROJECT_ROOT / "results" / "model_comparison.json"
+    if model_comp_path.exists():
+        try:
+            with open(model_comp_path, "r", encoding="utf-8") as f:
+                m_data = json.load(f)
+
+            st.markdown("### 🏆 **Empirical Model Comparison: VADER vs. Supervised ML (TF-IDF + Logistic Regression)**")
+            st.caption(f"Trained and evaluated on genuine customer reviews from **{m_data['dataset_name']}** (Total N={m_data['total_samples']}, Train={m_data['splits']['train']}, Val={m_data['splits']['val']}, Held-Out Test={m_data['splits']['test']}).")
+
+            r_v = m_data["vader"]
+            r_lr = m_data["logistic_regression"]
+            delta = m_data["delta"]
+
+            ec1, ec2, ec3, ec4 = st.columns(4)
+            with ec1:
+                render_html_block(f"""
+                <div class="metric-card metric-card-purple">
+                    <div class="metric-label">ML Test Accuracy</div>
+                    <div class="metric-value">{r_lr['accuracy'] * 100:.1f}%</div>
+                    <div class="metric-sub">TF-IDF + LogReg (C={m_data['hyperparameters']['best_c']})</div>
+                </div>
+                """)
+            with ec2:
+                render_html_block(f"""
+                <div class="metric-card">
+                    <div class="metric-label">VADER Test Accuracy</div>
+                    <div class="metric-value">{r_v['accuracy'] * 100:.1f}%</div>
+                    <div class="metric-sub">Zero-Shot Lexicon Engine</div>
+                </div>
+                """)
+            with ec3:
+                render_html_block(f"""
+                <div class="metric-card metric-card-green">
+                    <div class="metric-label">ML Macro F1-Score</div>
+                    <div class="metric-value">{r_lr['macro_f1']:.4f}</div>
+                    <div class="metric-sub">Balanced Macro F1 ({delta['f1_gain']:+.4f} vs VADER)</div>
+                </div>
+                """)
+            with ec4:
+                render_html_block(f"""
+                <div class="metric-card">
+                    <div class="metric-label">VADER Macro F1-Score</div>
+                    <div class="metric-value">{r_v['macro_f1']:.4f}</div>
+                    <div class="metric-sub">Zero-Shot Macro F1</div>
+                </div>
+                """)
+
+            # Comparison DataFrame
+            comp_rows = [
+                {"Evaluation Metric": "Overall Test Accuracy", "VADER (Rule-Based)": f"{r_v['accuracy']*100:.2f}%", "TF-IDF + LogReg (ML)": f"{r_lr['accuracy']*100:.2f}%", "Empirical Delta": f"{delta['accuracy_gain_pct']:+.2f}%"},
+                {"Evaluation Metric": "Macro F1-Score", "VADER (Rule-Based)": f"{r_v['macro_f1']:.4f}", "TF-IDF + LogReg (ML)": f"{r_lr['macro_f1']:.4f}", "Empirical Delta": f"{delta['f1_gain']:+.4f}"},
+                {"Evaluation Metric": "Macro Precision", "VADER (Rule-Based)": f"{r_v['macro_precision']*100:.2f}%", "TF-IDF + LogReg (ML)": f"{r_lr['macro_precision']*100:.2f}%", "Empirical Delta": f"{(r_lr['macro_precision'] - r_v['macro_precision'])*100:+.2f}%"},
+                {"Evaluation Metric": "Macro Recall", "VADER (Rule-Based)": f"{r_v['macro_recall']*100:.2f}%", "TF-IDF + LogReg (ML)": f"{r_lr['macro_recall']*100:.2f}%", "Empirical Delta": f"{(r_lr['macro_recall'] - r_v['macro_recall'])*100:+.2f}%"},
+                {"Evaluation Metric": "Negative Sentiment F1", "VADER (Rule-Based)": f"{r_v['class_f1']['negative']:.4f}", "TF-IDF + LogReg (ML)": f"{r_lr['class_f1']['negative']:.4f}", "Empirical Delta": f"{r_lr['class_f1']['negative'] - r_v['class_f1']['negative']:+.4f}"},
+                {"Evaluation Metric": "Neutral Sentiment F1", "VADER (Rule-Based)": f"{r_v['class_f1']['neutral']:.4f}", "TF-IDF + LogReg (ML)": f"{r_lr['class_f1']['neutral']:.4f}", "Empirical Delta": f"{r_lr['class_f1']['neutral'] - r_v['class_f1']['neutral']:+.4f}"},
+                {"Evaluation Metric": "Positive Sentiment F1", "VADER (Rule-Based)": f"{r_v['class_f1']['positive']:.4f}", "TF-IDF + LogReg (ML)": f"{r_lr['class_f1']['positive']:.4f}", "Empirical Delta": f"{r_lr['class_f1']['positive'] - r_v['class_f1']['positive']:+.4f}"}
+            ]
+            st.dataframe(pd.DataFrame(comp_rows), use_container_width=True, hide_index=True)
+
+            # Confusion Matrices side-by-side
+            cm_lr_path = PROJECT_ROOT / "results" / "cm_logistic_regression.png"
+            cm_v_path = PROJECT_ROOT / "results" / "cm_vader.png"
+            if cm_lr_path.exists() and cm_v_path.exists():
+                st.markdown("##### 🔍 Empirical Confusion Matrices (Held-Out Test)")
+                cm_c1, cm_c2 = st.columns(2)
+                with cm_c1:
+                    st.image(str(cm_lr_path), caption="TF-IDF + Logistic Regression Confusion Matrix", use_container_width=True)
+                with cm_c2:
+                    st.image(str(cm_v_path), caption="VADER Lexicon Confusion Matrix", use_container_width=True)
+
+            # 30 Misclassified Test Cases
+            err_path = PROJECT_ROOT / "results" / "error_analysis.csv"
+            if err_path.exists():
+                err_df = pd.read_csv(err_path)
+                with st.expander("🔬 Qualitative Error Analysis: 30 Misclassified Test Cases (Sarcasm, Negation, Mixed)", expanded=False):
+                    st.caption("Diagnostic examination of actual test set reviews where models failed, categorized by linguistic error cause.")
+                    st.dataframe(err_df, use_container_width=True, hide_index=True)
+
+            st.markdown("---")
+        except Exception as e:
+            st.warning(f"Could not load empirical model comparison: {e}")
+
     sentiment_metrics = evaluate_sentiment_model()
     spam_metrics = evaluate_spam_model()
 
@@ -2423,10 +2514,10 @@ elif st.session_state["nav_view"] == "📈 Model Evaluation & Benchmarks":
                 "Inference Latency": "~2 ms / review"
             },
             {
-                "Model Architecture": "DistilBERT (distilbert-base-uncased-finetuned-sst-2)",
+                "Model Architecture": "DistilBERT (distilbert-base-uncased-finetuned-sst-2) [Ref]",
                 "Paradigm": "Fine-Tuned Deep Bidirectional Transformer",
-                "Training Split": "67,349 SST-2 Train sentences (3 epochs)",
-                "Dev Accuracy (n=872)": f"{sst2_res['transformer_accuracy'] * 100:.1f}%",
+                "Training Split": "Published Reference Metric (GLUE/HuggingFace Card; not locally computed)",
+                "Dev Accuracy (n=872)": f"{sst2_res['transformer_accuracy'] * 100:.1f}% (Reference)",
                 "Macro F1": f"{sst2_res['transformer_f1_macro']:.3f}",
                 "Inference Latency": "~25 ms (CPU) / ~4 ms (GPU)"
             }
@@ -2461,9 +2552,9 @@ elif st.session_state["nav_view"] == "📈 Model Evaluation & Benchmarks":
         with s_col4:
             render_html_block(f"""
             <div class="metric-card metric-card-orange">
-                <div class="metric-label">Deep Transformer Acc</div>
+                <div class="metric-label">Transformer [Reference]</div>
                 <div class="metric-value">{sst2_res['transformer_accuracy'] * 100:.1f}%</div>
-                <div class="metric-sub">DistilBERT Fine-Tuned</div>
+                <div class="metric-sub">Published GLUE Reference</div>
             </div>
             """)
 

@@ -6,19 +6,21 @@ sanity-check test set, reporting Accuracy, Precision, Recall, F1-score, and Conf
 
 from typing import Dict, Any, List
 from pathlib import Path
+import json
 import pandas as pd
 import numpy as np
 from sklearn.metrics import accuracy_score, precision_recall_fscore_support, confusion_matrix
 from modules.sentiment import analyze_text_sentiment
 from reviewlens.spam_detector.detector import SpamDetector
 
-BENCHMARK_CSV_PATH = Path(__file__).resolve().parent.parent / "data" / "benchmark_sentiment.csv"
-SST2_CSV_PATH = Path(__file__).resolve().parent.parent / "data" / "public_sst2_benchmark.csv"
-SST2_MODEL_PATH = Path(__file__).resolve().parent.parent / "data" / "sst2_baseline_model.joblib"
-SEMEVAL_CSV_PATH = Path(__file__).resolve().parent.parent / "data" / "semeval_laptop_benchmark.csv"
-AMAZON_CSV_PATH = Path(__file__).resolve().parent.parent / "data" / "real_amazon_reviews.csv"
-FAKE_MODEL_PATH = Path(__file__).resolve().parent.parent / "data" / "fake_review_model.joblib"
-REVIEWS_CSV_PATH = Path(__file__).resolve().parent.parent / "data" / "reviews.csv"
+BASE_DIR = Path(__file__).resolve().parent.parent
+BENCHMARK_CSV_PATH = BASE_DIR / "data" / "benchmark_sentiment.csv"
+SST2_CSV_PATH = BASE_DIR / "data" / "public_sst2_benchmark.csv"
+SST2_MODEL_PATH = BASE_DIR / "data" / "sst2_baseline_model.joblib"
+SEMEVAL_CSV_PATH = BASE_DIR / "data" / "semeval_laptop_benchmark.csv"
+AMAZON_CSV_PATH = BASE_DIR / "data" / "real_amazon_reviews.csv"
+FAKE_MODEL_PATH = BASE_DIR / "data" / "fake_review_model.joblib"
+REVIEWS_CSV_PATH = BASE_DIR / "data" / "reviews.csv"
 
 # Fallback curated benchmark test set (50 reviews with ground-truth sentiment and spam labels)
 BENCHMARK_DATASET = [
@@ -330,6 +332,7 @@ def evaluate_sst2_public_benchmark() -> Dict[str, Any]:
                 pass
 
         # 3. Transformer Benchmark (DistilBERT fine-tuned on SST-2)
+        # Note: Published benchmark reference from official GLUE/HuggingFace model card; not dynamically computed locally
         transformer_acc = 0.9130
         transformer_f1 = 0.9120
 
@@ -352,10 +355,12 @@ def evaluate_sst2_public_benchmark() -> Dict[str, Any]:
             "baseline_accuracy": baseline_acc,
             "baseline_f1_macro": baseline_f1,
             "baseline_confusion_matrix": cm_baseline,
-            # Transformer model
+            # Transformer model (Published Reference Metric)
             "transformer_model": "distilbert-base-uncased-finetuned-sst-2-english",
             "transformer_accuracy": transformer_acc,
             "transformer_f1_macro": transformer_f1,
+            "transformer_is_reference": True,
+            "transformer_reference_label": "Published reference value (HuggingFace/GLUE), not locally computed",
             # Transparent limitations disclosure
             "domain_caveat": "SST-2 consists of single movie-review sentences rather than full multi-aspect product reviews; it benchmarks sentence-level sentiment polarity rather than multi-attribute e-commerce trade-offs.",
             "data_provenance": "Official Stanford Sentiment Treebank (SST-2 / GLUE development set). Genuine public NLP research benchmark."
@@ -443,7 +448,18 @@ def evaluate_ml_spam_classifier() -> Dict[str, Any]:
     """
     Evaluates the trained statistical machine learning fake-review detector
     (Random Forest + TF-IDF + Heuristic Feature Vectors) on balanced test data.
+    Reads computed empirical metrics from results/fake_review_metrics.json.
     """
+    results_json_path = BASE_DIR / "results" / "fake_review_metrics.json"
+    if results_json_path.exists():
+        try:
+            with open(results_json_path, "r", encoding="utf-8") as f:
+                metrics = json.load(f)
+            metrics["status"] = "ok"
+            return metrics
+        except Exception as e:
+            print(f"[!] Warning reading fake_review_metrics.json: {e}")
+
     if not FAKE_MODEL_PATH.exists():
         return {
             "status": "not_found",
@@ -459,10 +475,10 @@ def evaluate_ml_spam_classifier() -> Dict[str, Any]:
         return {
             "status": "ok",
             "model_type": "Supervised Random Forest (n=40 trees) + TF-IDF Lexical Vectors",
-            "accuracy": 0.943,
-            "precision": 0.952,
-            "recall": 0.938,
-            "f1_score": 0.945,
+            "accuracy": 0.875,
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1_score": 0.0,
             "feature_set": [
                 "Review character length",
                 "Word count & average word length",
