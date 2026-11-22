@@ -3,11 +3,146 @@ Spam, Bot, and Fake Review Detection Engine for ReviewLens.
 Analyzes reviews for synthetic patterns, promotional manipulation, rating mismatches, and copy-paste duplicates.
 """
 
-from typing import List, Optional, Set
+from typing import List, Optional, Set, Dict, Any
 import re
+import datetime
 import threading
+import pandas as pd
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.metrics.pairwise import cosine_similarity
 from reviewlens.config import SPAM_DETECTION_CONFIG
 from reviewlens.models import SpamResult
+
+
+def detect_review_bursts(
+    reviews: List[dict],
+    window_days: int = 2,
+    threshold_count: int = 5
+) -> List[Dict[str, Any]]:
+    """
+    Detect unnatural temporal velocity bursts (sudden spikes in review submission
+    within a short window), typical of coordinated astroturfing campaigns.
+
+    Args:
+        reviews: List of review dicts containing 'date' or 'timestamp', and optionally 'product_id', 'review_id'.
+        window_days: Sliding window duration in days (default 2).
+        threshold_count: Minimum review count within the window to flag as a burst (default 5).
+
+    Returns:
+        List of detected burst clusters with start_date, end_date, count, review_ids, product_id.
+    """
+    if not reviews or len(reviews) < threshold_count:
+        return []
+
+    # Parse timestamps
+    parsed_reviews = []
+    for idx, r in enumerate(reviews):
+        raw_date = r.get("date") or r.get("timestamp")
+        if not raw_date:
+            continue
+        try:
+            ts = pd.to_datetime(raw_date)
+            if pd.notna(ts):
+                rid = str(r.get("review_id", f"REV_{idx}"))
+                pid = str(r.get("product_id", "default_product"))
+                parsed_reviews.append({
+                    "timestamp": ts,
+                    "review_id": rid,
+                    "product_id": pid
+                })
+        except Exception:
+            continue
+
+    if len(parsed_reviews) < threshold_count:
+        return []
+
+    # Group by product_id
+    by_product: Dict[str, List[dict]] = {}
+    for pr in parsed_reviews:
+        by_product.setdefault(pr["product_id"], []).append(pr)
+
+    bursts: List[Dict[str, Any]] = []
+    for pid, p_revs in by_product.items():
+        if len(p_revs) < threshold_count:
+            continue
+        p_revs.sort(key=lambda x: x["timestamp"])
+
+        i = 0
+        while i < len(p_revs):
+            start_ts = p_revs[i]["timestamp"]
+            end_ts = start_ts + datetime.timedelta(days=window_days)
+            window_revs = [r for r in p_revs if start_ts <= r["timestamp"] <= end_ts]
+
+            if len(window_revs) >= threshold_count:
+                bursts.append({
+                    "product_id": pid,
+                    "start_date": start_ts.strftime("%Y-%m-%d"),
+                    "end_date": end_ts.strftime("%Y-%m-%d"),
+                    "count": len(window_revs),
+                    "review_ids": [r["review_id"] for r in window_revs]
+                })
+                # Skip forward past this window to avoid duplicate sub-bursts
+                i += len(window_revs)
+            else:
+                i += 1
+
+    return bursts
+
+
+def detect_near_duplicates(
+    reviews: List[dict],
+    similarity_threshold: float = 0.85
+) -> List[Dict[str, Any]]:
+    """
+    Detect copy-pasted or template-generated near-duplicate reviews across distinct IDs
+    using TF-IDF n-gram vectorization and cosine similarity.
+
+    Args:
+        reviews: List of review dicts with 'review_text' or 'text', and optionally 'review_id'.
+        similarity_threshold: Cosine similarity cutoff to classify as near-duplicate (default 0.85).
+
+    Returns:
+        List of duplicate pairs with review_id_a, review_id_b, similarity, text_a, text_b.
+    """
+    if not reviews or len(reviews) < 2:
+        return []
+
+    items = []
+    for idx, r in enumerate(reviews):
+        text = str(r.get("review_text") or r.get("text") or "").strip()
+        rid = str(r.get("review_id", f"REV_{idx}"))
+        if len(text) >= 15:
+            items.append({"id": rid, "text": text})
+
+    if len(items) < 2:
+        return []
+
+    corpus = [item["text"] for item in items]
+    try:
+        vec = TfidfVectorizer(ngram_range=(1, 2), min_df=1, sublinear_tf=True)
+        tfidf_mat = vec.fit_transform(corpus)
+        sim_mat = cosine_similarity(tfidf_mat)
+    except Exception:
+        return []
+
+    duplicates = []
+    n = len(items)
+    for i in range(n):
+        for j in range(i + 1, n):
+            # Exclude self-comparison if same review_id
+            if items[i]["id"] == items[j]["id"]:
+                continue
+            sim = float(sim_mat[i, j])
+            if sim >= similarity_threshold:
+                duplicates.append({
+                    "review_id_a": items[i]["id"],
+                    "review_id_b": items[j]["id"],
+                    "similarity": round(sim, 3),
+                    "text_a": items[i]["text"][:90],
+                    "text_b": items[j]["text"][:90]
+                })
+
+    return duplicates
 
 
 class SpamDetector:
@@ -121,3 +256,20 @@ class SpamDetector:
         """Clear duplicate signature memory safely."""
         with self._lock:
             self.seen_signatures.clear()
+
+    def detect_review_bursts(
+        self,
+        reviews: List[dict],
+        window_days: int = 2,
+        threshold_count: int = 5
+    ) -> List[Dict[str, Any]]:
+        """Instance wrapper for temporal velocity burst detection."""
+        return detect_review_bursts(reviews, window_days=window_days, threshold_count=threshold_count)
+
+    def detect_near_duplicates(
+        self,
+        reviews: List[dict],
+        similarity_threshold: float = 0.85
+    ) -> List[Dict[str, Any]]:
+        """Instance wrapper for TF-IDF near-duplicate detection."""
+        return detect_near_duplicates(reviews, similarity_threshold=similarity_threshold)

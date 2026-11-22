@@ -77,6 +77,8 @@ except ImportError:
         EVALUATION_METHODOLOGY_DISCLOSURE
     )
 from modules.live_analyzer import analyze_custom_review
+from modules.review_qa import answer_product_review_question
+from modules.pdf_report import generate_product_pdf_report
 from modules.auth import get_current_user, render_auth_interface, logout_user
 from components.header import render_header
 from components.product_card import render_product_card
@@ -1294,12 +1296,107 @@ elif st.session_state["nav_view"] == "📦 Product Details":
                 use_container_width=True
             )
 
+    # Review Q&A Section with TF-IDF Semantic Retrieval & Citations
     st.markdown("<br>", unsafe_allow_html=True)
-    cta_col1, cta_col2 = st.columns([2, 1])
+    st.markdown("### 💬 **Ask the Reviews (Extractive Q&A with Citations)**")
+    st.caption("Ask natural language questions about this product. The NLP engine retrieves exact review sentences using TF-IDF cosine similarity, balances sentiment consensus, and attributes direct citations.")
+
+    suggested_questions = [
+        "How is the battery life and charging?",
+        "Is the display bright and sharp?",
+        "Does it overheat or throttle?",
+        "How is the build quality and ergonomics?"
+    ]
+    pills_cols = st.columns(len(suggested_questions))
+    for p_idx, q_sug in enumerate(suggested_questions):
+        with pills_cols[p_idx]:
+            if st.button(f"💡 {q_sug}", key=f"btn_qa_sug_{p_idx}", use_container_width=True):
+                st.session_state["qa_query_input"] = q_sug
+
+    user_qa_query = st.text_input(
+        "Enter question about this product:",
+        value=st.session_state.get("qa_query_input", ""),
+        key="qa_query_text_box",
+        placeholder="e.g. How is the battery life? Does it handle video editing well?"
+    )
+
+    if user_qa_query.strip():
+        qa_result = answer_product_review_question(
+            selected_pid,
+            user_qa_query,
+            top_k=3,
+            reviews_df=reviews_df
+        )
+
+        if qa_result["status"] == "ok":
+            cons_badge = qa_result["consensus"]
+            cons_color = "#10B981" if "Positive" in cons_badge else ("#EF4444" if "Negative" in cons_badge else "#F59E0B")
+            pos_c = qa_result["sentiment_summary"]["positive"]
+            neg_c = qa_result["sentiment_summary"]["negative"]
+            neu_c = qa_result["sentiment_summary"]["neutral"]
+
+            st.markdown(f"""
+            <div style="background: rgba(22, 17, 46, 0.85); border: 1px solid rgba(155, 92, 255, 0.4); border-radius: 12px; padding: 1.2rem; margin: 1rem 0;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.8rem; flex-wrap: wrap; gap: 8px;">
+                    <div>
+                        <span style="font-size: 0.8rem; color: #94A3B8; text-transform: uppercase; font-weight: 700; letter-spacing: 0.05em;">EXTRACTIVE CONSENSUS</span>
+                        <div style="font-size: 1.25rem; font-weight: 800; color: {cons_color};">{cons_badge}</div>
+                    </div>
+                    <div style="font-size: 0.85rem; color: #CBD5E1; background: rgba(255,255,255,0.06); padding: 4px 12px; border-radius: 99px;">
+                        Retrieved Evidence: <b style="color:#10B981">{pos_c} Positive</b> &nbsp;|&nbsp; <b style="color:#EF4444">{neg_c} Negative</b> &nbsp;|&nbsp; <b style="color:#94A3B8">{neu_c} Neutral</b>
+                    </div>
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+
+            st.markdown("##### 📌 **Direct Review Citations & Evidence**")
+            for cit in qa_result["citations"]:
+                c_sent_color = "#10B981" if cit["sentiment"] == "POSITIVE" else ("#EF4444" if cit["sentiment"] == "NEGATIVE" else "#94A3B8")
+                st.markdown(f"""
+                <div style="background: rgba(13, 10, 36, 0.7); border-left: 4px solid {c_sent_color}; border-radius: 6px; padding: 0.8rem 1rem; margin-bottom: 0.6rem;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.4rem;">
+                        <span style="font-weight: 700; color: #9B5CFF; font-size: 0.82rem; font-family: monospace;">{cit['citation']}</span>
+                        <span>
+                            <span style="font-size: 0.75rem; background: rgba(34, 211, 238, 0.15); color: #22D3EE; padding: 2px 8px; border-radius: 4px;">Cosine Sim: {cit['similarity']:.3f}</span>
+                            &nbsp;<span style="font-size: 0.75rem; background: rgba(255,255,255,0.1); color: #FFFFFF; padding: 2px 8px; border-radius: 4px;">★ {cit['rating']:.1f}</span>
+                            &nbsp;<span style="font-size: 0.75rem; background: {c_sent_color}22; color: {c_sent_color}; padding: 2px 8px; border-radius: 4px; font-weight: 700;">{cit['sentiment']}</span>
+                        </span>
+                    </div>
+                    <div style="color: #F1F5F9; font-size: 0.92rem; line-height: 1.5; font-style: italic;">
+                        "{html.escape(cit['sentence'])}"
+                    </div>
+                </div>
+                """, unsafe_allow_html=True)
+        elif qa_result["status"] == "no_match":
+            st.info(f"ℹ️ {qa_result['answer']}")
+        elif qa_result["status"] == "no_reviews":
+            st.warning(f"⚠️ {qa_result['answer']}")
+
+    st.markdown("<br>", unsafe_allow_html=True)
+    cta_col1, cta_col2, cta_col3 = st.columns([2, 1, 1])
     with cta_col1:
         if st.button("🚀 Dive Into Full NLP Review Intelligence & Interactive Topic Modeling →", key="btn_deep_cta", type="primary", use_container_width=True):
             explore_review_intelligence_action(selected_pid)
     with cta_col2:
+        try:
+            pdf_bytes = generate_product_pdf_report(
+                prod=prod,
+                aspect_list=aspect_list,
+                sentiment_res=sentiment_res,
+                exec_summary=exec_summary
+            )
+            st.download_button(
+                label="📄 Export Executive PDF",
+                data=pdf_bytes,
+                file_name=f"{selected_pid}_executive_report.pdf",
+                mime="application/pdf",
+                help="Download full executive PDF dossier with aspect scorecard, strengths/cons, and academic disclosures",
+                type="primary",
+                use_container_width=True
+            )
+        except Exception as e:
+            st.error(f"Could not generate PDF: {e}")
+    with cta_col3:
         dossier_text = generate_markdown_dossier(prod, aspect_list, sentiment_res, exec_summary)
         st.download_button(
             label="📥 Export Dossier (.md)",

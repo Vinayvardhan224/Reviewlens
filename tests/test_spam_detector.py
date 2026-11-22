@@ -39,6 +39,29 @@ class TestSpamDetector(unittest.TestCase):
         self.assertTrue(res2.is_spam)
         self.assertTrue(any("duplicate" in r.lower() for r in res2.reasons))
 
+    def test_detect_review_bursts(self):
+        # 6 reviews submitted on the same day for a single product
+        reviews = [
+            {"review_id": f"R{i}", "product_id": "phone-1", "date": "2024-05-10 10:00:00", "review_text": "Good phone."}
+            for i in range(6)
+        ]
+        bursts = self.detector.detect_review_bursts(reviews, window_days=1, threshold_count=5)
+        self.assertEqual(len(bursts), 1)
+        self.assertEqual(bursts[0]["count"], 6)
+        self.assertEqual(bursts[0]["product_id"], "phone-1")
+
+    def test_detect_near_duplicates(self):
+        reviews = [
+            {"review_id": "R1", "review_text": "This phone has extraordinary battery life and a stunning display screen."},
+            {"review_id": "R2", "review_text": "This phone has extraordinary battery life and a stunning display screen!"},
+            {"review_id": "R3", "review_text": "Completely different text talking about camera lens quality and tripod."}
+        ]
+        dups = self.detector.detect_near_duplicates(reviews, similarity_threshold=0.85)
+        self.assertEqual(len(dups), 1)
+        self.assertEqual(dups[0]["review_id_a"], "R1")
+        self.assertEqual(dups[0]["review_id_b"], "R2")
+        self.assertGreaterEqual(dups[0]["similarity"], 0.85)
+
 
 if __name__ == "__main__":
     unittest.main()
