@@ -79,6 +79,8 @@ except ImportError:
 from modules.live_analyzer import analyze_custom_review
 from modules.review_qa import answer_product_review_question
 from modules.pdf_report import generate_product_pdf_report
+from modules.csv_analyzer import analyze_custom_reviews_csv, decompose_review_words
+from modules.navigation import NAV_GROUPS, ALL_NAV_VIEWS, get_group_for_view
 from modules.auth import get_current_user, render_auth_interface, logout_user
 from components.header import render_header
 from components.product_card import render_product_card
@@ -601,6 +603,35 @@ st.markdown("""
         color: #FFFFFF !important;
         font-weight: 700 !important;
     }
+
+    /* Mobile Responsiveness (@media <= 768px) */
+    @media (max-width: 768px) {
+        .block-container {
+            padding-left: 0.8rem !important;
+            padding-right: 0.8rem !important;
+            padding-top: 1rem !important;
+        }
+        .hero-banner {
+            padding: 1.2rem 0.9rem !important;
+        }
+        .hero-banner h1 {
+            font-size: 1.6rem !important;
+            line-height: 1.2 !important;
+        }
+        .metric-card {
+            margin-bottom: 0.75rem !important;
+        }
+        div[data-testid="column"] {
+            width: 100% !important;
+            flex: 1 1 100% !important;
+            min-width: 100% !important;
+        }
+        .nav-in {
+            flex-direction: column !important;
+            height: auto !important;
+            padding: 0.8rem 0 !important;
+        }
+    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -761,39 +792,43 @@ with col_sb_logout:
         navigate_to("🔍 Review Intelligence")
 
 st.sidebar.markdown("<div style='margin-top: 0.8rem; border-top: 1px solid rgba(255,255,255,0.08); padding-top: 0.8rem;'></div>", unsafe_allow_html=True)
-st.sidebar.markdown("##### 🔬 **Core NLP Intelligence**")
 
-NAV_PRIMARY_NLP = [
-    "🔍 Review Intelligence",
-    "🧪 Live Review Analyzer",
-    "📊 Original Analytics Dashboard",
-    "📈 Model Evaluation & Benchmarks",
-    "⚔️ Product Comparison",
-    "🎯 Smart Recommendations",
-]
+# Maintain NAV_OPTIONS alias
+NAV_OPTIONS = ALL_NAV_VIEWS
 
-NAV_SECONDARY_SHOPPING = [
-    "🏠 Product Explorer & Storefront",
-    "📱 Smartphones",
-    "💻 Laptops",
-    "🎧 Headphones",
-    "📷 Cameras",
-    "🛍️ All Products",
-    "📦 Product Details",
-    "📂 Data Ingestion & Validator",
-    "📖 Methodology & Transparency",
-    "🔐 Sign In / Profile"
-]
+current_view = st.session_state.get("nav_view", "🔍 Review Intelligence")
+if current_view == "🏠 Home / Discovery":
+    current_view = "🏠 Product Explorer & Storefront"
 
-NAV_OPTIONS = NAV_PRIMARY_NLP + NAV_SECONDARY_SHOPPING
+# 1. ANALYZE Group
+st.sidebar.markdown("<div style='font-size: 0.72rem; font-weight: 800; color: #9B5CFF; letter-spacing: 0.08em; margin: 0.4rem 0 0.2rem 0;'>ANALYZE</div>", unsafe_allow_html=True)
+for item in NAV_GROUPS["ANALYZE"]:
+    is_active = (current_view == item)
+    if st.sidebar.button(item, key=f"nav_btn_{item}", type="primary" if is_active else "secondary", use_container_width=True):
+        navigate_to(item)
 
-selected_view = st.sidebar.radio(
-    "Select Feature",
-    NAV_OPTIONS,
-    key="sidebar_nav_radio",
-    label_visibility="collapsed"
-)
-st.session_state["nav_view"] = selected_view
+# 2. COMPARE Group
+st.sidebar.markdown("<div style='font-size: 0.72rem; font-weight: 800; color: #22D3EE; letter-spacing: 0.08em; margin: 0.6rem 0 0.2rem 0;'>COMPARE</div>", unsafe_allow_html=True)
+for item in NAV_GROUPS["COMPARE"]:
+    is_active = (current_view == item)
+    if st.sidebar.button(item, key=f"nav_btn_{item}", type="primary" if is_active else "secondary", use_container_width=True):
+        navigate_to(item)
+
+# 3. SHOP (demo) Group (in expander, collapsed by default, auto-expanded if current view in SHOP)
+shop_expanded = current_view in NAV_GROUPS["SHOP (demo)"]
+with st.sidebar.expander("🛍️ **SHOP (demo)**", expanded=shop_expanded):
+    for item in NAV_GROUPS["SHOP (demo)"]:
+        is_active = (current_view == item)
+        if st.button(item, key=f"nav_btn_{item}", type="primary" if is_active else "secondary", use_container_width=True):
+            navigate_to(item)
+
+# 4. MORE Group (in expander, collapsed by default, auto-expanded if current view in MORE)
+more_expanded = current_view in NAV_GROUPS["MORE"]
+with st.sidebar.expander("⚙️ **MORE**", expanded=more_expanded):
+    for item in NAV_GROUPS["MORE"]:
+        is_active = (current_view == item)
+        if st.button(item, key=f"nav_btn_{item}", type="primary" if is_active else "secondary", use_container_width=True):
+            navigate_to(item)
 
 st.sidebar.markdown("---")
 
@@ -900,6 +935,112 @@ if st.session_state["nav_view"] in ["🏠 Home / Discovery", "🏠 Product Explo
     with feat_nav_col3:
         if st.button("📈 Sentiment Drift & Trust Audit →", key="home_btn_drift", use_container_width=True):
             navigate_to("🔍 Review Intelligence")
+
+    st.markdown("<br>", unsafe_allow_html=True)
+
+    # Custom Reviews CSV Ingestion & Explainability Panel (Home View)
+    with st.expander("📂 **Analyze Custom Reviews CSV (Instant Batch Upload & Explainability)**", expanded=False):
+        st.markdown("Upload any custom CSV containing consumer reviews (capped at 5,000 rows). ReviewLens will automatically execute full aspect extraction, sentiment scoring, spam bot auditing, and lexical explainability.")
+        up_c1, up_c2 = st.columns([3, 1])
+        with up_c1:
+            uploaded_csv = st.file_uploader(
+                "Upload Reviews CSV (expected columns: `review_text` or `text`, optional: `rating`, `date`):",
+                type=["csv"],
+                key="home_custom_csv_uploader"
+            )
+        with up_c2:
+            custom_cat = st.selectbox(
+                "Target Category:",
+                ["Electronics", "Smartphones", "Laptops", "Headphones", "Cameras"],
+                key="home_custom_csv_cat"
+            )
+
+        if uploaded_csv is not None:
+            try:
+                raw_custom_df = pd.read_csv(uploaded_csv)
+                with st.spinner("Processing reviews with NLP Pipeline & Explainability Engine..."):
+                    custom_res = analyze_custom_reviews_csv(raw_custom_df, category=custom_cat, max_rows=5000)
+
+                if custom_res["is_capped"]:
+                    st.warning("⚠️ Dataset exceeded 5,000 rows. Capped at the first 5,000 rows for real-time responsiveness.")
+
+                k = custom_res["kpis"]
+                st.success(f"✓ Successfully processed {k['total_reviews']} reviews!")
+
+                # Quick KPI Row
+                k1, k2, k3, k4 = st.columns(4)
+                with k1:
+                    st.metric("Total Analyzed", f"{k['total_reviews']:,}")
+                with k2:
+                    st.metric("Net Sentiment Score", f"{k['nss']:+.1f}", help="((Positive - Negative) / Total) * 100")
+                with k3:
+                    st.metric("Spam Anomaly Rate", f"{k['spam_rate_pct']:.1f}%", f"{k['spam_count']} flagged")
+                with k4:
+                    st.metric("Sentiment Polarity", f"{k['positive_count']} Pos / {k['negative_count']} Neg", f"{k['neutral_count']} Neu")
+
+                # Word-Level Explainability Panel
+                st.markdown("#### 🔍 **Word-Level Lexical Drivers (Explainability)**")
+                st.caption("ReviewLens decomposes customer language to identify the highest-impact positive and negative vocabulary driving sentiment polarity.")
+
+                driver_col1, driver_col2 = st.columns(2)
+                with driver_col1:
+                    st.markdown("##### 🟢 **Top Positive Valence Drivers**")
+                    pos_drivers = custom_res["word_drivers"]["positive"]
+                    if pos_drivers:
+                        pos_chips = " ".join([f"<span style='display:inline-block; margin:2px 4px; padding:3px 8px; border-radius:12px; background:rgba(16,185,129,0.15); border:1px solid #10B981; color:#34D399; font-size:0.82rem;'><b>{d['word']}</b> ({d['count']}x, +{d['valence']})</span>" for d in pos_drivers])
+                        st.markdown(pos_chips, unsafe_allow_html=True)
+                    else:
+                        st.info("No dominant positive lexical triggers identified.")
+
+                with driver_col2:
+                    st.markdown("##### 🔴 **Top Negative Valence Drivers**")
+                    neg_drivers = custom_res["word_drivers"]["negative"]
+                    if neg_drivers:
+                        neg_chips = " ".join([f"<span style='display:inline-block; margin:2px 4px; padding:3px 8px; border-radius:12px; background:rgba(239,68,68,0.15); border:1px solid #EF4444; color:#F87171; font-size:0.82rem;'><b>{d['word']}</b> ({d['count']}x, {d['valence']})</span>" for d in neg_drivers])
+                        st.markdown(neg_chips, unsafe_allow_html=True)
+                    else:
+                        st.info("No dominant negative lexical triggers identified.")
+
+                # Review Token Decomposer
+                st.markdown("<br>", unsafe_allow_html=True)
+                st.markdown("##### 🔬 **Inspect Individual Review Explainability**")
+                annotated_df = custom_res["annotated_df"]
+                sample_indices = list(range(min(20, len(annotated_df))))
+                selected_sample_idx = st.selectbox(
+                    "Select a review to decompose word-level impact:",
+                    sample_indices,
+                    format_func=lambda i: f"Review #{i+1}: {annotated_df['clean_text'].iloc[i][:60]}..."
+                )
+                sample_text = annotated_df["clean_text"].iloc[selected_sample_idx]
+                tokens = decompose_review_words(sample_text)
+
+                highlighted_html = []
+                for tok in tokens:
+                    w_esc = html.escape(tok["word"])
+                    if tok["is_positive"]:
+                        highlighted_html.append(f"<span style='background:rgba(16,185,129,0.3); border-bottom:2px solid #10B981; padding:1px 4px; border-radius:3px; color:#FFFFFF;' title='Positive Valence: +{tok['valence']}'>{w_esc}</span>")
+                    elif tok["is_negative"]:
+                        highlighted_html.append(f"<span style='background:rgba(239,68,68,0.3); border-bottom:2px solid #EF4444; padding:1px 4px; border-radius:3px; color:#FFFFFF;' title='Negative Valence: {tok['valence']}'>{w_esc}</span>")
+                    else:
+                        highlighted_html.append(f"<span style='color:#CBD5E1;'>{w_esc}</span>")
+
+                st.markdown(f"""
+                <div style="background: rgba(13, 10, 36, 0.7); border: 1px solid rgba(155, 92, 255, 0.3); border-radius: 8px; padding: 1rem; line-height: 1.8; font-size: 0.95rem; margin-top: 0.5rem;">
+                    {' '.join(highlighted_html)}
+                </div>
+                """, unsafe_allow_html=True)
+
+                # Export Annotated CSV
+                csv_buffer = annotated_df.to_csv(index=False).encode("utf-8")
+                st.download_button(
+                    label="📥 Download Enriched & Annotated CSV",
+                    data=csv_buffer,
+                    file_name="reviewlens_annotated_reviews.csv",
+                    mime="text/csv",
+                    use_container_width=True
+                )
+            except Exception as e:
+                st.error(f"Analysis Error: {e}")
 
     st.markdown("<br>", unsafe_allow_html=True)
 

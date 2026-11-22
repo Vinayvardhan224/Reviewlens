@@ -69,6 +69,24 @@ elif st.session_state["nav_view"] == "Smartphones":
         self.assertEqual(at.radio[0].value, "Home")
         self.assertIn("Home", at.markdown[0].value)
 
+    def test_every_view_belongs_to_exactly_one_group(self):
+        """Assert that every view in ReviewLens navigation belongs to exactly one group with zero overlap."""
+        from modules.navigation import NAV_GROUPS, ALL_NAV_VIEWS, get_group_for_view
+
+        expected_groups = ["ANALYZE", "COMPARE", "SHOP (demo)", "MORE"]
+        self.assertEqual(list(NAV_GROUPS.keys()), expected_groups)
+
+        seen_views = []
+        for g_name, views in NAV_GROUPS.items():
+            self.assertGreater(len(views), 0, f"Group {g_name} should not be empty")
+            for v in views:
+                self.assertNotIn(v, seen_views, f"View '{v}' is duplicated across groups")
+                seen_views.append(v)
+                self.assertEqual(get_group_for_view(v), g_name)
+
+        self.assertEqual(len(seen_views), len(ALL_NAV_VIEWS))
+        self.assertNotIn("🔐 Sign In / Profile", seen_views, "Sign In / Profile must be removed from radio nav list")
+
 
 if __name__ == "__main__":
     unittest.main()

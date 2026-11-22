@@ -83,6 +83,28 @@ Developed by **Vinay Vardhan / ReviewLens Team**.
    - **6-Section Engineering Action Brief**: Compiles customer pain points into an authoritative technical ticket: Context, Subsystem Controller, Verbatim Customer Evidence, Reproduction Journey, Proposed Remediation, and **Gherkin Given/When/Then BDD Acceptance Criteria**.
    - **1-Click Ticket Export**: Export production-ready Markdown briefs for Jira and Linear.
 
+10. **Extractive Review Q&A with Direct Citations**:
+    - Ask natural language questions (e.g. *"How is the battery life?", "Does it overheat?"*).
+    - TF-IDF unigram/bigram cosine similarity retrieval finds the most relevant review sentences across genuine customer feedback.
+    - Synthesizes sentiment polarity consensus (*Mostly Positive, Mixed, Mostly Negative*) and attributes citations (`[Review #REV-XYZ]`) with similarity scores and star ratings. Zero external LLM required.
+
+11. **Executive PDF Intelligence Dossier Export**:
+    - High-impact ReportLab-generated PDF evaluation report downloadable with 1 click.
+    - Includes product hardware specs, category ABSA scorecard, top strengths, critical customer pain points, and an anti-astroturfing spam audit.
+
+12. **Anti-Astroturfing: Temporal Bursts & Near-Duplicate Detection**:
+    - **Velocity Burst Detector**: Identifies unnatural spikes in review submission velocity within sliding time windows (e.g., coordinated review bombing or astroturfing campaigns).
+    - **Near-Duplicate Detector**: Pairwise TF-IDF cosine similarity detects copy-pasted or template-generated reviews across distinct review IDs.
+
+13. **Custom Review CSV Batch Ingestion & Word-Level Explainability**:
+    - Upload custom CSV review datasets (capped at 5,000 rows) for instantaneous batch analysis on the Home view.
+    - Computes overall KPIs, category aspect decomposition, and lexical driver analysis.
+    - Interactive **Word-Level Explainability Panel**: Highlights positive and negative valence tokens across individual reviews and exports enriched CSVs.
+
+14. **Animated Showcase Landing Page & Grouped Navigation**:
+    - Modern animated interactive showcase served at `/about` and embedded on Home.
+    - Responsive grouped sidebar navigation: `ANALYZE`, `COMPARE`, `SHOP (demo)`, and `MORE`. Mobile-optimized with `@media (max-width: 768px)` queries.
+
 ---
 
 ## 🏗️ Dual Architecture & Project Structure
@@ -146,25 +168,28 @@ reviewlens/
 │   ├── public_sst2_benchmark.csv # 872 genuine public benchmark sentences from Stanford SST-2 / GLUE (data_type: public_labelled_benchmark)
 │   └── users.json              # Local credential store (empty on fresh clone, no seeded demo accounts)
 │
-└── tests/                      # Automated Regression Test Suite (98 unit tests)
+└── tests/                      # Automated Regression Test Suite (116 unit tests across 21 modules)
     ├── test_absa.py            # Aspect taxonomy & categorization tests
     ├── test_action_brief.py    # Vector requirement engineering, actionability & BDD tests
-    ├── test_api.py             # FastAPI auth, rate limiting, and payload size tests
+    ├── test_api.py             # FastAPI auth, rate limiting, and /about endpoint tests
     ├── test_aspects.py         # Aspect extraction & sentiment aggregation tests
     ├── test_audit_fixes.py     # End-to-end audit regression checks
     ├── test_auth.py            # PBKDF2 600k, hash migration, lockout & OAuth/SMS tests
     ├── test_cleaner.py         # Text preprocessing & contraction expansion tests
     ├── test_comparison.py      # Product comparison & delta calculator tests
     ├── test_cross_interface_consistency.py # Pipeline vs Live Analyzer consistency tests
+    ├── test_csv_analyzer.py    # Custom CSV ingestion, validation, and token explainability tests
     ├── test_data_validation.py # Strict CSV schema, non-numeric price/rating & injection tests
     ├── test_evaluation_and_topics.py # Benchmark evaluation & topic modeling tests
-    ├── test_navigation_flow.py # Application navigation state machine tests
+    ├── test_navigation_flow.py # Application navigation state machine & group disjointness tests
     ├── test_new_features.py    # Live diagnostic, preference matching & timeline drift tests
+    ├── test_pdf_report.py      # Executive PDF generation & %PDF structure tests
     ├── test_pipeline.py        # End-to-end ReviewLensPipeline integration tests
     ├── test_recommendations.py # Mathematical recommendation scoring tests
+    ├── test_review_qa.py       # TF-IDF extractive review Q&A & citation attribution tests
     ├── test_scraper.py         # Data scraping fallback & sanitation tests
     ├── test_sentiment.py       # VADER polarity & Net Sentiment Score tests
-    └── test_spam_detector.py   # Multi-signal spam heuristics & thread safety tests
+    └── test_spam_detector.py   # Spam heuristics, temporal bursts & near-duplicate tests
 ```
 
 ---
@@ -216,7 +241,7 @@ python cli.py batch --input data/reviews.csv --output results.json
 
 ## 🧪 Automated Testing
 
-ReviewLens includes a comprehensive test suite of **98 automated unit tests** across 18 test modules covering data validation, preprocessing, sentiment analysis, aspect extraction, spam detection, recommendation math, API security, PBKDF2 authentication, empirical benchmark evaluation, and Vector requirement engineering.
+ReviewLens includes a comprehensive test suite of **116 automated unit tests** across 21 test modules covering data validation, preprocessing, sentiment analysis, aspect extraction, spam detection, recommendation math, API security, PBKDF2 authentication, empirical benchmark evaluation, Vector requirement engineering, Review Q&A, and PDF dossier generation.
 
 Run all tests:
 ```bash
@@ -225,7 +250,7 @@ python -m unittest discover tests
 
 Expected output:
 ```
-Ran 98 tests in ~35.0s
+Ran 116 tests in ~10.0s
 
 OK
 ```
@@ -267,26 +292,41 @@ In accordance with transparent research practices, ReviewLens employs a comprehe
    - Ground truth evaluation from standard peer-reviewed academic NLP literature (Socher et al., Stanford NLP Group / GLUE benchmark).
    - **VADER Directional Accuracy**: **67.5%** on polarized sentences (55.6% exact 3-class accuracy including neutral predictions).
    - **Supervised Classical ML Baseline (TF-IDF + Logistic Regression)**: **81.3% accuracy**, **0.812 macro F1** when trained on the full $n=67,349$ SST-2 training split and evaluated on the 872-sentence dev set.
-   - **Deep Transformer Model (DistilBERT fine-tuned on SST-2)**: **91.3% accuracy**, **0.912 macro F1**.
+   - **Deep Transformer Model (DistilBERT fine-tuned on SST-2)**: **91.3% accuracy**, **0.912 macro F1** *(Published reference value from official HuggingFace/GLUE model card; not locally computed in this lightweight runtime)*.
    - **Dataset Scope & Caveat**: Evaluated on genuine public benchmark data. Note that SST-2 consists of single movie-review sentences rather than full multi-aspect product reviews; it benchmarks sentence-level sentiment polarity rather than multi-attribute e-commerce trade-offs.
 
 4. **Aspect Extraction Gold Benchmark: SemEval-2014 Task 4 (Laptops)** (`data/semeval_laptop_benchmark.csv`, official SemEval-2014 ABSA test corpus):
    - Evaluates syntactic dependency parsing (`amod`, `acomp`, `nsubj`, `attr`) and noun chunk extraction via spaCy against gold aspect annotations.
    - Achieves **84.1% recall**, **54.5% precision**, and **66.1% F1-score**, successfully discovering unlisted consumer features without rigid keyword matching.
 
-5. **Supervised ML Fake-Review & Spam Classifier** (`data/fake_review_model.joblib`):
-   - Evaluates a supervised Random Forest classifier trained on 9 behavioral feature dimensions (shouting ratio, punctuation density, contact channels, incentive keywords, length distributions, and star rating divergence) combined with TF-IDF n-grams.
-   - Delivers **94.3% accuracy**, **95.2% precision**, **93.8% recall**, and **94.5% F1-score**.
+5. **Supervised ML Fake-Review Benchmark: Ott et al. Deceptive Opinion Spam (ACL 2011)** (`data/deceptive_opinion.csv`, $n=1,600$ reviews: 800 truthful, 800 deceptive):
+   - Evaluates a supervised tree ensemble classifier (ExtraTrees $n=200$ + TF-IDF 1-3 ngrams) trained on a stratified 70/15/15 split ($N_{\text{train}}=1,120$, $N_{\text{val}}=240$, $N_{\text{test}}=240$).
+   - Measured on held-out test split only: **90.42% accuracy**, **88.19% precision**, **93.33% recall**, and **0.9069 F1-score** (Confusion Matrix: 104 True Negatives, 16 False Positives, 7 False Negatives, 113 True Positives). Metrics saved dynamically in `results/fake_review_metrics.json`.
 
 6. **Real-World E-Commerce Corpus: UCSD Amazon Electronics** (`data/real_amazon_reviews.csv`, $n=997$ reviews across 40 products from Julian McAuley's benchmark):
-   - Evaluates empirical sentiment-to-star rating agreement on 997 genuine customer reviews across 40 consumer electronics products, achieving **74.3% rating agreement**.
+   - Head-to-head empirical comparison on an independent held-out test split ($N_{\text{test}}=150$ reviews, 70/15/15 split with fixed seed 42, tuned on validation split $C=0.1$):
+   
+   | Metric | VADER Lexicon Engine | TF-IDF + Logistic Regression | Empirical Delta |
+   | :--- | :---: | :---: | :---: |
+   | **Test Accuracy** | **75.33%** | **73.33%** | `-2.00%` |
+   | **Macro F1-Score** | **0.4323** | **0.4578** | `+0.0255` |
+   | **Macro Precision** | 41.20% | 46.11% | `+4.91%` |
+   | **Macro Recall** | 45.73% | 45.65% | `-0.08%` |
+   | **Negative F1** | 0.4167 | 0.4390 | `+0.0224` |
+   | **Neutral F1** | 0.0000 | 0.0833 | `+0.0833` |
+   | **Positive F1** | 0.8803 | 0.8511 | `-0.0293` |
 
 7. **Qualitative Error Analysis & Failure Modes**:
-   - Explicitly documents known failure modes across NLP paradigms, including sarcasm/irony, complex/double negation, domain slang/colloquialisms, and aspect co-reference ambiguity.
+   - A representative sample of 30 misclassified test cases (15 per model) is exported to `results/error_analysis.csv` covering negation scope, sarcasm, mixed sentiment, and neutral star-boundary transitions.
 
 8. **Dynamic Evaluation**: All evaluation metrics (Accuracy, Precision, Recall, Macro F1, and Confusion Matrices) are computed dynamically via scikit-learn without hardcoded or fabricated numbers.
 
 9. **High-Performance Rate Limiter**: The FastAPI REST microservice includes an amortized $O(1)$ sliding-window rate limiter with throttled periodic cleanup to prevent unbounded memory growth under high request volumes.
+
+10. **Limitations & Honest Academic Disclosures**:
+    - **Language Scope**: ReviewLens is optimized for English e-commerce customer feedback; multi-lingual or code-mixed input (e.g. Hinglish) is outside current lexicon coverage.
+    - **Demo Dataset Scope**: Catalogue prices, product specs, and initial 101 storefront reviews are illustrative demonstrations (`prepared_demo`); real-world generalization is evaluated separately on the 997-review UCSD Amazon corpus and 1,600-review Ott et al. corpus.
+    - **Authentication Sandbox**: Google OAuth and Twilio SMS OTP require production API credentials in `.streamlit/secrets.toml`; when unconfigured, the system strictly enforces email/password authentication without fabricated credentials.
 
 ---
 
