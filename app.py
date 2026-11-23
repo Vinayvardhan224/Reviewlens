@@ -31,7 +31,7 @@ from modules.data_loader import (
     PROVENANCE_DISCLOSURE
 )
 from modules.validation import validate_products_df, validate_reviews_df
-from modules.sentiment import analyze_reviews_sentiment, compute_nss, compute_review_timeline_metrics
+from modules.sentiment import analyze_reviews_sentiment, compute_nss, compute_review_timeline_metrics, get_lexicon
 from modules.aspect_analysis import analyze_reviews_aspects, ASPECT_CAVEAT_DISCLOSURE, CATEGORY_TAXONOMY, CATEGORY_ASPECTS
 from modules.keyword_extraction import extract_keywords_by_sentiment
 from modules.review_summary import generate_executive_summary, generate_markdown_dossier
@@ -86,6 +86,7 @@ from components.header import render_header
 from components.product_card import render_product_card
 from components.filters import render_sidebar_filters, apply_filters
 from components.landing import render_landing
+from components.highlight import highlight_review_html, top_drivers
 from components.charts import (
     create_sentiment_donut_chart,
     create_aspect_breakdown_bar_chart,
@@ -1958,6 +1959,17 @@ elif st.session_state["nav_view"] == "🧪 Live Review Analyzer":
                     <div class="metric-sub">{', '.join(aspects_found) if aspects_found else 'No domain keywords'}</div>
                 </div>
                 """)
+
+            # Explainability: Word-level sentiment highlighting & evidence drivers
+            st.markdown("#### 🖍️ Why this score? (word-level evidence)")
+            lex = get_lexicon()
+            st.markdown(highlight_review_html(input_text, lex), unsafe_allow_html=True)
+            pos_w, neg_w = top_drivers(input_text, lex)
+            if pos_w or neg_w:
+                st.caption(
+                    "Top positive: " + (", ".join(f"`{w}`" for w, _ in pos_w) or "none")
+                    + "  |  Top negative: " + (", ".join(f"`{w}`" for w, _ in neg_w) or "none")
+                )
 
             # Anomaly alert callout if present
             if diag_res["anomaly"]["is_anomaly"]:

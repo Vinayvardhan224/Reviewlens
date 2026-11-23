@@ -198,3 +198,9 @@ def compute_review_timeline_metrics(df: pd.DataFrame) -> List[Dict[str, Any]]:
 
     timeline_points.sort(key=lambda x: x["period"])
     return timeline_points
+
+
+def get_lexicon() -> Dict[str, float]:
+    """Retrieve the core VADER lexicon dictionary mapping words to valence scores."""
+    return _core_analyzer.sia.lexicon
+
