@@ -549,6 +549,16 @@ def render_auth_interface(on_navigate_home=None) -> None:
             border: none !important;
         }
 
+        /* Smooth Floating Animation for 3D Hero Preview */
+        @keyframes subtleFloat {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-7px); }
+            100% { transform: translateY(0px); }
+        }
+        .floating-hero {
+            animation: subtleFloat 5s ease-in-out infinite;
+        }
+
         /* 4 Feature Items Grid Item */
         .hero-feature-item {
             background: rgba(22, 17, 46, 0.65);
@@ -619,49 +629,37 @@ def render_auth_interface(on_navigate_home=None) -> None:
     # ====================================================
     with col_left:
         laptop_preview_html = f"""
-        <div style="position: relative; margin: 0.2rem 0 1.2rem 0; text-align: center;">
+        <div class="floating-hero" style="position: relative; margin: 0.2rem 0 1.2rem 0; text-align: center;">
             <img src="data:image/png;base64,{laptop_b64}" style="max-width: 440px; width: 100%; height: auto; display: inline-block; filter: drop-shadow(0 15px 35px rgba(113, 56, 245, 0.4));" alt="ReviewLens 3D NLP Dashboard Preview">
         </div>
-        """ if laptop_b64 else """
-        <div style="background: rgba(21, 17, 43, 0.7); border: 1px solid rgba(155, 92, 255, 0.3); border-radius: 16px; padding: 1.3rem; margin-bottom: 1.8rem; box-shadow: 0 10px 30px rgba(0,0,0,0.4);">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 0.6rem;">
-                <div style="font-size: 0.85rem; font-weight: 700; color: #C4B5FD; display: flex; align-items: center; gap: 0.5rem;">
+        """ if laptop_b64 else ""
+
+        live_nlp_preview_html = """
+        <div style="background: rgba(21, 17, 43, 0.72); border: 1px solid rgba(155, 92, 255, 0.32); border-radius: 16px; padding: 1.1rem 1.2rem; margin-bottom: 1.2rem; box-shadow: 0 10px 30px rgba(0,0,0,0.45);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 0.5rem;">
+                <div style="font-size: 0.82rem; font-weight: 700; color: #C4B5FD; display: flex; align-items: center; gap: 0.5rem;">
                     <span style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #10B981; box-shadow: 0 0 8px #10B981;"></span>
-                    Live NLP Review Stream
+                    Live NLP Review Decomposition Engine
                 </div>
-                <div style="font-size: 0.78rem; color: #B9B3D0;">VADER & ABSA Powered</div>
+                <div style="font-size: 0.74rem; color: #22D3EE; font-weight: 600;">ABSA • VADER • Explainable</div>
             </div>
-            <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(16, 185, 129, 0.25); border-left: 4px solid #10B981; border-radius: 8px; padding: 0.65rem 0.9rem; margin-bottom: 0.6rem;">
-                <div style="display: flex; justify-content: space-between; margin-bottom: 0.2rem;">
-                    <span style="font-size: 0.78rem; font-weight: 700; color: #FFFFFF;">Galaxy S24 FE • Battery & Display</span>
-                    <span style="color: #34D399; font-weight: 700; font-size: 0.75rem;">🟢 POSITIVE (+0.84)</span>
+            <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(34, 211, 238, 0.25); border-left: 3px solid #22D3EE; border-radius: 8px; padding: 0.65rem 0.85rem; margin-bottom: 0.65rem;">
+                <div style="font-size: 0.73rem; color: #94A3B8; margin-bottom: 0.25rem;">Live Sample Review Analysis:</div>
+                <div style="font-size: 0.85rem; color: #F1F5F9; line-height: 1.45;">
+                    "The <span style="background: rgba(52, 211, 153, 0.25); color: #34D399; padding: 1px 6px; border-radius: 4px; font-weight: 600;">vibrant 120Hz display</span> is extraordinary, but battery endurance is <span style="background: rgba(239, 68, 68, 0.25); color: #F87171; padding: 1px 6px; border-radius: 4px; font-weight: 600;">not reliable</span> under 5G."
                 </div>
-                <div style="font-size: 0.82rem; color: #E2E8F0; font-style: italic;">"Battery easily lasted two full days, and the 120Hz OLED screen is stunning..."</div>
             </div>
-            <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(239, 68, 68, 0.25); border-left: 4px solid #EF4444; border-radius: 8px; padding: 0.65rem 0.9rem; margin-bottom: 0.6rem;">
-                <div style="display: flex; justify-content: space-between; margin-bottom: 0.2rem;">
-                    <span style="font-size: 0.78rem; font-weight: 700; color: #FFFFFF;">Bose QC Ultra • Microphone</span>
-                    <span style="color: #F87171; font-weight: 700; font-size: 0.75rem;">🔴 NEGATIVE (-0.68)</span>
-                </div>
-                <div style="font-size: 0.82rem; color: #E2E8F0; font-style: italic;">"Microphone sounds muffled during noisy Zoom calls in wind..."</div>
-            </div>
-            <div style="margin-top: 0.9rem; padding-top: 0.6rem; border-top: 1px solid rgba(255,255,255,0.08);">
-                <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: #B9B3D0; margin-bottom: 0.3rem;">
-                    <span>Sentiment Polarity Spread:</span>
-                    <span><b>74% Positive</b> • 18% Neutral • 8% Negative</span>
-                </div>
-                <div style="height: 6px; border-radius: 3px; background: #1E293B; overflow: hidden; display: flex;">
-                    <div style="width: 74%; background: #10B981;"></div>
-                    <div style="width: 18%; background: #F59E0B;"></div>
-                    <div style="width: 8%; background: #EF4444;"></div>
-                </div>
+            <div style="display: flex; gap: 0.45rem; flex-wrap: wrap;">
+                <span style="font-size: 0.73rem; background: rgba(52, 211, 153, 0.15); color: #34D399; border: 1px solid rgba(52, 211, 153, 0.35); border-radius: 6px; padding: 2px 7px;">🏷️ Display: <b>+0.88 (Positive)</b></span>
+                <span style="font-size: 0.73rem; background: rgba(239, 68, 68, 0.15); color: #F87171; border: 1px solid rgba(239, 68, 68, 0.35); border-radius: 6px; padding: 2px 7px;">🏷️ Battery: <b>-0.65 (Negated)</b></span>
+                <span style="font-size: 0.73rem; background: rgba(155, 92, 255, 0.15); color: #C4B5FD; border: 1px solid rgba(155, 92, 255, 0.35); border-radius: 6px; padding: 2px 7px;">🛡️ Authenticity: <b>94% Genuine</b></span>
             </div>
         </div>
         """
 
         _render_html(f"""
         <div style="padding-right: 0.5rem;">
-            <div style="display: inline-flex; align-items: center; gap: 0.75rem; margin-bottom: 1.5rem;">
+            <div style="display: inline-flex; align-items: center; gap: 0.75rem; margin-bottom: 1.1rem;">
                 <div style="width: 44px; height: 44px; border-radius: 12px; background: linear-gradient(135deg, #7138F5 0%, #9B5CFF 100%); display: flex; align-items: center; justify-content: center; font-size: 22px; color: #FFFFFF; box-shadow: 0 0 22px rgba(155, 92, 255, 0.6);">
                     ★
                 </div>
@@ -670,18 +668,25 @@ def render_auth_interface(on_navigate_home=None) -> None:
                 </div>
             </div>
 
-            <h1 style="font-size: 2.85rem; font-weight: 800; line-height: 1.15; margin: 0 0 1rem 0; color: #FFFFFF; letter-spacing: -0.5px;">
+            <div style="display: flex; gap: 0.45rem; flex-wrap: wrap; margin-bottom: 0.9rem;">
+                <span style="font-size: 0.72rem; font-weight: 700; color: #22D3EE; background: rgba(34, 211, 238, 0.12); border: 1px solid rgba(34, 211, 238, 0.35); padding: 3px 10px; border-radius: 20px;">⚡ 124 Passing Tests</span>
+                <span style="font-size: 0.72rem; font-weight: 700; color: #C4B5FD; background: rgba(113, 56, 245, 0.22); border: 1px solid rgba(155, 92, 255, 0.35); padding: 3px 10px; border-radius: 20px;">🛡️ 90.4% Spam F1</span>
+                <span style="font-size: 0.72rem; font-weight: 700; color: #34D399; background: rgba(52, 211, 153, 0.12); border: 1px solid rgba(52, 211, 153, 0.35); padding: 3px 10px; border-radius: 20px;">🏷️ SemEval & SST-2 ABSA</span>
+            </div>
+
+            <h1 style="font-size: 2.85rem; font-weight: 800; line-height: 1.15; margin: 0 0 0.8rem 0; color: #FFFFFF; letter-spacing: -0.5px;">
                 Insights from<br>
                 Product <span style="background: linear-gradient(135deg, #B575FF 0%, #E0A7FF 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Reviews</span>
             </h1>
 
-            <p style="font-size: 1.05rem; color: #B9B3D0; line-height: 1.6; margin-bottom: 1.6rem; max-width: 520px;">
+            <p style="font-size: 1.05rem; color: #B9B3D0; line-height: 1.6; margin-bottom: 1.4rem; max-width: 520px;">
                 An NLP-powered platform to analyze reviews, understand customer sentiment, detect fake reviews, and get smart, AI-generated replies.
             </p>
 
             {laptop_preview_html}
+            {live_nlp_preview_html}
 
-            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.75rem; text-align: center; margin-top: 1.2rem;">
+            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.75rem; text-align: center; margin-top: 1rem;">
                 <div class="hero-feature-item">
                     <div style="font-size: 1.65rem; color: #9B5CFF; margin-bottom: 0.35rem;">📊</div>
                     <div style="font-size: 0.82rem; font-weight: 700; color: #FFFFFF; line-height: 1.3;">Sentiment<br>Analysis</div>
@@ -712,8 +717,8 @@ def render_auth_interface(on_navigate_home=None) -> None:
             # ------------------------------------------------
             if st.session_state["auth_mode"] == "login":
                 _render_html("""
-                <div style="text-align: center; margin-bottom: 1.5rem;">
-                    <div style="display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; margin-bottom: 0.75rem;">
+                <div style="text-align: center; margin-bottom: 1.2rem;">
+                    <div style="display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; margin-bottom: 0.65rem;">
                         <div style="width: 36px; height: 36px; border-radius: 10px; background: linear-gradient(135deg, #7138F5 0%, #9B5CFF 100%); display: flex; align-items: center; justify-content: center; font-size: 18px; color: #FFFFFF; box-shadow: 0 0 16px rgba(155, 92, 255, 0.5);">
                             ★
                         </div>
@@ -727,6 +732,30 @@ def render_auth_interface(on_navigate_home=None) -> None:
                     <p style="font-size: 0.92rem; color: #B9B3D0; margin: 0;">
                         Sign in to continue analyzing product reviews.
                     </p>
+                </div>
+
+                <div style="background: linear-gradient(135deg, rgba(113, 56, 245, 0.28) 0%, rgba(34, 211, 238, 0.16) 100%); border: 1px solid rgba(155, 92, 255, 0.45); border-radius: 14px; padding: 0.85rem 1rem; margin-bottom: 1.1rem; text-align: center;">
+                    <div style="font-size: 0.88rem; font-weight: 700; color: #FFFFFF; margin-bottom: 0.2rem;">
+                        ⚡ Evaluating or Exploring the Demo?
+                    </div>
+                    <div style="font-size: 0.74rem; color: #C4B5FD; margin-bottom: 0.65rem;">
+                        Instant one-click full guest access to all NLP analyzers, comparison models & benchmarks
+                    </div>
+                </div>
+                """)
+
+                if st.button("🚀 Enter Instant Demo Mode (No Login Required) →", key="btn_hero_instant_demo", type="secondary", use_container_width=True):
+                    login_as_guest()
+                    if on_navigate_home:
+                        on_navigate_home()
+                    else:
+                        st.session_state["pending_nav"] = "🏠 Home / Discovery"
+                        st.rerun()
+
+                _render_html("""
+                <div style="text-align: center; margin: 1.1rem 0 0.9rem 0; color: #7E7A94; font-size: 0.78rem; position: relative;">
+                    <span style="background: #120E26; padding: 0 10px; position: relative; z-index: 1;">OR SIGN IN WITH ACCOUNT</span>
+                    <hr style="position: absolute; top: 50%; left: 0; right: 0; border: none; border-top: 1px solid rgba(255,255,255,0.12); margin: 0; z-index: 0;">
                 </div>
                 """)
 
@@ -746,6 +775,8 @@ def render_auth_interface(on_navigate_home=None) -> None:
                     label_visibility="collapsed",
                     key="auth_field_password"
                 )
+
+                st.caption("💡 Evaluator Demo Account: `demo@reviewlens.com` • `Password@123`")
 
                 col_rem, col_forgot = st.columns([1, 1])
                 with col_rem:
