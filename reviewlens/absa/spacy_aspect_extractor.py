@@ -17,7 +17,13 @@ try:
         _SPACY_NLP = spacy.load("en_core_web_sm")
         _SPACY_AVAILABLE = True
     except Exception:
-        _SPACY_AVAILABLE = False
+        try:
+            import spacy.cli
+            spacy.cli.download("en_core_web_sm")
+            _SPACY_NLP = spacy.load("en_core_web_sm")
+            _SPACY_AVAILABLE = True
+        except Exception:
+            _SPACY_AVAILABLE = False
 except ImportError:
     _SPACY_AVAILABLE = False
 
@@ -25,6 +31,13 @@ except ImportError:
 def is_spacy_available() -> bool:
     """Returns True if spaCy and the en_core_web_sm model are ready."""
     return _SPACY_AVAILABLE
+
+
+def get_active_extractor_name() -> str:
+    """Returns human-readable name of the active aspect extractor."""
+    if is_spacy_available():
+        return "spaCy Dependency & Noun-Chunk Parser (en_core_web_sm)"
+    return "Domain-Taxonomy Keyword Extractor (Rule-Based Fallback)"
 
 
 def extract_aspect_opinion_pairs_spacy(
