@@ -76,16 +76,9 @@ def main():
         "f1_score": round(float(f1), 4),
         "confusion_matrix": cm,
         "feature_set": [
-            "Review character length",
-            "Word count & average word length",
-            "Uppercase character ratio (shouting)",
-            "Exclamation & question mark density",
-            "Presence of phone numbers & contact channels",
-            "Promotional incentive triggers (coupon, cashback, free gift)",
-            "Unnatural character repetition loops",
-            "Star rating vs text sentiment divergence",
-            "TF-IDF unigram, bigram & trigram lexical patterns"
-        ]
+            "TF-IDF unigram, bigram & trigram lexical n-grams (1-3 words, sublinear TF scaling, max 5,000 features, min_df=2)"
+        ],
+        "domain_caveat": "Trained on Ott et al. (ACL 2011) deceptive hotel reviews; accuracy on Amazon electronics reviews may vary due to domain shift."
     }
 
     metrics_file = RESULTS_DIR / "fake_review_metrics.json"

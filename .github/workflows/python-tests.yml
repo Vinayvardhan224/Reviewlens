@@ -34,3 +34,13 @@ jobs:
     - name: Run unit test suite
       run: |
         python -m unittest discover tests
+
+  docker-build:
+    name: Build & verify Docker production container
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Build Docker image from lockfile
+      run: |
+        docker build -t reviewlens:ci .

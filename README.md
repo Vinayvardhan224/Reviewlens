@@ -168,7 +168,7 @@ reviewlens/
 │   ├── public_sst2_benchmark.csv # 872 genuine public benchmark sentences from Stanford SST-2 / GLUE (data_type: public_labelled_benchmark)
 │   └── users.json              # Local credential store (empty on fresh clone, no seeded demo accounts)
 │
-└── tests/                      # Automated Regression Test Suite (116 unit tests across 21 modules)
+└── tests/                      # Automated Regression Test Suite (124 unit tests across 22 modules)
     ├── test_absa.py            # Aspect taxonomy & categorization tests
     ├── test_action_brief.py    # Vector requirement engineering, actionability & BDD tests
     ├── test_api.py             # FastAPI auth, rate limiting, and /about endpoint tests
@@ -181,6 +181,7 @@ reviewlens/
     ├── test_csv_analyzer.py    # Custom CSV ingestion, validation, and token explainability tests
     ├── test_data_validation.py # Strict CSV schema, non-numeric price/rating & injection tests
     ├── test_evaluation_and_topics.py # Benchmark evaluation & topic modeling tests
+    ├── test_highlight.py       # Word-level sentiment explainability & negation highlighting tests
     ├── test_navigation_flow.py # Application navigation state machine & group disjointness tests
     ├── test_new_features.py    # Live diagnostic, preference matching & timeline drift tests
     ├── test_pdf_report.py      # Executive PDF generation & %PDF structure tests
@@ -241,7 +242,7 @@ python cli.py batch --input data/reviews.csv --output results.json
 
 ## 🧪 Automated Testing
 
-ReviewLens includes a comprehensive test suite of **116 automated unit tests** across 21 test modules covering data validation, preprocessing, sentiment analysis, aspect extraction, spam detection, recommendation math, API security, PBKDF2 authentication, empirical benchmark evaluation, Vector requirement engineering, Review Q&A, and PDF dossier generation.
+ReviewLens includes a comprehensive test suite of **124 automated unit tests** across 22 test modules covering data validation, preprocessing, sentiment analysis, aspect extraction, spam detection, recommendation math, API security, PBKDF2 authentication, empirical benchmark evaluation, Vector requirement engineering, Review Q&A, and PDF dossier generation.
 
 Run all tests:
 ```bash
@@ -250,7 +251,7 @@ python -m unittest discover tests
 
 Expected output:
 ```
-Ran 116 tests in ~10.0s
+Ran 124 tests in ~12.0s
 
 OK
 ```
@@ -302,8 +303,11 @@ In accordance with transparent research practices, ReviewLens employs a comprehe
 5. **Supervised ML Fake-Review Benchmark: Ott et al. Deceptive Opinion Spam (ACL 2011)** (`data/deceptive_opinion.csv`, $n=1,600$ reviews: 800 truthful, 800 deceptive):
    - Evaluates a supervised tree ensemble classifier (ExtraTrees $n=200$ + TF-IDF 1-3 ngrams) trained on a stratified 70/15/15 split ($N_{\text{train}}=1,120$, $N_{\text{val}}=240$, $N_{\text{test}}=240$).
    - Measured on held-out test split only: **90.42% accuracy**, **88.19% precision**, **93.33% recall**, and **0.9069 F1-score** (Confusion Matrix: 104 True Negatives, 16 False Positives, 7 False Negatives, 113 True Positives). Metrics saved dynamically in `results/fake_review_metrics.json`.
+   - **Domain Shift Caveat**: The fake review classifier is trained on the Ott et al. corpus of 1,600 hotel reviews (using TF-IDF 1-3 ngrams). While it achieves 90.42% accuracy on the hotel domain test split, performance on Amazon consumer electronics reviews will be lower due to differing vocabulary, product specifications, and promotional astroturfing styles. The persisted model (`data/fake_review_model.joblib`) is 9.6 MB, safely under GitHub's 100 MB file limit.
+   - **Integration Signal**: The model is wired directly into `reviewlens/spam_detector/detector.py` as an additional statistical signal alongside heuristic rules.
 
 6. **Real-World E-Commerce Corpus: UCSD Amazon Electronics** (`data/real_amazon_reviews.csv`, $n=997$ reviews across 40 products from Julian McAuley's benchmark):
+   - **Sample Size Disclosure**: The empirical sentiment comparison baseline is trained on a sample of **697 Amazon product reviews** (the 70% train split of the 997-review UCSD corpus, with 150 validation and 150 held-out test reviews). While sufficient for demonstrating relative performance between lexicon and classical ML methods under identical data splits, a dataset of several tens of thousands of reviews would be required to claim broad industrial-scale generalization.
    - Head-to-head empirical comparison on an independent held-out test split ($N_{\text{test}}=150$ reviews, 70/15/15 split with fixed seed 42, tuned on validation split $C=0.1$):
    
    | Metric | VADER Lexicon Engine | TF-IDF + Logistic Regression | Empirical Delta |
@@ -325,6 +329,8 @@ In accordance with transparent research practices, ReviewLens employs a comprehe
 
 10. **Limitations & Honest Academic Disclosures**:
     - **Language Scope**: ReviewLens is optimized for English e-commerce customer feedback; multi-lingual or code-mixed input (e.g. Hinglish) is outside current lexicon coverage.
+    - **Small Training Set for E-Commerce Baseline**: The ML sentiment comparison model is trained on a sample of 697 Amazon product reviews; expanding to a larger corpus (50k+ reviews) is recommended for production scaling.
+    - **Cross-Domain Fake Review Detection**: The statistical fake-review model is trained on 1,600 hotel reviews; e-commerce bot detection is augmented by multi-point heuristic rules (shouting, burst velocity, character loops, promotional phrases).
     - **Demo Dataset Scope**: Catalogue prices, product specs, and initial 101 storefront reviews are illustrative demonstrations (`prepared_demo`); real-world generalization is evaluated separately on the 997-review UCSD Amazon corpus and 1,600-review Ott et al. corpus.
     - **Authentication Sandbox**: Google OAuth and Twilio SMS OTP require production API credentials in `.streamlit/secrets.toml`; when unconfigured, the system strictly enforces email/password authentication without fabricated credentials.
 

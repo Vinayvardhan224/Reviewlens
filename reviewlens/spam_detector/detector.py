@@ -145,6 +145,29 @@ def detect_near_duplicates(
     return duplicates
 
 
+_ML_SPAM_MODEL_CACHE = None
+_ML_SPAM_MODEL_LOADED = False
+_ML_SPAM_LOCK = threading.Lock()
+
+
+def _get_ml_spam_model():
+    """Lazy loader for persisted statistical ML fake-review model."""
+    global _ML_SPAM_MODEL_CACHE, _ML_SPAM_MODEL_LOADED
+    if not _ML_SPAM_MODEL_LOADED:
+        with _ML_SPAM_LOCK:
+            if not _ML_SPAM_MODEL_LOADED:
+                try:
+                    import joblib
+                    from pathlib import Path
+                    model_path = Path(__file__).resolve().parent.parent.parent / "data" / "fake_review_model.joblib"
+                    if model_path.exists():
+                        _ML_SPAM_MODEL_CACHE = joblib.load(model_path)
+                except Exception:
+                    _ML_SPAM_MODEL_CACHE = None
+                _ML_SPAM_MODEL_LOADED = True
+    return _ML_SPAM_MODEL_CACHE
+
+
 class SpamDetector:
     """Detects spam, incentivized, or untrustworthy product reviews."""
 
@@ -242,6 +265,31 @@ class SpamDetector:
                     else:
                         self.seen_signatures.add(sig)
 
+        # 8. ML Fake-Review Model Signal (Trained on Ott et al. benchmark)
+        ml_prob: Optional[float] = None
+        ml_caveat: Optional[str] = None
+        ml_model = _get_ml_spam_model()
+        if ml_model is not None and text.strip():
+            try:
+                vec = ml_model.get("vectorizer")
+                clf = ml_model.get("clf")
+                if vec is not None and clf is not None:
+                    X_vec = vec.transform([text])
+                    if hasattr(clf, "predict_proba"):
+                        probs = clf.predict_proba(X_vec)[0]
+                        deceptive_idx = 1 if len(probs) > 1 else 0
+                        ml_prob = round(float(probs[deceptive_idx]), 4)
+                        ml_caveat = (
+                            "Trained on Ott et al. (ACL 2011) deceptive hotel reviews; "
+                            "Amazon electronics review accuracy may vary due to domain shift."
+                        )
+                        if ml_prob >= 0.75:
+                            reasons.append(
+                                f"Statistical ML Fake-Review Model flagged deceptive patterns (probability: {ml_prob:.1%}) [Ott et al. benchmark]"
+                            )
+            except Exception:
+                pass
+
         normalized_score = min(1.0, round(spam_points, 2))
         is_spam = normalized_score >= 0.50
 
@@ -249,7 +297,9 @@ class SpamDetector:
             is_spam=is_spam,
             spam_score=normalized_score,
             has_mismatch=has_mismatch,
-            reasons=reasons
+            reasons=reasons,
+            ml_spam_prob=ml_prob,
+            ml_domain_caveat=ml_caveat
         )
 
     def reset_session(self):

@@ -26,6 +26,8 @@ class SpamResult(BaseModel):
     spam_score: float = Field(0.0, ge=0.0, le=1.0, description="Probability or heuristic spam index")
     has_mismatch: bool = False
     reasons: List[str] = Field(default_factory=list)
+    ml_spam_prob: Optional[float] = None
+    ml_domain_caveat: Optional[str] = None
 
 
 class SentimentResult(BaseModel):

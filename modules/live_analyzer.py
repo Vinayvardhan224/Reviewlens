@@ -164,7 +164,9 @@ def analyze_custom_review(
             "is_spam": analysis.spam.is_spam,
             "spam_score": round(analysis.spam.spam_score, 2),
             "reasons": analysis.spam.reasons,
-            "has_mismatch": analysis.spam.has_mismatch
+            "has_mismatch": analysis.spam.has_mismatch,
+            "ml_spam_prob": analysis.spam.ml_spam_prob,
+            "ml_domain_caveat": analysis.spam.ml_domain_caveat
         },
         "anomaly": {
             "is_anomaly": anomaly_flag,

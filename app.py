@@ -1930,11 +1930,14 @@ elif st.session_state["nav_view"] == "🧪 Live Review Analyzer":
                 spam_flag = spam_info["is_spam"]
                 spam_col = "#EF4444" if spam_flag else "#10B981"
                 spam_label = "HIGH RISK / SPAM" if spam_flag else "AUTHENTIC REVIEW"
+                ml_prob_sub = ""
+                if spam_info.get("ml_spam_prob") is not None:
+                    ml_prob_sub = f" | ML: <b>{spam_info['ml_spam_prob']*100:.0f}%</b>"
                 render_html_block(f"""
                 <div class="metric-card" style="border-left: 4px solid {spam_col};">
                     <div class="metric-label">Spam & Bot Probability</div>
                     <div class="metric-value" style="color: {spam_col}; font-size: 1.3rem;">{spam_label}</div>
-                    <div class="metric-sub">Spam Score: <b>{spam_info['spam_score'] * 100:.0f}%</b></div>
+                    <div class="metric-sub">Rules: <b>{spam_info['spam_score'] * 100:.0f}%</b>{ml_prob_sub}</div>
                 </div>
                 """)
 
@@ -1976,6 +1979,8 @@ elif st.session_state["nav_view"] == "🧪 Live Review Analyzer":
                 st.error(f"🚨 **Rating Contradiction Detected:** {diag_res['anomaly']['description']}")
             elif diag_res["spam_analysis"]["is_spam"]:
                 st.warning(f"⚠️ **Spam Triggers Detected:** {', '.join(diag_res['spam_analysis']['reasons'])}")
+                if diag_res["spam_analysis"].get("ml_domain_caveat"):
+                    st.caption(f"ℹ️ *ML Domain Caveat:* {diag_res['spam_analysis']['ml_domain_caveat']}")
 
             # Visual breakdown
             gauge_col, clause_col = st.columns([1, 2])
@@ -2912,9 +2917,11 @@ elif st.session_state["nav_view"] == "📈 Model Evaluation & Benchmarks":
             </div>
             """)
 
-        with st.expander("🔍 Inspect 9 Feature Dimensions Used by the ML Fake-Review Model"):
+        with st.expander("🔍 Inspect Feature Representation & Domain Caveats of the ML Fake-Review Model"):
             for feat in ml_spam_res.get("feature_set", []):
-                st.markdown(f"- **{feat}**")
+                st.markdown(f"- **Feature Representation:** {feat}")
+            if ml_spam_res.get("domain_caveat"):
+                st.info(f"ℹ️ **Domain Notice:** {ml_spam_res['domain_caveat']}")
 
     # 7. Real Public Amazon Electronics Review Corpus (n=997)
     st.markdown("---")
