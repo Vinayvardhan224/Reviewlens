@@ -12,10 +12,16 @@ from typing import Dict, Any, Optional, Callable
 import os
 import re
 import smtplib
+from pathlib import Path
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from modules.secrets_util import get_secret, is_demo_mode_enabled
-from modules.otp_manager import OTPManager, check_and_record_dispatch, RESEND_COOLDOWN_SECONDS
+from modules.otp_manager import (
+    OTPManager,
+    check_and_record_dispatch,
+    get_target_cooldown_remaining,
+    RESEND_COOLDOWN_SECONDS
+)
 from modules.audit_logger import log_auth_event
 
 EMAIL_OTP_SESSION_KEY = "pending_email_otp"
@@ -25,7 +31,7 @@ EMAIL_REGEX = r"^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$"
 def is_smtp_configured() -> bool:
     """Checks whether genuine Gmail SMTP credentials are configured."""
     user = get_secret("SMTP_USER")
-    password = get_secret("SMTP_APP_PASSWORD")
+    password = get_secret("SMTP_APP_PASSWORD", "").replace(" ", "").strip()
     return bool(user and password and "@" in user)
 
 
@@ -133,8 +139,11 @@ def send_email_otp(
     if not _validate_email(clean_email):
         return {"success": False, "message": "Please enter a valid email address."}
 
-    # Check resend cooldown
-    cooldown = OTPManager.get_cooldown_remaining(EMAIL_OTP_SESSION_KEY)
+    # Check resend cooldown across session and persistent disk
+    cooldown = max(
+        OTPManager.get_cooldown_remaining(EMAIL_OTP_SESSION_KEY),
+        get_target_cooldown_remaining(clean_email)
+    )
     if cooldown > 0:
         return {
             "success": False,
@@ -170,7 +179,7 @@ def send_email_otp(
         host = get_secret("SMTP_HOST", "smtp.gmail.com")
         port = int(get_secret("SMTP_PORT", "465"))
         user = get_secret("SMTP_USER")
-        password = get_secret("SMTP_APP_PASSWORD")
+        password = get_secret("SMTP_APP_PASSWORD", "").replace(" ", "").strip()
 
         try:
             msg = _build_email_message(clean_email, raw_code, purpose)
@@ -188,7 +197,7 @@ def send_email_otp(
             log_auth_event("otp_sent", "email_smtp", clean_email, success=False, details=f"SMTP error: {str(e)[:60]}")
             return {
                 "success": False,
-                "message": f"Failed to deliver verification email: {str(e)[:80]}. Check SMTP credentials."
+                "message": "Could not send verification email. Please try again later."
             }
 
     # 3. Demo sandbox mode fallback (ONLY if REVIEWLENS_DEMO_MODE=1)
@@ -232,3 +241,47 @@ def verify_email_otp(
 def clear_email_otp() -> None:
     """Clears pending email OTP from session state upon successful completion."""
     OTPManager.clear(EMAIL_OTP_SESSION_KEY)
+
+
+def send_forgot_password_otp(
+    email: str,
+    send_fn: Optional[Callable[[str, str], bool]] = None
+) -> Dict[str, Any]:
+    """
+    Dispatches a password reset OTP only if the email belongs to a registered account.
+    Returns a uniform success message regardless of whether the account exists
+    to prevent user account enumeration and prevent Gmail SMTP quota exhaustion.
+    """
+    clean_email = email.strip().lower() if email else ""
+    if not _validate_email(clean_email):
+        return {"success": False, "message": "Please enter a valid email address."}
+
+    users_file = Path(__file__).resolve().parent.parent / "data" / "users.json"
+    user_exists = False
+    if users_file.exists():
+        try:
+            import json
+            with open(users_file, "r", encoding="utf-8") as f:
+                db = json.load(f)
+                user_exists = clean_email in db
+        except Exception:
+            user_exists = False
+
+    uniform_msg = f"If an account is associated with {clean_email}, a verification code has been dispatched."
+
+    if not user_exists:
+        log_auth_event("forgot_pw_unregistered", "email", clean_email, success=True, details="Silently skipped SMTP for unregistered email")
+        return {
+            "success": True,
+            "message": uniform_msg,
+            "cooldown_seconds": int(RESEND_COOLDOWN_SECONDS)
+        }
+
+    res = send_email_otp(clean_email, purpose="forgot_password", send_fn=send_fn)
+    if res.get("success"):
+        return {
+            "success": True,
+            "message": uniform_msg,
+            "cooldown_seconds": res.get("cooldown_seconds", int(RESEND_COOLDOWN_SECONDS))
+        }
+    return res

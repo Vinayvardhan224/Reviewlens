@@ -31,6 +31,12 @@ class TestPWAShell(unittest.TestCase):
         self.assertIn("icons", data)
         self.assertGreaterEqual(len(data["icons"]), 2)
 
+        # Check discrete purpose entries
+        purposes = [icon.get("purpose") for icon in data.get("icons", [])]
+        self.assertIn("any", purposes)
+        self.assertIn("maskable", purposes)
+        self.assertNotIn("any maskable", purposes)
+
     def test_manifest_icons_exist_and_valid(self):
         with open(MANIFEST_PATH, "r", encoding="utf-8") as f:
             data = json.load(f)

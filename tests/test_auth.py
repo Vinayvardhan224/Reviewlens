@@ -36,6 +36,7 @@ from modules.auth import (
     _load_user_db,
     _save_user_db
 )
+from modules.otp_email import send_forgot_password_otp, verify_email_otp
 
 
 class TestAuthModule(unittest.TestCase):
@@ -78,6 +79,7 @@ class TestAuthModule(unittest.TestCase):
         self.assertEqual(len(h1), 64)  # SHA-256 output length
 
     def test_register_and_authenticate_user(self):
+        import streamlit as st
         unique_email = f"user_{secrets.token_hex(4)}@testdomain.com"
         captured_otp = []
         def mock_send(email, code):
@@ -88,6 +90,13 @@ class TestAuthModule(unittest.TestCase):
         self.assertTrue(reg_res["success"])
         self.assertTrue(reg_res.get("requires_verification"))
         self.assertTrue(len(captured_otp) > 0)
+
+        # SECURITY VERIFICATION: Plaintext password must never be in session state
+        pending = st.session_state.get("pending_registration")
+        self.assertIsNotNone(pending)
+        self.assertNotIn("password", pending)
+        self.assertIn("password_hash", pending)
+        self.assertIn("salt", pending)
 
         # Complete registration with OTP
         comp_res = complete_user_registration(captured_otp[0])
@@ -101,6 +110,7 @@ class TestAuthModule(unittest.TestCase):
         self.assertTrue(get_current_user()["authenticated"])
 
     def test_invalid_password_and_lockout(self):
+        import streamlit as st
         unique_email = f"user_{secrets.token_hex(4)}@testdomain.com"
         captured_otp = []
         def mock_send(email, code):
@@ -110,16 +120,22 @@ class TestAuthModule(unittest.TestCase):
         register_user("Lockout Test", unique_email, "TargetPass@123", "TargetPass@123", send_fn=mock_send)
         complete_user_registration(captured_otp[0])
 
-        # 4 failed attempts
+        # 4 failed attempts with uniform error message (anti-enumeration)
         for _ in range(4):
             res = authenticate_user(unique_email, "WrongPassword!")
             self.assertFalse(res["success"])
-            self.assertIn("Incorrect password", res["message"])
+            self.assertEqual("Email or password is incorrect.", res["message"])
 
         # 5th failed attempt triggers lockout
         res_locked = authenticate_user(unique_email, "WrongPassword!")
         self.assertFalse(res_locked["success"])
         self.assertIn("locked", res_locked["message"].lower())
+
+        # CRITICAL SECURITY CHECK: Clearing session state/cookies must NOT bypass lockout
+        st.session_state.clear()
+        bypass_attempt = authenticate_user(unique_email, "WrongPassword!")
+        self.assertFalse(bypass_attempt["success"])
+        self.assertIn("locked", bypass_attempt["message"].lower())
 
     def test_legacy_hash_auto_migration(self):
         unique_email = f"legacy_{secrets.token_hex(4)}@testdomain.com"
@@ -170,13 +186,20 @@ class TestAuthModule(unittest.TestCase):
         self.assertEqual(profile["display_name"], "Lead Analyst")
         self.assertEqual(profile["avatar_letter"], "L")
 
+        # Reject invalid/empty emails without falling back to demo placeholder
+        with self.assertRaises(ValueError):
+            login_with_google("", verified=True)
+        with self.assertRaises(ValueError):
+            login_with_google("invalid-address", verified=True)
+
     def test_phone_otp_dispatch_and_verification(self):
         captured_phone_code = []
         def mock_phone_send(phone, code):
             captured_phone_code.append(code)
             return True
 
-        res = send_phone_otp("+1", "5551234567", send_fn=mock_phone_send)
+        unique_num = f"555{secrets.randbelow(8999999) + 1000000}"
+        res = send_phone_otp("+1", unique_num, send_fn=mock_phone_send)
         self.assertTrue(res["success"])
         self.assertEqual(len(captured_phone_code), 1)
         otp = captured_phone_code[0]
@@ -202,9 +225,32 @@ class TestAuthModule(unittest.TestCase):
 
     def test_reset_user_password(self):
         unique_email = f"reset_{secrets.token_hex(4)}@testdomain.com"
-        captured = []
-        register_user("Reset Target", unique_email, "InitialPass@123", "InitialPass@123", send_fn=lambda e, c: captured.append(c) or True)
-        complete_user_registration(captured[0])
+        salt = secrets.token_hex(16)
+        db = _load_user_db()
+        db[unique_email] = {
+            "name": "Reset Target",
+            "email": unique_email,
+            "salt": salt,
+            "password_hash": hash_password("InitialPass@123", salt),
+            "created_at": "Nov 2026",
+            "tier": "Verified ReviewLens Member",
+            "iterations": PBKDF2_ITERATIONS
+        }
+        _save_user_db(db)
+
+        # Attempting reset without verifying OTP MUST fail
+        unverified_res = reset_user_password(unique_email, "UpdatedPass@456", "UpdatedPass@456")
+        self.assertFalse(unverified_res["success"])
+        self.assertIn("Verification code must be validated", unverified_res["message"])
+
+        # Genuine verified reset flow
+        captured_reset = []
+        f_res = send_forgot_password_otp(unique_email, send_fn=lambda e, c: captured_reset.append(c) or True)
+        self.assertTrue(f_res["success"])
+        self.assertEqual(len(captured_reset), 1)
+
+        v_res = verify_email_otp(unique_email, captured_reset[0], purpose="forgot_password")
+        self.assertTrue(v_res["success"])
 
         res = reset_user_password(unique_email, "UpdatedPass@456", "UpdatedPass@456")
         self.assertTrue(res["success"])

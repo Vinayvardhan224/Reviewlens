@@ -21,10 +21,17 @@ from modules.secrets_util import is_demo_mode_enabled
 from modules.audit_logger import log_auth_event
 
 RATE_LIMITS_FILE = Path(__file__).resolve().parent.parent / "data" / "otp_rate_limits.json"
+AUTH_LOCKOUTS_FILE = Path(__file__).resolve().parent.parent / "data" / "auth_lockouts.json"
 OTP_EXPIRY_SECONDS = 300.0  # 5 minutes
 RESEND_COOLDOWN_SECONDS = 60.0  # 60 seconds
 MAX_ATTEMPTS = 3
 MAX_SENDS_PER_HOUR = 5
+GLOBAL_DAILY_LIMIT = 100  # Global cap across all users per 24 hours
+GLOBAL_DAILY_KEY = "__global_daily__"
+COOLDOWN_PREFIX = "__cooldown__"
+
+LOCKOUT_DURATION_SECONDS = 600.0  # 10 minutes (after 5 failed password attempts)
+MAX_FAILED_LOGIN_ATTEMPTS = 5
 
 
 def _get_target_key(target: str) -> str:
@@ -33,7 +40,78 @@ def _get_target_key(target: str) -> str:
     return hashlib.sha256(clean.encode("utf-8")).hexdigest()[:24]
 
 
-def _load_persistent_limits() -> Dict[str, list]:
+def _load_auth_lockouts() -> Dict[str, Dict[str, Any]]:
+    """Loads persistent failed password attempts and lockout timestamps from disk."""
+    if not AUTH_LOCKOUTS_FILE.exists():
+        return {}
+    try:
+        with open(AUTH_LOCKOUTS_FILE, "r", encoding="utf-8") as f:
+            data = json.load(f)
+            return data if isinstance(data, dict) else {}
+    except Exception:
+        return {}
+
+
+def _save_auth_lockouts(data: Dict[str, Dict[str, Any]]) -> None:
+    """Saves persistent failed password attempts and lockout timestamps to disk."""
+    try:
+        AUTH_LOCKOUTS_FILE.parent.mkdir(parents=True, exist_ok=True)
+        with open(AUTH_LOCKOUTS_FILE, "w", encoding="utf-8") as f:
+            json.dump(data, f)
+    except Exception:
+        pass
+
+
+def get_failed_attempts(identifier: str) -> Tuple[int, float]:
+    """
+    Retrieves current consecutive failed attempts and locked_until timestamp.
+    Returns: (fails_count, locked_until_epoch)
+    """
+    key = _get_target_key(identifier)
+    data = _load_auth_lockouts()
+    record = data.get(key, {"fails": 0, "locked_until": 0.0})
+    now = time.time()
+    locked_until = record.get("locked_until", 0.0)
+    # If lockout expired, reset
+    if locked_until > 0.0 and now > locked_until:
+        clear_failed_attempts(identifier)
+        return 0, 0.0
+    return record.get("fails", 0), locked_until
+
+
+def record_failed_attempt(identifier: str) -> Tuple[int, float]:
+    """
+    Records a failed authentication attempt on disk.
+    If fails >= 5, triggers a 10-minute persistent lockout.
+    Returns: (new_fails_count, locked_until_epoch)
+    """
+    key = _get_target_key(identifier)
+    data = _load_auth_lockouts()
+    record = data.get(key, {"fails": 0, "locked_until": 0.0})
+    now = time.time()
+
+    fails = record.get("fails", 0) + 1
+    locked_until = record.get("locked_until", 0.0)
+    if fails >= MAX_FAILED_LOGIN_ATTEMPTS:
+        locked_until = now + LOCKOUT_DURATION_SECONDS
+
+    record["fails"] = fails
+    record["locked_until"] = locked_until
+    data[key] = record
+    _save_auth_lockouts(data)
+    return fails, locked_until
+
+
+def clear_failed_attempts(identifier: str) -> None:
+    """Clears failed attempts and lockouts upon successful login."""
+    key = _get_target_key(identifier)
+    data = _load_auth_lockouts()
+    if key in data:
+        data.pop(key, None)
+        _save_auth_lockouts(data)
+
+
+def _load_persistent_limits() -> Dict[str, Any]:
     """Loads recipient send timestamps from data/otp_rate_limits.json."""
     if not RATE_LIMITS_FILE.exists():
         return {}
@@ -45,7 +123,7 @@ def _load_persistent_limits() -> Dict[str, list]:
         return {}
 
 
-def _save_persistent_limits(data: Dict[str, list]) -> None:
+def _save_persistent_limits(data: Dict[str, Any]) -> None:
     """Saves recipient send timestamps to data/otp_rate_limits.json."""
     try:
         RATE_LIMITS_FILE.parent.mkdir(parents=True, exist_ok=True)
@@ -55,41 +133,61 @@ def _save_persistent_limits(data: Dict[str, list]) -> None:
         pass
 
 
-def check_and_record_dispatch(target: str) -> Tuple[bool, str, int]:
+def get_target_cooldown_remaining(target: str) -> int:
+    """Returns remaining seconds for recipient 60s cooldown (disk-backed across sessions/tabs)."""
+    key = _get_target_key(target)
+    disk_data = _load_persistent_limits()
+    last_sent = disk_data.get(f"{COOLDOWN_PREFIX}{key}", 0.0)
+    now = time.time()
+    rem = RESEND_COOLDOWN_SECONDS - (now - last_sent)
+    return max(0, int(rem))
+
+
+def check_and_record_dispatch(target: str, enforce_cooldown: bool = False) -> Tuple[bool, str, int]:
     """
-    Validates that target has not exceeded hourly dispatch quota (5/hour)
-    and updates rate limit timestamps.
+    Validates that dispatch conforms to:
+      1. Recipient 60s cooldown (if enforce_cooldown=True)
+      2. Global daily limit (max 100/day across all recipients)
+      3. Recipient hourly quota (max 5/hr)
     Returns: (is_allowed, error_message, sends_remaining_or_cooldown)
     """
     key = _get_target_key(target)
     now = time.time()
-    cutoff = now - 3600.0
+    cutoff_hour = now - 3600.0
+    cutoff_day = now - 86400.0
 
-    # 1. Check session state cache
-    if "otp_hourly_dispatches" not in st.session_state:
-        st.session_state["otp_hourly_dispatches"] = _load_persistent_limits()
-
-    cache = st.session_state["otp_hourly_dispatches"]
-    timestamps = [t for t in cache.get(key, []) if t > cutoff]
-
-    # Also merge from persistent disk file in case multiple tabs/reloads occurred
     disk_data = _load_persistent_limits()
-    disk_timestamps = [t for t in disk_data.get(key, []) if t > cutoff]
-    merged_timestamps = sorted(list(set(timestamps + disk_timestamps)))
 
-    if len(merged_timestamps) >= MAX_SENDS_PER_HOUR:
-        oldest_active = merged_timestamps[0]
+    # 1. Enforce persistent 60-second recipient cooldown if requested
+    if enforce_cooldown:
+        wait_s = get_target_cooldown_remaining(target)
+        if wait_s > 0:
+            return False, f"Please wait {wait_s}s before requesting a new verification code.", wait_s
+
+    # 2. Enforce global daily dispatch quota (100 sends/24h)
+    raw_global = disk_data.get(GLOBAL_DAILY_KEY, [])
+    global_timestamps = [t for t in raw_global if isinstance(t, (int, float)) and t > cutoff_day]
+    if len(global_timestamps) >= GLOBAL_DAILY_LIMIT:
+        return False, "Daily verification dispatch quota reached. Please try again tomorrow.", 86400
+
+    # 3. Enforce recipient hourly quota (5 sends/hr)
+    raw_target = disk_data.get(key, [])
+    target_timestamps = [t for t in raw_target if isinstance(t, (int, float)) and t > cutoff_hour]
+    if len(target_timestamps) >= MAX_SENDS_PER_HOUR:
+        oldest_active = target_timestamps[0]
         wait_seconds = int((oldest_active + 3600.0) - now)
         wait_minutes = max(1, (wait_seconds + 59) // 60)
         return False, f"Hourly dispatch limit exceeded (max {MAX_SENDS_PER_HOUR}/hr). Please wait {wait_minutes} minutes.", wait_seconds
 
-    # Record dispatch
-    merged_timestamps.append(now)
-    cache[key] = merged_timestamps
-    disk_data[key] = merged_timestamps
+    # Record dispatch across disk and in-memory caches
+    global_timestamps.append(now)
+    target_timestamps.append(now)
+    disk_data[GLOBAL_DAILY_KEY] = global_timestamps
+    disk_data[key] = target_timestamps
+    disk_data[f"{COOLDOWN_PREFIX}{key}"] = now
     _save_persistent_limits(disk_data)
 
-    remaining_sends = MAX_SENDS_PER_HOUR - len(merged_timestamps)
+    remaining_sends = MAX_SENDS_PER_HOUR - len(target_timestamps)
     return True, "", remaining_sends
 
 
@@ -218,6 +316,29 @@ class OTPManager:
             return False, "Incorrect verification code. Maximum attempts reached. Code invalidated."
 
         return False, f"Incorrect verification code. {remaining} attempt{'s' if remaining != 1 else ''} remaining."
+
+    @staticmethod
+    def is_verified(
+        session_key: str,
+        target: str,
+        expected_purpose: Optional[str] = None
+    ) -> bool:
+        """
+        Validates whether an OTP was successfully verified for this target and purpose,
+        and has not expired.
+        """
+        state = st.session_state.get(session_key)
+        if not state:
+            return False
+        if not state.get("verified", False):
+            return False
+        if state.get("target_key") != _get_target_key(target):
+            return False
+        if expected_purpose and state.get("purpose") != expected_purpose:
+            return False
+        if time.time() > state.get("expires_at", 0.0):
+            return False
+        return True
 
     @staticmethod
     def clear(session_key: str) -> None:

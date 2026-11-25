@@ -15,6 +15,7 @@ import json
 import re
 import time
 import hashlib
+import hmac
 import secrets
 import html
 import base64
@@ -23,9 +24,18 @@ import streamlit as st
 
 from modules.secrets_util import get_secret, is_demo_mode_enabled
 from modules.audit_logger import log_auth_event
-from modules.otp_manager import OTPManager, check_and_record_dispatch, RESEND_COOLDOWN_SECONDS
+from modules.otp_manager import (
+    OTPManager,
+    check_and_record_dispatch,
+    RESEND_COOLDOWN_SECONDS,
+    get_failed_attempts,
+    record_failed_attempt,
+    clear_failed_attempts,
+    LOCKOUT_DURATION_SECONDS
+)
 from modules.otp_email import (
     send_email_otp,
+    send_forgot_password_otp,
     verify_email_otp,
     is_smtp_configured,
     clear_email_otp,
@@ -170,11 +180,16 @@ def get_current_user() -> Dict[str, Any]:
     if hasattr(st, "user") and hasattr(st.user, "is_logged_in") and st.user.is_logged_in:
         profile = st.session_state.get("user_profile", {})
         if not profile.get("authenticated"):
-            login_with_google(
-                email=getattr(st.user, "email", "google_user@gmail.com"),
-                name=getattr(st.user, "name", None),
-                verified=True
-            )
+            google_email = getattr(st.user, "email", None)
+            is_email_verified = getattr(st.user, "is_email_verified", True)
+            if not google_email or "@" not in google_email or not is_email_verified:
+                log_auth_event("login_failed", "google_oidc", google_email or "unknown", success=False, details="No verified email provided by Google")
+            else:
+                login_with_google(
+                    email=google_email,
+                    name=getattr(st.user, "name", None),
+                    verified=True
+                )
 
     if "user_profile" not in st.session_state:
         st.session_state["user_profile"] = {
@@ -194,19 +209,19 @@ def get_current_user() -> Dict[str, Any]:
 
 def authenticate_user(email: str, password: str, require_2fa: bool = False) -> Dict[str, Any]:
     """
-    Validates user credentials against hashed storage with attempt throttling (10-minute lockout).
+    Validates user credentials against hashed storage with persistent attempt throttling.
     Sets active authenticated session on success (or prompts 2FA if enabled).
+    Provides uniform responses to prevent account enumeration.
     """
     clean_email = email.strip().lower() if email else ""
     if not clean_email or not password:
         return {"success": False, "message": "Please enter both email and password."}
 
-    # Lockout check (5 failed attempts locks for 10 minutes)
-    rate_limits = st.session_state.setdefault("auth_rate_limits", {})
-    client_state = rate_limits.setdefault(clean_email, {"fails": 0, "locked_until": 0.0})
     now = time.time()
-    if client_state["locked_until"] > now:
-        remaining = int(client_state["locked_until"] - now)
+    # Check persistent lockout on disk (survives cookies/reloads)
+    fails, locked_until = get_failed_attempts(clean_email)
+    if locked_until > now:
+        remaining = int(locked_until - now)
         rem_min = max(1, (remaining + 59) // 60)
         return {
             "success": False,
@@ -216,34 +231,46 @@ def authenticate_user(email: str, password: str, require_2fa: bool = False) -> D
     db = _load_user_db()
     user_record = db.get(clean_email)
     if not user_record:
+        fails, locked_until = record_failed_attempt(clean_email)
         log_auth_event("login_fail", "email_password", clean_email, success=False, details="Account not found")
-        return {"success": False, "message": "No account found with this email address. Please register or check spelling."}
+        if fails >= 5:
+            return {"success": False, "message": "Too many failed attempts. Account locked for 10 minutes."}
+        return {"success": False, "message": "Email or password is incorrect."}
 
-    expected_hash_600k = hash_password(password, user_record["salt"], iterations=PBKDF2_ITERATIONS)
-    expected_hash_100k = hash_password(password, user_record["salt"], iterations=100_000)
-    legacy_hash = hashlib.sha256((user_record["salt"] + password).encode("utf-8")).hexdigest()
+    salt = user_record.get("salt", "")
+    stored_hash = user_record.get("password_hash", "")
+    iterations = user_record.get("iterations", PBKDF2_ITERATIONS)
 
-    matched = False
-    if user_record["password_hash"] == expected_hash_600k:
-        matched = True
-    elif user_record["password_hash"] in (expected_hash_100k, legacy_hash):
-        matched = True
-        user_record["password_hash"] = expected_hash_600k
-        user_record["iterations"] = PBKDF2_ITERATIONS
-        _save_user_db(db)
+    # Compute only the target iterations hash (fast & single calculation)
+    candidate_hash = hash_password(password, salt, iterations=iterations)
+    matched = hmac.compare_digest(stored_hash, candidate_hash)
+
+    # Fallback check for legacy records only if primary check fails
+    if not matched:
+        if "iterations" not in user_record:
+            legacy_hash = hashlib.sha256((salt + password).encode("utf-8")).hexdigest()
+            if hmac.compare_digest(stored_hash, legacy_hash):
+                matched = True
+        elif user_record.get("iterations") != PBKDF2_ITERATIONS:
+            fallback_100k = hash_password(password, salt, iterations=100_000)
+            if hmac.compare_digest(stored_hash, fallback_100k):
+                matched = True
+
+        if matched:
+            user_record["password_hash"] = hash_password(password, salt, iterations=PBKDF2_ITERATIONS)
+            user_record["iterations"] = PBKDF2_ITERATIONS
+            _save_user_db(db)
 
     if not matched:
-        client_state["fails"] += 1
-        if client_state["fails"] >= 5:
-            client_state["locked_until"] = now + LOCKOUT_DURATION_SECONDS
+        fails, locked_until = record_failed_attempt(clean_email)
+        if fails >= 5:
             log_auth_event("lockout", "email_password", clean_email, success=False, details="5 failed attempts; 10 min lock")
             return {"success": False, "message": "Too many failed attempts. Account locked for 10 minutes."}
-        log_auth_event("login_fail", "email_password", clean_email, success=False, details=f"Attempt {client_state['fails']}/5")
-        return {"success": False, "message": f"Incorrect password. Please verify your credentials ({5 - client_state['fails']} attempts remaining)."}
+        log_auth_event("login_fail", "email_password", clean_email, success=False, details=f"Attempt {fails}/5")
+        return {"success": False, "message": "Email or password is incorrect."}
 
-    # Reset failed attempts on success
-    client_state["fails"] = 0
-    client_state["locked_until"] = 0.0
+    # Reset persistent failed attempts on success
+    clear_failed_attempts(clean_email)
 
     # 2FA Check if requested
     if require_2fa:
@@ -326,8 +353,8 @@ def register_user(
     send_fn: Optional[Callable[[str, str], bool]] = None
 ) -> Dict[str, Any]:
     """
-    Validates registration inputs and dispatches email verification OTP.
-    Account is created ONLY after email code verification.
+    Validates registration inputs, immediately hashes password via PBKDF2, and dispatches email verification OTP.
+    Plaintext passwords are never stored in session state. Account is created ONLY after email code verification.
     """
     clean_name = name.strip() if name else ""
     clean_email = email.strip().lower() if email else ""
@@ -349,23 +376,29 @@ def register_user(
     if clean_email in db:
         return {"success": False, "message": "An account with this email already exists. Please sign in instead."}
 
-    # Staging credentials in session for email OTP verification
-    st.session_state["pending_registration"] = {
-        "name": clean_name,
-        "email": clean_email,
-        "password": password
-    }
+    # Hash password immediately - never store plaintext passwords in session state
+    salt = secrets.token_hex(16)
+    p_hash = hash_password(password, salt, iterations=PBKDF2_ITERATIONS)
 
-    # Send Email Verification Code
+    # Send Email Verification Code FIRST before setting session state
     res = send_email_otp(clean_email, purpose="signup", send_fn=send_fn)
     if not res.get("success"):
+        st.session_state.pop("pending_registration", None)
         # If SMTP is unconfigured and demo mode is off, fail honestly
         if not is_smtp_configured() and not is_demo_mode_enabled():
             return {
                 "success": False,
                 "message": "Email verification service is not configured. (Configure SMTP_USER and SMTP_APP_PASSWORD in .streamlit/secrets.toml)"
             }
-        return {"success": False, "message": res.get("message", "Failed to dispatch verification code.")}
+        return {"success": False, "message": res.get("message", "Could not send verification email. Please try again later.")}
+
+    # Staging hashed credentials only after successful dispatch
+    st.session_state["pending_registration"] = {
+        "name": clean_name,
+        "email": clean_email,
+        "salt": salt,
+        "password_hash": p_hash
+    }
 
     return {
         "success": True,
@@ -377,7 +410,7 @@ def register_user(
 
 def complete_user_registration(entered_code: str) -> Dict[str, Any]:
     """
-    Verifies email code and creates persistent PBKDF2 user record in data/users.json.
+    Verifies email code and creates persistent PBKDF2 user record in data/users.json using precomputed hash.
     """
     pending = st.session_state.get("pending_registration")
     if not pending:
@@ -388,10 +421,12 @@ def complete_user_registration(entered_code: str) -> Dict[str, Any]:
     if not v_res["success"]:
         return {"success": False, "message": v_res["message"]}
 
-    # Create account in DB
+    # Create account in DB with precomputed cryptographic hash
     db = _load_user_db()
-    salt = secrets.token_hex(16)
-    p_hash = hash_password(pending["password"], salt, iterations=PBKDF2_ITERATIONS)
+    salt = pending.get("salt") or secrets.token_hex(16)
+    p_hash = pending.get("password_hash")
+    if not p_hash:
+        return {"success": False, "message": "Registration data corrupted. Please register again."}
 
     db[clean_email] = {
         "name": pending["name"],
@@ -430,10 +465,15 @@ def complete_user_registration(entered_code: str) -> Dict[str, Any]:
 def reset_user_password(email: str, new_password: str, confirm_password: str) -> Dict[str, Any]:
     """
     Updates the stored PBKDF2 hash for the given user after OTP verification.
+    Enforces that an active verified email OTP session exists for this email address.
     """
     clean_email = email.strip().lower() if email else ""
     if not clean_email:
         return {"success": False, "message": "Email is required."}
+
+    # Verify that the OTP was genuinely validated
+    if not OTPManager.is_verified(EMAIL_OTP_SESSION_KEY, clean_email, "forgot_password"):
+        return {"success": False, "message": "Verification code must be validated before resetting password."}
 
     if len(new_password) < 8:
         return {"success": False, "message": "New password must be at least 8 characters long."}
@@ -443,7 +483,7 @@ def reset_user_password(email: str, new_password: str, confirm_password: str) ->
 
     db = _load_user_db()
     if clean_email not in db:
-        return {"success": False, "message": "No registered account found with this email."}
+        return {"success": False, "message": "Email or password is incorrect."}
 
     salt = secrets.token_hex(16)
     p_hash = hash_password(new_password, salt, iterations=PBKDF2_ITERATIONS)
@@ -492,10 +532,10 @@ def login_with_google(email: str, name: Optional[str] = None, verified: bool = F
             "Google OAuth 2.0 is disabled. Configure client_id and client_secret in .streamlit/secrets.toml or set REVIEWLENS_DEMO_MODE=1 for demo sandbox."
         )
 
-    clean_email = email.strip() if email else "shopper@gmail.com"
-    if "@" not in clean_email:
-        clean_email += "@gmail.com"
+    if not email or not isinstance(email, str) or "@" not in email:
+        raise ValueError("A valid verified email address is required for Google authentication.")
 
+    clean_email = email.strip().lower()
     display_name = name.strip() if (name and name.strip()) else clean_email.split("@")[0].replace(".", " ").title()
     avatar_letter = display_name[0].upper() if display_name else "G"
 
@@ -1570,10 +1610,10 @@ def render_auth_interface(on_navigate_home=None) -> None:
                 if "forgot_email_sent" not in st.session_state:
                     if st.button("Send Verification Code →", key="btn_submit_forgot", type="primary", use_container_width=True):
                         with st.spinner("Dispatching reset code..."):
-                            f_res = send_email_otp(forgot_email, purpose="forgot_password")
+                            f_res = send_forgot_password_otp(forgot_email)
                             if f_res.get("success"):
                                 st.session_state["forgot_email_sent"] = forgot_email.strip().lower()
-                                st.success("Verification code dispatched if an account exists with this email address.")
+                                st.success(f_res.get("message", "If an account is associated with this email, a verification code has been dispatched."))
                                 st.rerun()
                             else:
                                 st.error(f_res.get("message", "Unable to dispatch code."))

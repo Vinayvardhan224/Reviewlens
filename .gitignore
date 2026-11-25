@@ -16,6 +16,7 @@ venv/
 logs/
 data/users.json
 data/otp_rate_limits.json
+data/auth_lockouts.json
 .pytest_cache/
 *.egg-info/
 .coverage

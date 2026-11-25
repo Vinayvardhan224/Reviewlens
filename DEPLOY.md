@@ -39,6 +39,14 @@ This document describes how to deploy ReviewLens across supported hosting target
    ```
 5. Click **Deploy!**. Streamlit Cloud will automatically build dependencies from `requirements.txt` and launch the platform.
 
+> [!NOTE]
+> **Ephemeral Filesystem on Free Streamlit Community Cloud**:
+> Files written to disk on Streamlit Community Cloud (such as `data/users.json` and `data/otp_rate_limits.json`) reside on an ephemeral container filesystem and reset whenever the container sleeps or reboots. This is completely standard and safe for demonstrations and academic presentations. For persistent production accounts across deployments, connect ReviewLens to an external cloud database (e.g., Supabase PostgreSQL, Firebase, or MongoDB Atlas).
+
+> [!IMPORTANT]
+> **Mobile SMS OTP (Twilio) Caveats**:
+> SMS verification is completely optional. A Twilio trial account can only dispatch SMS to verified personal phone numbers. Furthermore, commercial SMS delivery to Indian phone numbers (`+91`) requires mandatory TRAI DLT registration and pre-approved sender headers. For frictionless evaluation, use Email OTP (Gmail SMTP) or Demo Sandbox mode (`REVIEWLENS_DEMO_MODE=1`).
+
 ---
 
 ## 2. Docker & Docker Compose Deployment
@@ -62,12 +70,15 @@ docker compose up -d --build
 The `pwa/` folder contains a standalone Progressive Web App shell that can be installed on iOS, Android, and Desktop:
 
 1. Enable **GitHub Pages** in your repository settings:
-   - Go to **Settings** > **Pages**
-   - Source: **GitHub Actions**
-2. The workflow in `.github/workflows/pages.yml` will automatically build and publish the PWA whenever changes to `pwa/` are pushed to `main`.
+   - Go to your repository on GitHub: **Settings** > **Pages**
+   - Under **Build and deployment** > **Source**, choose **GitHub Actions**
+2. Deploy the PWA via manual workflow run:
+   - Go to the **Actions** tab on GitHub
+   - Select **Deploy ReviewLens PWA to GitHub Pages** in the left sidebar
+   - Click **Run workflow** > select branch `main` > click **Run workflow**
 3. Configure the PWA target URL:
    ```bash
-   python scripts/set_app_url.py https://your-streamlit-app-url.streamlit.app
+   python scripts/set_app_url.py https://reviewlens.streamlit.app
    ```
 4. Once deployed, users visiting the GitHub Pages site can click **"Install App"** to install ReviewLens directly to their home screen or desktop.
 
