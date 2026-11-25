@@ -784,13 +784,7 @@ if not current_user.get("authenticated"):
     </style>
     """, unsafe_allow_html=True)
 
-    render_auth_interface(on_navigate_home=lambda: (
-        st.session_state.update({
-            "nav_view": "🔍 Review Intelligence",
-            "sidebar_nav_radio": "🔍 Review Intelligence"
-        }),
-        st.rerun()
-    ))
+    render_auth_interface(on_navigate_home=lambda: navigate_to("🏠 Home / Discovery"))
     st.stop()
 
 # Top utility header (rendered only when authenticated)

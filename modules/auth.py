@@ -247,13 +247,14 @@ def authenticate_user(email: str, password: str, require_2fa: bool = False) -> D
 
     # Fallback check for legacy records only if primary check fails
     if not matched:
-        if "iterations" not in user_record:
+        # Check legacy 100,000-iteration PBKDF2
+        fallback_100k = hash_password(password, salt, iterations=100_000)
+        if hmac.compare_digest(stored_hash, fallback_100k):
+            matched = True
+        else:
+            # Check legacy single-round salted SHA-256
             legacy_hash = hashlib.sha256((salt + password).encode("utf-8")).hexdigest()
             if hmac.compare_digest(stored_hash, legacy_hash):
-                matched = True
-        elif user_record.get("iterations") != PBKDF2_ITERATIONS:
-            fallback_100k = hash_password(password, salt, iterations=100_000)
-            if hmac.compare_digest(stored_hash, fallback_100k):
                 matched = True
 
         if matched:
@@ -1311,14 +1312,13 @@ def render_auth_interface(on_navigate_home=None) -> None:
                         st.session_state["auth_mode"] = "phone"
                         st.rerun()
                 with col_alt2:
-                    if is_demo_mode_enabled():
-                        if st.button("⚡ Guest Preview →", key="btn_auth_guest_preview", use_container_width=True):
-                            login_as_guest()
-                            if on_navigate_home:
-                                on_navigate_home()
-                            else:
-                                st.session_state["pending_nav"] = "🏠 Home / Discovery"
-                                st.rerun()
+                    if st.button("⚡ Guest Preview →", key="btn_auth_guest_preview", use_container_width=True):
+                        login_as_guest()
+                        if on_navigate_home:
+                            on_navigate_home()
+                        else:
+                            st.session_state["pending_nav"] = "🏠 Home / Discovery"
+                            st.rerun()
 
             # ------------------------------------------------
             # 1B. 2-STEP VERIFICATION OTP SCREEN
