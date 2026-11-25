@@ -10,9 +10,12 @@ venv/
 .idea/
 .vscode/
 *.log
-data/users.json
 .env
 .env.*
+.streamlit/secrets.toml
+logs/
+data/users.json
+data/otp_rate_limits.json
 .pytest_cache/
 *.egg-info/
 .coverage

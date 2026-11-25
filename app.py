@@ -81,7 +81,8 @@ from modules.review_qa import answer_product_review_question
 from modules.pdf_report import generate_product_pdf_report
 from modules.csv_analyzer import analyze_custom_reviews_csv, decompose_review_words
 from modules.navigation import NAV_GROUPS, ALL_NAV_VIEWS, get_group_for_view
-from modules.auth import get_current_user, render_auth_interface, logout_user
+from modules.secrets_util import get_secret
+from modules.auth import get_current_user, render_auth_interface, logout_user, check_session_timeout
 from components.header import render_header
 from components.product_card import render_product_card
 from components.filters import render_sidebar_filters, apply_filters
@@ -110,6 +111,20 @@ try:
     )
 except Exception:
     pass
+
+
+@st.cache_resource
+def ensure_nlp_resources() -> bool:
+    """Pre-loads and caches NLP corpora once across all sessions."""
+    try:
+        from setup_nltk import main as setup_nltk_main
+        setup_nltk_main()
+    except Exception:
+        pass
+    return True
+
+
+ensure_nlp_resources()
 
 
 def render_html_block(html_content: str) -> None:
@@ -166,29 +181,53 @@ st.markdown("""
     }
 
     /* ========================================================
-       SLIDING ANIMATION & STYLING FOR SIDEBAR
+       FADE-IN ANIMATION & STYLING FOR SIDEBAR
        ======================================================== */
-    @keyframes sidebarSlideIn {
+    @keyframes sidebarFadeIn {
         0% {
-            transform: translateX(-100%);
             opacity: 0;
         }
         100% {
-            transform: translateX(0);
             opacity: 1;
         }
     }
 
     section[data-testid="stSidebar"] {
-        animation: sidebarSlideIn 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards !important;
-        transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), width 0.35s ease !important;
+        animation: sidebarFadeIn 0.35s ease-out forwards;
+        transition: width 0.3s ease !important;
         background: linear-gradient(180deg, #09071A 0%, #120D2A 55%, #0B081C 100%) !important;
         border-right: 1px solid rgba(155, 92, 255, 0.2) !important;
         box-shadow: 8px 0 30px rgba(0, 0, 0, 0.5) !important;
     }
 
-    section[data-testid="stSidebar"] * {
+    section[data-testid="stSidebar"] p,
+    section[data-testid="stSidebar"] span,
+    section[data-testid="stSidebar"] label,
+    section[data-testid="stSidebar"] h1,
+    section[data-testid="stSidebar"] h2,
+    section[data-testid="stSidebar"] h3,
+    section[data-testid="stSidebar"] h4,
+    section[data-testid="stSidebar"] h5,
+    section[data-testid="stSidebar"] h6 {
         color: #F1F5F9;
+    }
+
+    /* Expander rotating chevron */
+    details summary svg {
+        transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
+    }
+    details[open] summary svg {
+        transform: rotate(90deg) !important;
+    }
+
+    /* Pop badge animation */
+    @keyframes popBadge {
+        0% { transform: scale(0.8); opacity: 0; }
+        70% { transform: scale(1.15); }
+        100% { transform: scale(1); opacity: 1; }
+    }
+    .tray-pop-badge {
+        animation: popBadge 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
     }
 
     /* Sidebar action buttons (Profile, Sign Out) high contrast fix */
@@ -217,10 +256,12 @@ st.markdown("""
     }
 
     section[data-testid="stSidebar"] div[data-testid="stButton"] button[kind="primary"] {
-        background: linear-gradient(135deg, #7138F5 0%, #9B5CFF 100%) !important;
-        border: none !important;
+        background: linear-gradient(135deg, rgba(113, 56, 245, 0.55) 0%, rgba(155, 92, 255, 0.35) 100%) !important;
+        border: 1px solid #9B5CFF !important;
+        border-left: 4px solid #22D3EE !important;
         color: #FFFFFF !important;
         font-weight: 700 !important;
+        box-shadow: 0 4px 18px rgba(155, 92, 255, 0.4) !important;
     }
 
     /* Modern SaaS Navigation Radio Items in Sidebar */
@@ -622,7 +663,8 @@ st.markdown("""
         .metric-card {
             margin-bottom: 0.75rem !important;
         }
-        div[data-testid="column"] {
+        div[data-testid="column"],
+        div[data-testid="stColumn"] {
             width: 100% !important;
             flex: 1 1 100% !important;
             min-width: 100% !important;
@@ -631,6 +673,16 @@ st.markdown("""
             flex-direction: column !important;
             height: auto !important;
             padding: 0.8rem 0 !important;
+        }
+    }
+
+    /* Accessibility: Prefers Reduced Motion */
+    @media (prefers-reduced-motion: reduce) {
+        *, *::before, *::after {
+            animation-duration: 0.01ms !important;
+            animation-iteration-count: 1 !important;
+            transition-duration: 0.01ms !important;
+            scroll-behavior: auto !important;
         }
     }
 </style>
@@ -852,6 +904,16 @@ else:
 
 st.sidebar.markdown("---")
 st.sidebar.caption("🛡️ **Data Provenance**: Sample prices & ratings are illustrative. Reviews are tagged `prepared_demo` for transparent NLP research.")
+
+install_url = get_secret("REVIEWLENS_INSTALL_URL")
+if install_url:
+    with st.sidebar.expander("📲 **Install on Phone / PC**", expanded=False):
+        st.markdown(f"""
+        Install ReviewLens as a fast standalone app:
+        - **Web App / PWA**: [Launch App Shell]({install_url})
+        - **Mobile**: Tap **Add to Home screen** in your browser
+        - **PC / Mac**: Click the install icon in the address bar
+        """)
 
 
 # ==========================================
@@ -3060,6 +3122,37 @@ elif st.session_state["nav_view"] == "📖 Methodology & Transparency":
     - **Sample Size Warning**: Products with fewer than 10 reviews carry lower statistical power. We advise users to weigh sample counts when interpreting NSS.
     - **Data Provenance**: Reviews and specifications in this prototype are curated demonstrations (`data_type='prepared_demo'`) designed for clean evaluation. Live outbound links connect directly to Amazon India.
     """)
+
+    with st.expander("🩺 **System Status & Health Check (/healthz)**", expanded=False):
+        import platform
+        import sklearn
+        import nltk
+        try:
+            import spacy
+            spacy_ver = spacy.__version__
+        except Exception:
+            spacy_ver = "Not installed (fallback keyword-taxonomy active)"
+
+        st.markdown(f"""
+        - **Python Runtime**: `{platform.python_version()}` ({platform.system()} {platform.machine()})
+        - **Streamlit**: `{st.__version__}`
+        - **scikit-learn**: `{sklearn.__version__}`
+        - **NLTK**: `{nltk.__version__}`
+        - **spaCy**: `{spacy_ver}`
+        - **Users DB (`data/users.json`)**: `{'✅ Present' if Path('data/users.json').exists() else '❌ Missing'}`
+        - **SST-2 Benchmark (`data/public_sst2_benchmark.csv`)**: `{'✅ Present' if Path('data/public_sst2_benchmark.csv').exists() else '❌ Missing'}`
+        - **ML Spam Model (`models/fake_review_model.joblib`)**: `{'✅ Present' if Path('models/fake_review_model.joblib').exists() else '❌ Missing'}`
+        - **Auth Rate Limit Cache (`data/otp_rate_limits.json`)**: `{'✅ Present' if Path('data/otp_rate_limits.json').exists() else 'ℹ️ Empty/New'}`
+        """)
+
+    with st.expander("📲 **Install ReviewLens on Phone or PC (PWA Guide)**", expanded=False):
+        st.markdown("""
+        ReviewLens can be installed as a standalone Progressive Web App (PWA) with zero app-store download:
+        1. **Chrome / Edge (Desktop)**: Click the **Install ReviewLens** icon in the address bar (or Menu > 'Install ReviewLens').
+        2. **Android (Chrome)**: Tap the three dots (⋮) > **Add to Home screen** > **Install**.
+        3. **iPhone / iPad (Safari)**: Tap the Share button (⎋) > **Add to Home Screen** > **Add**.
+        4. **Offline Capability**: The PWA service worker caches app icons and displays a dedicated offline warning if internet connection is lost.
+        """)
 
 
 # ==========================================

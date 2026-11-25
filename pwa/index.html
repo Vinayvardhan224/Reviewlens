@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>ReviewLens | Smart Shopping & Review Intelligence</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <meta name="theme-color" content="#07051A">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="ReviewLens">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: #07051A;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+    #top-bar {
+      height: 48px;
+      background: linear-gradient(90deg, #09071A 0%, #15102E 100%);
+      border-bottom: 1px solid rgba(155, 92, 255, 0.25);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 16px;
+      color: #FFFFFF;
+      z-index: 100;
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 800;
+      font-size: 16px;
+    }
+    .brand-icon {
+      width: 26px;
+      height: 26px;
+      border-radius: 7px;
+      background: linear-gradient(135deg, #7138F5 0%, #9B5CFF 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+    }
+    .install-btn {
+      background: linear-gradient(135deg, #7138F5 0%, #9B5CFF 100%);
+      color: #FFFFFF;
+      border: none;
+      border-radius: 16px;
+      padding: 6px 14px;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      display: none;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s ease;
+    }
+    .install-btn:hover {
+      box-shadow: 0 0 12px rgba(155, 92, 255, 0.6);
+    }
+    #app-frame {
+      width: 100%;
+      height: calc(100% - 48px);
+      border: none;
+      background: #07051A;
+    }
+    #offline-banner {
+      display: none;
+      background: #EF4444;
+      color: white;
+      text-align: center;
+      padding: 8px;
+      font-size: 13px;
+      font-weight: 600;
+    }
+  </style>
+</head>
+<body>
+  <div id="offline-banner">⚠️ You are offline. Live review analytics are unavailable.</div>
+  <div id="top-bar">
+    <div class="brand">
+      <div class="brand-icon">★</div>
+      <div>Review<span style="color: #9B5CFF;">Lens</span></div>
+    </div>
+    <button id="install-btn" class="install-btn">📲 Install App</button>
+  </div>
+  <iframe id="app-frame" src="about:blank" title="ReviewLens Application"></iframe>
+
+  <script src="config.js"></script>
+  <script>
+    // Set iframe target from config.js
+    const frame = document.getElementById('app-frame');
+    if (typeof APP_URL !== 'undefined' && APP_URL) {
+      frame.src = APP_URL;
+    } else {
+      frame.src = "https://share.streamlit.io/vinayvardhan224/reviewlens";
+    }
+
+    // Register Service Worker
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('./sw.js').catch(err => {
+        console.warn('SW registration skipped:', err);
+      });
+    }
+
+    // PWA Install Prompt Handler
+    let deferredPrompt;
+    const installBtn = document.getElementById('install-btn');
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      installBtn.style.display = 'inline-flex';
+    });
+
+    installBtn.addEventListener('click', async () => {
+      if (deferredPrompt) {
+        deferredPrompt.prompt();
+        const { outcome } = await deferredPrompt.userChoice;
+        if (outcome === 'accepted') {
+          installBtn.style.display = 'none';
+        }
+        deferredPrompt = null;
+      }
+    });
+
+    // Offline / Online Status Detection
+    const offlineBanner = document.getElementById('offline-banner');
+    window.addEventListener('offline', () => {
+      offlineBanner.style.display = 'block';
+    });
+    window.addEventListener('online', () => {
+      offlineBanner.style.display = 'none';
+    });
+  </script>
+</body>
+</html>

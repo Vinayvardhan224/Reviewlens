@@ -15,6 +15,7 @@ import os
 import unittest
 import hashlib
 import secrets
+import time
 from modules.auth import (
     get_current_user,
     login_with_google,
@@ -24,6 +25,10 @@ from modules.auth import (
     logout_user,
     hash_password,
     register_user,
+    complete_user_registration,
+    reset_user_password,
+    compute_password_strength,
+    check_session_timeout,
     authenticate_user,
     is_google_oauth_configured,
     is_sms_configured,
@@ -74,9 +79,20 @@ class TestAuthModule(unittest.TestCase):
 
     def test_register_and_authenticate_user(self):
         unique_email = f"user_{secrets.token_hex(4)}@testdomain.com"
-        reg_res = register_user("Dr. Evelyn Reed", unique_email, "StrongPassword@123", "StrongPassword@123")
+        captured_otp = []
+        def mock_send(email, code):
+            captured_otp.append(code)
+            return True
+
+        reg_res = register_user("Dr. Evelyn Reed", unique_email, "StrongPassword@123", "StrongPassword@123", send_fn=mock_send)
         self.assertTrue(reg_res["success"])
-        self.assertEqual(reg_res["user"]["display_name"], "Dr. Evelyn Reed")
+        self.assertTrue(reg_res.get("requires_verification"))
+        self.assertTrue(len(captured_otp) > 0)
+
+        # Complete registration with OTP
+        comp_res = complete_user_registration(captured_otp[0])
+        self.assertTrue(comp_res["success"])
+        self.assertEqual(comp_res["user"]["display_name"], "Dr. Evelyn Reed")
 
         # Verify authentication
         auth_res = authenticate_user(unique_email, "StrongPassword@123")
@@ -86,7 +102,13 @@ class TestAuthModule(unittest.TestCase):
 
     def test_invalid_password_and_lockout(self):
         unique_email = f"user_{secrets.token_hex(4)}@testdomain.com"
-        register_user("Lockout Test", unique_email, "TargetPass@123", "TargetPass@123")
+        captured_otp = []
+        def mock_send(email, code):
+            captured_otp.append(code)
+            return True
+
+        register_user("Lockout Test", unique_email, "TargetPass@123", "TargetPass@123", send_fn=mock_send)
+        complete_user_registration(captured_otp[0])
 
         # 4 failed attempts
         for _ in range(4):
@@ -149,10 +171,15 @@ class TestAuthModule(unittest.TestCase):
         self.assertEqual(profile["avatar_letter"], "L")
 
     def test_phone_otp_dispatch_and_verification(self):
-        res = send_phone_otp("+1", "5551234567")
+        captured_phone_code = []
+        def mock_phone_send(phone, code):
+            captured_phone_code.append(code)
+            return True
+
+        res = send_phone_otp("+1", "5551234567", send_fn=mock_phone_send)
         self.assertTrue(res["success"])
-        self.assertIn("test_otp", res)
-        otp = res["test_otp"]
+        self.assertEqual(len(captured_phone_code), 1)
+        otp = captured_phone_code[0]
         self.assertEqual(len(otp), 6)
 
         # Verification with incorrect code
@@ -165,6 +192,32 @@ class TestAuthModule(unittest.TestCase):
         user = get_current_user()
         self.assertTrue(user["authenticated"])
         self.assertEqual(user["auth_method"], "phone")
+
+    def test_password_strength_meter(self):
+        self.assertEqual(compute_password_strength("")["score"], 0)
+        self.assertEqual(compute_password_strength("short")["label"], "Too Short")
+        strong = compute_password_strength("SuperSecret$2026!")
+        self.assertIn(strong["label"], ("Strong", "Very Strong"))
+        self.assertGreaterEqual(strong["score"], 3)
+
+    def test_reset_user_password(self):
+        unique_email = f"reset_{secrets.token_hex(4)}@testdomain.com"
+        captured = []
+        register_user("Reset Target", unique_email, "InitialPass@123", "InitialPass@123", send_fn=lambda e, c: captured.append(c) or True)
+        complete_user_registration(captured[0])
+
+        res = reset_user_password(unique_email, "UpdatedPass@456", "UpdatedPass@456")
+        self.assertTrue(res["success"])
+        login_res = authenticate_user(unique_email, "UpdatedPass@456")
+        self.assertTrue(login_res["success"])
+
+    def test_session_timeout(self):
+        login_as_guest()
+        import streamlit as st
+        st.session_state["auth_last_activity"] = time.time() - 1900
+        timed_out = check_session_timeout()
+        self.assertTrue(timed_out)
+        self.assertFalse(get_current_user()["authenticated"])
 
     def test_guest_login(self):
         profile = login_as_guest()

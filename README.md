@@ -168,7 +168,7 @@ reviewlens/
 │   ├── public_sst2_benchmark.csv # 872 genuine public benchmark sentences from Stanford SST-2 / GLUE (data_type: public_labelled_benchmark)
 │   └── users.json              # Local credential store (empty on fresh clone, no seeded demo accounts)
 │
-└── tests/                      # Automated Regression Test Suite (124 unit tests across 22 modules)
+└── tests/                      # Automated Regression Test Suite (139 unit tests across 24 modules)
     ├── test_absa.py            # Aspect taxonomy & categorization tests
     ├── test_action_brief.py    # Vector requirement engineering, actionability & BDD tests
     ├── test_api.py             # FastAPI auth, rate limiting, and /about endpoint tests
@@ -184,8 +184,10 @@ reviewlens/
     ├── test_highlight.py       # Word-level sentiment explainability & negation highlighting tests
     ├── test_navigation_flow.py # Application navigation state machine & group disjointness tests
     ├── test_new_features.py    # Live diagnostic, preference matching & timeline drift tests
+    ├── test_otp.py             # Salted OTP hashes, rate limits, cooldown & email dispatch tests
     ├── test_pdf_report.py      # Executive PDF generation & %PDF structure tests
     ├── test_pipeline.py        # End-to-end ReviewLensPipeline integration tests
+    ├── test_pwa.py             # Progressive Web App manifest, service worker & URL tests
     ├── test_recommendations.py # Mathematical recommendation scoring tests
     ├── test_review_qa.py       # TF-IDF extractive review Q&A & citation attribution tests
     ├── test_scraper.py         # Data scraping fallback & sanitation tests
@@ -242,7 +244,7 @@ python cli.py batch --input data/reviews.csv --output results.json
 
 ## 🧪 Automated Testing
 
-ReviewLens includes a comprehensive test suite of **124 automated unit tests** across 22 test modules covering data validation, preprocessing, sentiment analysis, aspect extraction, spam detection, recommendation math, API security, PBKDF2 authentication, empirical benchmark evaluation, Vector requirement engineering, Review Q&A, and PDF dossier generation.
+ReviewLens includes a comprehensive test suite of **139 automated unit tests** across 24 test modules covering data validation, preprocessing, sentiment analysis, aspect extraction, spam detection, recommendation math, API security, PBKDF2 authentication, empirical benchmark evaluation, Vector requirement engineering, Review Q&A, and PDF dossier generation.
 
 Run all tests:
 ```bash
@@ -251,7 +253,7 @@ python -m unittest discover tests
 
 Expected output:
 ```
-Ran 124 tests in ~12.0s
+Ran 139 tests in ~14.0s
 
 OK
 ```
