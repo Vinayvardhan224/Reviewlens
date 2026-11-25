@@ -1605,7 +1605,7 @@ def render_auth_interface(on_navigate_home=None) -> None:
                 </div>
                 """)
 
-                forgot_email = st.text_input("Registered Email Address", placeholder="✉️ Enter your registered email", label_visibility="collapsed", key="forgot_field_email")
+                forgot_email = st.text_input("Registered Email Address", placeholder="Enter your registered email address", label_visibility="collapsed", key="forgot_field_email")
 
                 if "forgot_email_sent" not in st.session_state:
                     if st.button("Send Verification Code →", key="btn_submit_forgot", type="primary", use_container_width=True):
@@ -1710,14 +1710,14 @@ def render_auth_interface(on_navigate_home=None) -> None:
                                 st.rerun()
                 else:
                     if hasattr(st, "login"):
-                        if st.button("🔴 Proceed to Google Sign-In (Native OIDC) ↗", key="btn_google_native_login", type="primary", use_container_width=True):
+                        if st.button("🌐 Proceed to Google Sign-In (Native OIDC) ↗", key="btn_google_native_login", type="primary", use_container_width=True):
                             st.login("google")
                     else:
                         oauth_url = get_google_oauth_url()
                         if oauth_url:
                             st.markdown(
                                 f'<a href="{oauth_url}" target="_self" style="display: block; text-align: center; background: #FFFFFF; color: #1F2937; padding: 0.65rem 1rem; border-radius: 8px; font-weight: 700; text-decoration: none; margin-bottom: 1rem; box-shadow: 0 2px 8px rgba(0,0,0,0.15);">'
-                                '🔴 Proceed to Google Account Sign-In ↗</a>',
+                                '🌐 Proceed to Google Account Sign-In ↗</a>',
                                 unsafe_allow_html=True
                             )
 
