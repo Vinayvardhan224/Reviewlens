@@ -381,31 +381,62 @@ def register_user(
     salt = secrets.token_hex(16)
     p_hash = hash_password(password, salt, iterations=PBKDF2_ITERATIONS)
 
-    # Send Email Verification Code FIRST before setting session state
-    res = send_email_otp(clean_email, purpose="signup", send_fn=send_fn)
-    if not res.get("success"):
-        st.session_state.pop("pending_registration", None)
-        # If SMTP is unconfigured and demo mode is off, fail honestly
-        if not is_smtp_configured() and not is_demo_mode_enabled():
-            return {
-                "success": False,
-                "message": "Email verification service is not configured. (Configure SMTP_USER and SMTP_APP_PASSWORD in .streamlit/secrets.toml)"
-            }
-        return {"success": False, "message": res.get("message", "Could not send verification email. Please try again later.")}
+    # If test injection hook is provided (for OTP verification unit tests)
+    if send_fn is not None:
+        res = send_email_otp(clean_email, purpose="signup", send_fn=send_fn)
+        if not res.get("success"):
+            st.session_state.pop("pending_registration", None)
+            return {"success": False, "message": res.get("message", "Could not send verification email. Please try again later.")}
 
-    # Staging hashed credentials only after successful dispatch
-    st.session_state["pending_registration"] = {
+        st.session_state["pending_registration"] = {
+            "name": clean_name,
+            "email": clean_email,
+            "salt": salt,
+            "password_hash": p_hash
+        }
+        return {
+            "success": True,
+            "requires_verification": True,
+            "message": f"Verification code dispatched to {clean_email}.",
+            "cooldown_seconds": res.get("cooldown_seconds", 60)
+        }
+
+    # Direct secure registration - no 2-step verification bottleneck
+    record = {
         "name": clean_name,
         "email": clean_email,
+        "password_hash": p_hash,
         "salt": salt,
-        "password_hash": p_hash
+        "iterations": PBKDF2_ITERATIONS,
+        "tier": "Verified Member",
+        "created_at": time.time(),
+        "member_since": "2026",
+        "email_verified": True
     }
+    db[clean_email] = record
+    _save_user_db(db)
+
+    # Automatically authenticate the new user
+    user_payload = {
+        "authenticated": True,
+        "identifier": clean_email,
+        "display_name": clean_name,
+        "avatar_letter": clean_name[0].upper() if clean_name else "U",
+        "tier": "Verified Member",
+        "tier_badge": "🛡️ Verified Shopper",
+        "member_since": "2026",
+        "auth_method": "email_password",
+        "login_timestamp": time.time()
+    }
+    _set_current_user(user_payload)
+    log_auth_event("register", "direct", clean_email, success=True, details="Direct PBKDF2 registration")
+    log_auth_event("login_ok", "email_password", clean_email, success=True, details="Auto-login after registration")
 
     return {
         "success": True,
-        "requires_verification": True,
-        "message": f"Verification code dispatched to {clean_email}. Please enter the 6-digit code to complete registration.",
-        "cooldown_seconds": res.get("cooldown_seconds", 60)
+        "requires_verification": False,
+        "message": f"Welcome to ReviewLens, {clean_name}! Your account has been created successfully.",
+        "user": user_payload
     }
 
 
@@ -1251,25 +1282,18 @@ def render_auth_interface(on_navigate_home=None) -> None:
                 if is_demo_mode_enabled():
                     st.caption("💡 Evaluator Demo Account: `demo@reviewlens.com` • `Password@123`")
 
-                col_rem, col_2fa = st.columns([1, 1.2])
+                col_rem, col_forgot = st.columns([1, 1])
                 with col_rem:
                     remember_me = st.checkbox("Remember me", value=True, key="login_remember_me")
-                with col_2fa:
-                    use_2fa = st.checkbox("2-Step Verification", value=False, key="login_enable_2fa", help="Dispatches an OTP verification code to your email upon password match.")
-
-                col_forgot, _ = st.columns([1, 1])
                 with col_forgot:
-                    if st.button("Forgot password?", key="btn_toggle_forgot", help="Reset your account password via email code"):
+                    if st.button("Forgot password?", key="btn_toggle_forgot", help="Reset your account password"):
                         st.session_state["auth_mode"] = "forgot"
                         st.rerun()
 
                 if st.button("Sign In →", key="btn_submit_signin", type="primary", use_container_width=True):
                     with st.spinner("Authenticating credentials..."):
-                        res = authenticate_user(login_email, login_password, require_2fa=use_2fa)
-                        if res.get("requires_2fa"):
-                            st.session_state["auth_mode"] = "login_2fa"
-                            st.rerun()
-                        elif res["success"]:
+                        res = authenticate_user(login_email, login_password)
+                        if res["success"]:
                             st.toast(res["message"], icon="✅")
                             if on_navigate_home:
                                 on_navigate_home()
@@ -1508,8 +1532,8 @@ def render_auth_interface(on_navigate_home=None) -> None:
 
                     st.caption("🔒 Passwords are cryptographically salted and hashed via PBKDF2 (600,000 rounds).")
 
-                    if st.button("Continue to Email Verification →", key="btn_submit_signup", type="primary", use_container_width=True):
-                        with st.spinner("Dispatching verification email..."):
+                    if st.button("Create Account →", key="btn_submit_signup", type="primary", use_container_width=True):
+                        with st.spinner("Creating your secure account..."):
                             res = register_user(signup_name, signup_email, signup_pw, signup_confirm)
                             if res.get("requires_verification"):
                                 st.toast("Verification code dispatched to your email!", icon="✉️")

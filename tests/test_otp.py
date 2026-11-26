@@ -23,6 +23,12 @@ from modules.audit_logger import log_auth_event, _hash_identifier
 class TestOTPEngine(unittest.TestCase):
     def setUp(self):
         st.session_state.clear()
+        from modules.otp_manager import RATE_LIMITS_FILE
+        if RATE_LIMITS_FILE.exists():
+            try:
+                RATE_LIMITS_FILE.unlink()
+            except Exception:
+                pass
 
     def test_otp_generation_and_storage_security(self):
         session_key = "test_otp_security"
