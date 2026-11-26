@@ -12,6 +12,7 @@ from typing import Dict, Any, Optional, Callable
 import os
 import re
 import smtplib
+import socket
 from pathlib import Path
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
@@ -176,29 +177,69 @@ def send_email_otp(
 
     # 2. Live Gmail SMTP dispatch path
     if is_smtp_configured():
-        host = get_secret("SMTP_HOST", "smtp.gmail.com")
+        host = get_secret("SMTP_HOST", "smtp.gmail.com").strip()
         port = int(get_secret("SMTP_PORT", "465"))
-        user = get_secret("SMTP_USER")
+        user = get_secret("SMTP_USER", "").strip()
         password = get_secret("SMTP_APP_PASSWORD", "").replace(" ", "").strip()
+
+        sent = False
+        last_error = ""
 
         try:
             msg = _build_email_message(clean_email, raw_code, purpose)
-            with smtplib.SMTP_SSL(host, port, timeout=10.0) as server:
-                server.login(user, password)
-                server.send_message(msg)
 
-            log_auth_event("otp_sent", "email_smtp", clean_email, success=True, details=f"purpose: {purpose}")
+            # Strategy A: If port is 465, try SSL first with STARTTLS fallback
+            if port == 465:
+                try:
+                    with smtplib.SMTP_SSL(host, 465, timeout=10.0) as server:
+                        server.login(user, password)
+                        server.send_message(msg)
+                    sent = True
+                except (smtplib.SMTPConnectError, socket.timeout, TimeoutError, OSError) as net_err:
+                    last_error = f"SSL 465 error ({net_err}); attempting STARTTLS 587"
+                    # Strategy B: Automatic fallback to port 587 with STARTTLS (essential when cloud hosts block port 465)
+                    try:
+                        with smtplib.SMTP(host, 587, timeout=10.0) as server:
+                            server.starttls()
+                            server.login(user, password)
+                            server.send_message(msg)
+                        sent = True
+                    except Exception as fallback_err:
+                        last_error = str(fallback_err)
+            else:
+                # Direct port (e.g. 587) with STARTTLS
+                with smtplib.SMTP(host, port, timeout=10.0) as server:
+                    server.starttls()
+                    server.login(user, password)
+                    server.send_message(msg)
+                sent = True
+
+            if sent:
+                log_auth_event("otp_sent", "email_smtp", clean_email, success=True, details=f"purpose: {purpose}")
+                return {
+                    "success": True,
+                    "message": f"A 6-digit verification code has been sent to {clean_email}.",
+                    "cooldown_seconds": int(RESEND_COOLDOWN_SECONDS)
+                }
+        except Exception as e:
+            last_error = str(e)
+
+        log_auth_event("otp_sent", "email_smtp", clean_email, success=False, details=f"SMTP error: {last_error[:60]}")
+
+        # If demo mode is active and SMTP failed, gracefully fall back to sandbox mode
+        if is_demo_mode_enabled():
+            log_auth_event("otp_sent", "email_demo_sandbox_fallback", clean_email, success=True, details="Demo mode sandbox fallback after SMTP failure")
             return {
                 "success": True,
-                "message": f"A 6-digit verification code has been sent to {clean_email}.",
-                "cooldown_seconds": int(RESEND_COOLDOWN_SECONDS)
+                "message": f"Demo Sandbox: Code dispatched for {clean_email} (SMTP fallback).",
+                "cooldown_seconds": int(RESEND_COOLDOWN_SECONDS),
+                "demo_sandbox": True
             }
-        except Exception as e:
-            log_auth_event("otp_sent", "email_smtp", clean_email, success=False, details=f"SMTP error: {str(e)[:60]}")
-            return {
-                "success": False,
-                "message": "Could not send verification email. Please try again later."
-            }
+
+        return {
+            "success": False,
+            "message": "Could not send verification email. Please try again later."
+        }
 
     # 3. Demo sandbox mode fallback (ONLY if REVIEWLENS_DEMO_MODE=1)
     if is_demo_mode_enabled():
