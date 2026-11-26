@@ -1539,6 +1539,8 @@ def render_auth_interface(on_navigate_home=None) -> None:
                     """)
 
                     entered_reg_code = st.text_input("Enter 6-Digit Verification Code", max_chars=6, placeholder="e.g. 123456", key="signup_otp_code")
+                    if is_demo_mode_enabled():
+                        st.caption("🧪 **Demo Sandbox Mode:** Enter code `123456` to test registration.")
 
                     col_reg_v, col_reg_r = st.columns([1.2, 1])
                     with col_reg_v:
@@ -1626,6 +1628,8 @@ def render_auth_interface(on_navigate_home=None) -> None:
                     """)
 
                     reset_code = st.text_input("6-Digit Verification Code", max_chars=6, placeholder="e.g. 123456", key="forgot_code_input")
+                    if is_demo_mode_enabled():
+                        st.caption("🧪 **Demo Sandbox Mode:** Enter code `123456` to test password reset.")
                     new_pw = st.text_input("New Password", type="password", placeholder="🔒 New password (min. 8 chars)", key="forgot_new_pw")
                     confirm_pw = st.text_input("Confirm New Password", type="password", placeholder="🔒 Re-type new password", key="forgot_confirm_pw")
 
