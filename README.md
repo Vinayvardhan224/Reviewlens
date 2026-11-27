@@ -13,6 +13,34 @@ Developed by **Vinay Vardhan / ReviewLens Team**.
 
 ---
 
+## 🏛️ System Architecture
+
+```mermaid
+flowchart TD
+    User([Customer / Evaluator]) --> AuthGate{Auth Gate<br/>Single-Render Check}
+    AuthGate -->|Unauthenticated| LoginView[Split-Screen Glassmorphism Login<br/>Email OTP / Google OIDC / SMS / Demo Mode]
+    AuthGate -->|Authenticated / Demo| AppRouter[ReviewLens Application Router]
+    
+    subgraph Core_NLP [Explainable NLP Engine]
+        VADER[VADER Polarity Lexicon<br/>+ Domain Modifiers]
+        ABSA[spaCy Syntactic Dependency<br/>Aspect Extraction]
+        SpamML[ExtraTrees Deceptive Classifier<br/>+ Heuristic Filter]
+        LDA[LDA Unsupervised Topic Modeling]
+    end
+
+    AppRouter --> Home[🔍 Review Intelligence & Catalogue]
+    AppRouter --> LiveLab[🧪 Live Diagnostic Lab]
+    AppRouter --> Compare[⚔️ Product Duel & Radar Comparison]
+    AppRouter --> Benchmarks[📈 Empirical Model Evaluation]
+
+    Home --> Core_NLP
+    LiveLab --> Core_NLP
+    Compare --> Core_NLP
+    Benchmarks --> Core_NLP
+```
+
+---
+
 ## 🌟 Key Capabilities
 
 1. **Amazon-Inspired Smart Discovery & Catalogue**:
@@ -253,7 +281,7 @@ python -m unittest discover tests
 
 Expected output:
 ```
-Ran 139 tests in ~14.0s
+Ran 142 tests in ~42.0s
 
 OK
 ```

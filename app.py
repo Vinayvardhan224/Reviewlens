@@ -101,6 +101,21 @@ from components.charts import (
 )
 from reviewlens.dashboard import render_original_dashboard
 from components.theme import inject_theme, get_theme_css, glass_card, kpi_tile, apply_glass_layout
+from modules.secrets_util import is_demo_mode_enabled
+import logging
+
+def check_public_host_demo_warning() -> None:
+    """Logs a security warning if demo mode is enabled on a public or cloud host."""
+    if is_demo_mode_enabled():
+        headless = os.getenv("STREAMLIT_SERVER_HEADLESS", "").lower() in ("1", "true")
+        hostname = os.getenv("HOSTNAME", "").lower()
+        if headless or "streamlit" in hostname or "appuser" in hostname:
+            logging.warning(
+                "SECURITY WARNING: REVIEWLENS_DEMO_MODE=1 is active on a public/cloud host. "
+                "Bypass is restricted to demo accounts; production accounts are protected."
+            )
+
+check_public_host_demo_warning()
 
 # Page configuration
 try:
@@ -115,6 +130,18 @@ except Exception:
 
 # Inject Glassmorphism Design System Theme
 inject_theme()
+
+# Render DEMO MODE banner if active
+if is_demo_mode_enabled():
+    st.markdown("""
+    <div style="background: rgba(245, 158, 11, 0.18); border: 1px solid rgba(245, 158, 11, 0.5); border-radius: 12px; padding: 0.6rem 1.2rem; margin-bottom: 1rem; display: flex; align-items: center; justify-content: space-between; color: #FCD34D;">
+        <div style="display: flex; align-items: center; gap: 0.6rem; font-weight: 700; font-size: 0.88rem;">
+            <span>⚡ DEMO MODE ACTIVE</span>
+            <span style="font-weight: 400; font-size: 0.8rem; color: #FDE68A;">— Sandboxed evaluation mode. Mock OTP bypass enabled for demo accounts only.</span>
+        </div>
+        <span style="background: rgba(245, 158, 11, 0.3); padding: 2px 8px; border-radius: 6px; font-size: 0.72rem; font-weight: 700;">REVIEWLENS_DEMO_MODE=1</span>
+    </div>
+    """, unsafe_allow_html=True)
 
 
 @st.cache_resource
@@ -924,6 +951,17 @@ else:
 
 st.sidebar.markdown("---")
 st.sidebar.caption("🛡️ **Data Provenance**: Sample prices & ratings are illustrative. Reviews are tagged `prepared_demo` for transparent NLP research.")
+
+with st.sidebar.expander("🎨 **Appearance & Performance**", expanded=False):
+    reduce_eff = st.checkbox(
+        "Reduce visual effects",
+        value=bool(st.session_state.get("rl_reduce_effects", False)),
+        key="chk_reduce_effects",
+        help="Disables background blurs and animations for faster rendering on low-power devices."
+    )
+    if reduce_eff != st.session_state.get("rl_reduce_effects", False):
+        st.session_state["rl_reduce_effects"] = reduce_eff
+        st.rerun()
 
 install_url = get_secret("REVIEWLENS_INSTALL_URL")
 if install_url:
@@ -3057,6 +3095,26 @@ elif st.session_state["nav_view"] == "📈 Model Evaluation & Benchmarks":
     err_df = pd.DataFrame(error_cases)
     st.dataframe(err_df, use_container_width=True, hide_index=True)
 
+    # 9. System Limitations & Academic Disclosures
+    st.markdown("---")
+    st.markdown("### 9. System Limitations & Academic Disclosures")
+    render_html_block("""
+    <div class="rl-glass-strong">
+        <div class="rl-tile-title" style="color: #FBBF24;">⚠️ System Limitations & Known Constraints</div>
+        <div style="font-size: 0.9rem; line-height: 1.6; color: #F1F5F9;">
+            <ul style="margin: 0.4rem 0 0 1.2rem; padding: 0;">
+                <li><b>Small Demo Dataset:</b> Demonstration catalogue uses a curated sample (n=101) alongside UCSD Amazon benchmark (n=997); statistical significance is constrained on rare product variants.</li>
+                <li><b>English Language Only:</b> Lexicons and dependency parsing models operate strictly on English syntax; multilingual reviews require prior machine translation.</li>
+                <li><b>SST-2 Movie Domain Shift:</b> Public GLUE SST-2 benchmark evaluates movie review sentences; lexical sentiment nuances differ from consumer tech specifications.</li>
+                <li><b>DistilBERT Metric as Published Reference:</b> Transformer accuracy (92.7%) is an official GLUE benchmark reference metric from literature, not an in-process real-time inference loop.</li>
+                <li><b>VADER Neutral Sensitivity:</b> Lexicon-based scoring has lower recall on neutral text without polarized adjectives (neutral F1 ~0.33), sometimes tipping slightly positive or negative.</li>
+                <li><b>Aspect Extraction Precision:</b> Syntactic dependency aspect parsing achieves high recall (~89.7%) but moderate precision (~54.5%), occasionally extracting generic product nouns.</li>
+                <li><b>Spam Domain Shift:</b> The supervised deceptive review model was trained on the Ott et al. (ACL 2011) hotel corpus; accuracy on Amazon electronics reviews will be lower due to vocabulary domain shift.</li>
+            </ul>
+        </div>
+    </div>
+    """)
+
 
 # ==========================================
 # VIEW 13: DATA INGESTION & VALIDATOR
@@ -3160,6 +3218,7 @@ elif st.session_state["nav_view"] == "📖 Methodology & Transparency":
         - **NLTK**: `{nltk.__version__}`
         - **spaCy**: `{spacy_ver}`
         - **Users DB (`data/users.json`)**: `{'✅ Present' if Path('data/users.json').exists() else '❌ Missing'}`
+        - **Storage**: Ephemeral filesystem (Streamlit Cloud reset notice: local JSON database is session-scoped on free cloud tier)
         - **SST-2 Benchmark (`data/public_sst2_benchmark.csv`)**: `{'✅ Present' if Path('data/public_sst2_benchmark.csv').exists() else '❌ Missing'}`
         - **ML Spam Model (`models/fake_review_model.joblib`)**: `{'✅ Present' if Path('models/fake_review_model.joblib').exists() else '❌ Missing'}`
         - **Auth Rate Limit Cache (`data/otp_rate_limits.json`)**: `{'✅ Present' if Path('data/otp_rate_limits.json').exists() else 'ℹ️ Empty/New'}`

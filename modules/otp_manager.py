@@ -33,6 +33,8 @@ COOLDOWN_PREFIX = "__cooldown__"
 LOCKOUT_DURATION_SECONDS = 600.0  # 10 minutes (after 5 failed password attempts)
 MAX_FAILED_LOGIN_ATTEMPTS = 5
 
+DEMO_ACCOUNTS = ["demo@reviewlens.com", "vinay@reviewlens.com", "evaluator@gmail.com"]
+
 
 def _get_target_key(target: str) -> str:
     """Produces a normalized hash key for recipient rate limiting."""
@@ -306,7 +308,22 @@ class OTPManager:
         if not is_match and is_demo_mode_enabled():
             demo_hash = hashlib.sha256((salt + "123456").encode("utf-8")).hexdigest()
             if hmac.compare_digest(candidate_hash, demo_hash):
-                is_match = True
+                # Restrict 123456 demo bypass:
+                # Allowed ONLY for accounts in DEMO_ACCOUNTS and brand-new registrations (purpose == "signup").
+                # NEVER allowed for password reset (purpose == "forgot_password") of non-demo accounts.
+                clean_target = str(target).strip().lower()
+                is_demo_target = clean_target in [acc.lower() for acc in DEMO_ACCOUNTS]
+                is_signup = state.get("purpose") == "signup"
+                if is_demo_target or is_signup:
+                    is_match = True
+                else:
+                    log_auth_event(
+                        "otp_bypass_blocked",
+                        state.get("channel", "otp"),
+                        target,
+                        success=False,
+                        details=f"Demo code 123456 blocked for real account password reset/login (purpose: {state.get('purpose')})"
+                    )
 
         if is_match:
             state["verified"] = True

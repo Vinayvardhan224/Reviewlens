@@ -22,6 +22,14 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Verify Deployment Integrity
+        run: python scripts/check_deployment.py
+
       - name: Setup Pages
         uses: actions/configure-pages@v4
 

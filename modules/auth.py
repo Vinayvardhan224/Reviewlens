@@ -19,6 +19,8 @@ import hmac
 import secrets
 import html
 import base64
+import threading
+import tempfile
 from pathlib import Path
 import streamlit as st
 
@@ -26,6 +28,7 @@ from modules.secrets_util import get_secret, is_demo_mode_enabled
 from modules.audit_logger import log_auth_event
 from modules.otp_manager import (
     OTPManager,
+    DEMO_ACCOUNTS,
     check_and_record_dispatch,
     RESEND_COOLDOWN_SECONDS,
     get_failed_attempts,
@@ -153,22 +156,48 @@ def check_session_timeout() -> bool:
     return False
 
 
+_USER_DB_LOCK = threading.Lock()
+
+
 def _load_user_db() -> Dict[str, Any]:
-    """Loads user database from data/users.json without seeding default accounts."""
+    """Loads user database from data/users.json with thread safety."""
     if not USER_DB_PATH.exists():
         return {}
-    try:
-        with open(USER_DB_PATH, "r", encoding="utf-8") as f:
-            return json.load(f)
-    except Exception:
-        return {}
+    with _USER_DB_LOCK:
+        try:
+            with open(USER_DB_PATH, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except Exception:
+            return {}
 
 
 def _save_user_db(db: Dict[str, Any]) -> None:
-    """Safely saves user database to data/users.json."""
+    """
+    Safely and atomically saves user database to data/users.json using
+    tempfile.NamedTemporaryFile + os.replace under a thread lock.
+    """
     USER_DB_PATH.parent.mkdir(parents=True, exist_ok=True)
-    with open(USER_DB_PATH, "w", encoding="utf-8") as f:
-        json.dump(db, f, indent=2)
+    with _USER_DB_LOCK:
+        temp_file = tempfile.NamedTemporaryFile(
+            mode="w",
+            dir=str(USER_DB_PATH.parent),
+            delete=False,
+            encoding="utf-8",
+            suffix=".tmp"
+        )
+        try:
+            json.dump(db, temp_file, indent=2)
+            temp_file.flush()
+            os.fsync(temp_file.fileno())
+            temp_file.close()
+            os.replace(temp_file.name, USER_DB_PATH)
+        except Exception:
+            if os.path.exists(temp_file.name):
+                try:
+                    os.remove(temp_file.name)
+                except Exception:
+                    pass
+            raise
 
 
 def get_current_user() -> Dict[str, Any]:
@@ -1653,7 +1682,10 @@ def render_auth_interface(on_navigate_home=None) -> None:
 
                     reset_code = st.text_input("6-Digit Verification Code", max_chars=6, placeholder="e.g. 123456", key="forgot_code_input")
                     if is_demo_mode_enabled():
-                        st.caption("🧪 **Demo Sandbox Mode:** Enter code `123456` to test password reset.")
+                        if target_email.lower() in [acc.lower() for acc in DEMO_ACCOUNTS]:
+                            st.caption("🧪 **Demo Sandbox Mode:** Enter code `123456` to test password reset.")
+                        else:
+                            st.caption("🔒 Enter the verification code sent to your registered email.")
                     new_pw = st.text_input("New Password", type="password", placeholder="🔒 New password (min. 8 chars)", key="forgot_new_pw")
                     confirm_pw = st.text_input("Confirm New Password", type="password", placeholder="🔒 Re-type new password", key="forgot_confirm_pw")
 
