@@ -2606,7 +2606,12 @@ elif st.session_state["nav_view"] == "🎯 Smart Recommendations":
 # VIEW: AUTHENTICATION & USER PROFILE
 # ==========================================
 elif st.session_state["nav_view"] == "🔐 Sign In / Profile":
-    render_auth_interface(on_navigate_home=lambda: navigate_to("🏠 Home / Discovery"))
+    curr_u = get_current_user()
+    if curr_u.get("authenticated"):
+        render_auth_interface(on_navigate_home=lambda: navigate_to("🏠 Home / Discovery"))
+    else:
+        st.info("Session required. Redirecting to sign in...")
+        st.rerun()
 
 
 # ==========================================

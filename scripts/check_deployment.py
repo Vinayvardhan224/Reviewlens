@@ -51,13 +51,9 @@ def check_pwa_config() -> bool:
 
 def check_manifest() -> bool:
     """Verifies manifest validity, icon presence, and purpose separation."""
-    manifest_candidates = [
-        PROJECT_ROOT / "pwa" / "manifest.webmanifest",
-        PROJECT_ROOT / "pwa" / "manifest.json"
-    ]
-    manifest_path = next((p for p in manifest_candidates if p.exists()), None)
-    if not manifest_path:
-        print("❌ FAIL: No manifest file found in pwa/.", file=sys.stderr)
+    manifest_path = PROJECT_ROOT / "pwa" / "manifest.webmanifest"
+    if not manifest_path.exists():
+        print("❌ FAIL: pwa/manifest.webmanifest not found.", file=sys.stderr)
         return False
 
     try:
