@@ -39,6 +39,10 @@ This document describes how to deploy ReviewLens across supported hosting target
    ```
 5. Click **Deploy!**. Streamlit Cloud will automatically build dependencies from `requirements.txt` and launch the platform.
 
+> [!TIP]
+> **Streamlit Sharing Access Control**:
+> If you see a Streamlit sign-in before ReviewLens, set the app's Sharing to public in your Streamlit Cloud app settings (Settings > Sharing > Viewer access > Public).
+
 > [!NOTE]
 > **Ephemeral Filesystem on Free Streamlit Community Cloud**:
 > Files written to disk on Streamlit Community Cloud (such as `data/users.json` and `data/otp_rate_limits.json`) reside on an ephemeral container filesystem and reset whenever the container sleeps or reboots. This is completely standard and safe for demonstrations and academic presentations. For persistent production accounts across deployments, connect ReviewLens to an external cloud database (e.g., Supabase PostgreSQL, Firebase, or MongoDB Atlas).

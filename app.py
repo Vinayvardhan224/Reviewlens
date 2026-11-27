@@ -100,6 +100,7 @@ from components.charts import (
     create_live_sentiment_gauge
 )
 from reviewlens.dashboard import render_original_dashboard
+from components.theme import inject_theme, get_theme_css, glass_card, kpi_tile, apply_glass_layout
 
 # Page configuration
 try:
@@ -111,6 +112,9 @@ try:
     )
 except Exception:
     pass
+
+# Inject Glassmorphism Design System Theme
+inject_theme()
 
 
 @st.cache_resource
@@ -748,19 +752,10 @@ def explore_review_intelligence_action(pid: str):
     navigate_to("🔍 Review Intelligence")
 
 
-# Load catalogue & reviews with validation and shared empty-catalogue guard
-try:
-    df_products = get_all_products(validate=True)
-    df_reviews = get_all_reviews(validate=True, products_df=df_products)
-except Exception as e:
-    st.error(f"⚠️ Dataset validation error: {str(e)}")
-    st.stop()
-
-if df_products is None or df_products.empty:
-    st.error("⚠️ The product catalogue is empty or missing. Please ensure data/products.csv is present and valid.")
-    st.stop()
-
-# Current authenticated user profile
+# ========================================================
+# 1. AUTHENTICATION GATE (CHECK BEFORE ANY DATA LOADING)
+# ========================================================
+check_session_timeout()
 current_user = get_current_user()
 
 if not current_user.get("authenticated"):
@@ -785,6 +780,37 @@ if not current_user.get("authenticated"):
     """, unsafe_allow_html=True)
 
     render_auth_interface(on_navigate_home=lambda: navigate_to("🏠 Home / Discovery"))
+    st.stop()
+
+# ========================================================
+# 2. CACHED CATALOGUE & REVIEW LOADERS (AUTHENTICATED ONLY)
+# ========================================================
+DATA_DIR = PROJECT_ROOT / "data"
+
+@st.cache_data
+def load_cached_products(mtime: float) -> pd.DataFrame:
+    """Cached loader for catalogue products with schema validation."""
+    return get_all_products(validate=True)
+
+@st.cache_data
+def load_cached_reviews(mtime: float, _products_df: pd.DataFrame) -> pd.DataFrame:
+    """Cached loader for consumer reviews with relational integrity validation."""
+    return get_all_reviews(validate=True, products_df=_products_df)
+
+prod_path = DATA_DIR / "products.csv"
+rev_path = DATA_DIR / "reviews.csv"
+prod_mtime = prod_path.stat().st_mtime if prod_path.exists() else 0.0
+rev_mtime = rev_path.stat().st_mtime if rev_path.exists() else 0.0
+
+try:
+    df_products = load_cached_products(prod_mtime)
+    df_reviews = load_cached_reviews(rev_mtime, df_products)
+except Exception as e:
+    st.error(f"⚠️ Dataset validation error: {str(e)}")
+    st.stop()
+
+if df_products is None or df_products.empty:
+    st.error("⚠️ The product catalogue is empty or missing. Please ensure data/products.csv is present and valid.")
     st.stop()
 
 # Top utility header (rendered only when authenticated)
