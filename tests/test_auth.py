@@ -278,6 +278,28 @@ class TestAuthModule(unittest.TestCase):
         logout_user()
         self.assertFalse(get_current_user()["authenticated"])
 
+    def test_direct_registration_path(self):
+        """Verifies direct registration without send_fn creates user and auto-authenticates without NameError."""
+        import streamlit as st
+        st.session_state["compare_tray"] = ["PROD-001"]
+        unique_email = f"direct_{secrets.token_hex(4)}@testdomain.com"
+        reg_res = register_user("Alice Direct", unique_email, "StrongPassword@123", "StrongPassword@123")
+        self.assertTrue(reg_res["success"])
+        self.assertFalse(reg_res.get("requires_verification", False))
+
+        # Check authenticated session state
+        curr = get_current_user()
+        self.assertTrue(curr["authenticated"])
+        self.assertEqual(curr["display_name"], "Alice Direct")
+        self.assertEqual(curr["identifier"], unique_email)
+        self.assertEqual(curr["saved_comparisons"], ["PROD-001"])
+        self.assertEqual(curr["custom_presets"], {})
+
+        # Duplicate registration should return friendly failure, not crash
+        dup_res = register_user("Alice Direct", unique_email, "StrongPassword@123", "StrongPassword@123")
+        self.assertFalse(dup_res["success"])
+        self.assertIn("already exists", dup_res["message"].lower())
+
 
 if __name__ == "__main__":
     unittest.main()

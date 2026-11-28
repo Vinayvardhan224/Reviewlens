@@ -200,6 +200,12 @@ def _save_user_db(db: Dict[str, Any]) -> None:
             raise
 
 
+def _set_current_user(user_payload: Dict[str, Any]) -> None:
+    """Sets the active authenticated user profile and refreshes session activity timestamp."""
+    st.session_state["user_profile"] = user_payload
+    st.session_state["auth_last_activity"] = time.time()
+
+
 def get_current_user() -> Dict[str, Any]:
     """Retrieves or initializes the current active user session state."""
     # Check 30-minute inactivity timeout
@@ -455,9 +461,12 @@ def register_user(
         "tier_badge": "🛡️ Verified Shopper",
         "member_since": "2026",
         "auth_method": "email_password",
+        "saved_comparisons": st.session_state.get("compare_tray", []),
+        "custom_presets": {},
         "login_timestamp": time.time()
     }
-    _set_current_user(user_payload)
+    st.session_state["user_profile"] = user_payload
+    st.session_state["auth_last_activity"] = time.time()
     log_auth_event("register", "direct", clean_email, success=True, details="Direct PBKDF2 registration")
     log_auth_event("login_ok", "email_password", clean_email, success=True, details="Auto-login after registration")
 
