@@ -32,6 +32,7 @@ NAV_GROUPS: Dict[str, List[str]] = {
     "MORE": [
         "📂 Data Ingestion & Validator",
         "📖 Methodology & Transparency",
+        "📲 Install App",
     ],
 }
 

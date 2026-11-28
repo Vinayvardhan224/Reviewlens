@@ -101,6 +101,7 @@ from components.charts import (
 )
 from reviewlens.dashboard import render_original_dashboard
 from components.theme import inject_theme, get_theme_css, glass_card, kpi_tile, apply_glass_layout
+from components.install_page import render_install_page
 from modules.secrets_util import is_demo_mode_enabled
 import logging
 
@@ -3237,6 +3238,26 @@ elif st.session_state["nav_view"] == "📖 Methodology & Transparency":
         3. **iPhone / iPad (Safari)**: Tap the Share button (⎋) > **Add to Home Screen** > **Add**.
         4. **Offline Capability**: The PWA service worker caches app icons and displays a dedicated offline warning if internet connection is lost.
         """)
+
+
+# ==========================================
+# VIEW 15: INSTALL APP (PWA GUIDE)
+# ==========================================
+elif st.session_state["nav_view"] == "📲 Install App":
+    target_app_url = get_secret("APP_URL")
+    if not target_app_url:
+        try:
+            config_p = PROJECT_ROOT / "pwa" / "config.js"
+            if config_p.exists():
+                m = re.search(r'const\s+APP_URL\s*=\s*["\']([^"\']+)["\']', config_p.read_text(encoding="utf-8"))
+                if m:
+                    target_app_url = m.group(1).strip()
+        except Exception:
+            pass
+    if not target_app_url:
+        target_app_url = "https://reviewlens.streamlit.app"
+
+    render_install_page(target_app_url)
 
 
 # ==========================================

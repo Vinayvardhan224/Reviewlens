@@ -52,8 +52,13 @@ A structured, timed walkthrough designed for academic evaluators, viva panels, a
 
 ### Phase 5: Progressive Web App & Offline Installation (2:30 - 3:00)
 1. **Appearance Toggle**: Open sidebar > **🎨 Appearance & Performance** > Toggle **Reduce visual effects** to show instant rendering mode.
-2. **PWA Standalone App**:
+2. **Dedicated Install App Page**:
+   - **Navigate**: Sign in, open **📲 Install App** from the sidebar's **More** group.
+   - *Presenter Explains*: "ReviewLens provides a dedicated, glassmorphic installation hub for Android, iOS, and Desktop with zero app store downloads."
+   - Point out the 3 platform tabs (Android Chrome, iOS Safari Share, and Desktop address-bar install), the copyable app link with QR code generator, and the **🚀 Open installable version** button linking directly to the standalone PWA shell.
+   - Review the "Good to know" operational caveats (network requirement, container wake-up time, Google sign-in).
+3. **PWA Standalone App**:
    - Show the PWA shell running from GitHub Pages or locally (`pwa/index.html`).
    - Demonstrate the browser install prompt ("Install ReviewLens").
    - Disconnect Wi-Fi / simulate offline in DevTools to display the custom branded `pwa/offline.html` service worker fallback.
-3. **Conclusion**: Conclude with test suite evidence (`python -m unittest discover tests` passing with 140+ unit tests).
+4. **Conclusion**: Conclude with test suite evidence (`python -m unittest discover tests` passing with 165+ unit tests).

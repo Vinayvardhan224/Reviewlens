@@ -131,7 +131,7 @@ flowchart TD
 
 14. **Animated Showcase Landing Page & Grouped Navigation**:
     - Modern animated interactive showcase served at `/about` and embedded on Home.
-    - Responsive grouped sidebar navigation: `ANALYZE`, `COMPARE`, `SHOP (demo)`, and `MORE`. Mobile-optimized with `@media (max-width: 768px)` queries.
+    - Responsive grouped sidebar navigation: `ANALYZE`, `COMPARE`, `SHOP (demo)`, and `MORE` (including dedicated **📲 Install App** PWA guide). Mobile-optimized with `@media (max-width: 768px)` queries.
 
 ---
 
@@ -248,6 +248,8 @@ python setup_nltk.py
 streamlit run app.py
 ```
 Open your browser at `http://localhost:8501`. ReviewLens defaults directly to **Review Intelligence & Analysis Hub** for a primary NLP research experience, with the Storefront Catalogue accessible in secondary navigation.
+
+To install ReviewLens on mobile or desktop: sign in, open **📲 Install App** from the sidebar's **MORE** group, and follow the platform instructions (Android, iOS Safari, or Desktop).
 
 #### FastAPI REST Microservice
 ```bash
