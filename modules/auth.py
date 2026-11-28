@@ -156,7 +156,7 @@ def check_session_timeout() -> bool:
     return False
 
 
-_USER_DB_LOCK = threading.Lock()
+_USER_DB_LOCK = threading.RLock()
 
 
 def _load_user_db() -> Dict[str, Any]:

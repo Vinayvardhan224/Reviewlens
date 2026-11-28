@@ -66,7 +66,8 @@ class TestStorageSafety(unittest.TestCase):
         for t in threads:
             t.start()
         for t in threads:
-            t.join()
+            t.join(timeout=5.0)
+            self.assertFalse(t.is_alive(), "Worker thread timed out / deadlocked!")
 
         self.assertEqual(len(errors), 0, f"Thread errors occurred: {errors}")
         final_db = _load_user_db()
